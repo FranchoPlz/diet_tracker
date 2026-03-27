@@ -35,9 +35,7 @@ jobs:
           workspaces: './src-tauri -> target'
 
       - name: Install frontend dependencies
-        run: |
-          del package-lock.json
-          npm install
+        run: npm install
 
       - name: Install Python dependencies & PyInstaller
         run: pip install -r src-tauri/python/requirements.txt pyinstaller
