@@ -1,10 +1,38 @@
-.DS_Store
-node_modules
-/build
-/.svelte-kit
-/package
+# Dependencies
+node_modules/
+
+# Build output
+/build/
+/.svelte-kit/
+/package/
+
+# Environment
 .env
 .env.*
 !.env.example
+
+# Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# OS
+.DS_Store
+Thumbs.db
+*.Zone.Identifier
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# PyInstaller sidecar build artifacts
+src-tauri/python/build/
+src-tauri/python/dist/
+
+# Sidecar binaries (platform-specific, built in CI)
+src-tauri/diet_parser-*
+
+# Sisyphus agent artifacts
+.sisyphus/evidence/
+.sisyphus/boulder.json
