@@ -1,0 +1,45 @@
+TASK 6 - COMMANDS CHECK EVIDENCE
+==================================
+Date: 2026-03-27
+
+## cargo check Result
+Command: . "$HOME/.cargo/env" && cargo check
+Exit code: 0 (success)
+Output: cargo build (1 crates compiled)
+
+## IPC Commands Defined in src-tauri/src/lib.rs
+
+1. parse_pdf(app: AppHandle, path: String) -> Result<String, String>
+   - Calls sidecar "binaries/diet_parser" with args ["parse", path]
+   - Returns stdout on success, stderr on failure
+
+2. calculate_totals(app: AppHandle, pdf_path: String, selection_json: String) -> Result<String, String>
+   - Writes selection_json to temp file /tmp/diet_selection.json
+   - Calls sidecar "binaries/diet_parser" with args ["calculate", pdf_path, temp_path]
+   - Returns stdout on success, stderr on failure
+
+3. export_csv(app: AppHandle, totals_json: String, output_path: String) -> Result<String, String>
+   - Writes totals_json to temp file /tmp/diet_totals.json
+   - Calls sidecar "binaries/diet_parser" with args ["export", temp_path, output_path]
+   - Returns stdout on success, stderr on failure
+
+## generate_handler! Registration
+.invoke_handler(tauri::generate_handler![parse_pdf, calculate_totals, export_csv])
+
+## tauri.conf.json externalBin
+"externalBin": ["binaries/diet_parser"]
+
+## capabilities/default.json shell scope
+{
+  "identifier": "shell:allow-execute",
+  "allow": [
+    {
+      "name": "binaries/diet_parser",
+      "sidecar": true,
+      "args": true
+    }
+  ]
+}
+
+## Result
+All 3 commands compile cleanly. cargo check passes with exit code 0.

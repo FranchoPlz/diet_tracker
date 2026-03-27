@@ -1,0 +1,16 @@
+{
+  "status": "ok",
+  "page_count": 6,
+  "pages_extracted": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "page_1_contains_DIETA": true,
+  "page_1_contains_ALMUERZO": true,
+  "all_pages_have_text": true,
+  "validation": "PASS"
+}

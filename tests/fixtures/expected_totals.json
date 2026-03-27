@@ -1,0 +1,140 @@
+{
+    "status": "ok",
+    "totals": [
+        {
+            "ingredient": "aguacate",
+            "quantity": 300,
+            "unit": "g"
+        },
+        {
+            "ingredient": "barra de pan",
+            "quantity": 210,
+            "unit": "g"
+        },
+        {
+            "ingredient": "barra de pan a elegir",
+            "quantity": 880,
+            "unit": "g"
+        },
+        {
+            "ingredient": "crema de cacahuete normal o crunchy",
+            "quantity": 90,
+            "unit": "g"
+        },
+        {
+            "ingredient": "fresas",
+            "quantity": 450,
+            "unit": "g"
+        },
+        {
+            "ingredient": "fruta de temporada a elegir",
+            "quantity": 3,
+            "unit": "unidad"
+        },
+        {
+            "ingredient": "frutos secos a elegir",
+            "quantity": 60,
+            "unit": "g"
+        },
+        {
+            "ingredient": "garbanzos cocidos",
+            "quantity": 450,
+            "unit": "g"
+        },
+        {
+            "ingredient": "gelatina 0%",
+            "quantity": 4,
+            "unit": "unidad"
+        },
+        {
+            "ingredient": "guacamole",
+            "quantity": 400,
+            "unit": "g"
+        },
+        {
+            "ingredient": "huevo",
+            "quantity": 11,
+            "unit": "unidad"
+        },
+        {
+            "ingredient": "hummus",
+            "quantity": 200,
+            "unit": "g"
+        },
+        {
+            "ingredient": "jam\u00f3n serrano",
+            "quantity": 90,
+            "unit": "g"
+        },
+        {
+            "ingredient": "leche +prote\u00ednas",
+            "quantity": 750,
+            "unit": "ml"
+        },
+        {
+            "ingredient": "lomo de pavo",
+            "quantity": 200,
+            "unit": "g"
+        },
+        {
+            "ingredient": "lonchas de jam\u00f3n serrano a la plancha",
+            "quantity": 8,
+            "unit": "unidad"
+        },
+        {
+            "ingredient": "merluza",
+            "quantity": 900,
+            "unit": "g"
+        },
+        {
+            "ingredient": "mermelada sin az\u00facar a elegir el sabor",
+            "quantity": 300,
+            "unit": "g"
+        },
+        {
+            "ingredient": "pan de brioche",
+            "quantity": 150,
+            "unit": "g"
+        },
+        {
+            "ingredient": "pan rallado",
+            "quantity": 160,
+            "unit": "g"
+        },
+        {
+            "ingredient": "pechuga de pollo",
+            "quantity": 1200,
+            "unit": "g"
+        },
+        {
+            "ingredient": "quesitos light",
+            "quantity": 6,
+            "unit": "unidad"
+        },
+        {
+            "ingredient": "queso feta",
+            "quantity": 150,
+            "unit": "g"
+        },
+        {
+            "ingredient": "vasito de arroz basmati microondas",
+            "quantity": 6,
+            "unit": "unidad"
+        },
+        {
+            "ingredient": "yogur alpro de sabor a elegir",
+            "quantity": 800,
+            "unit": "g"
+        },
+        {
+            "ingredient": "yogur de proteinas de sabor a elegir",
+            "quantity": 3,
+            "unit": "unidad"
+        },
+        {
+            "ingredient": "yogur de prote\u00ednas de chocolate",
+            "quantity": 4,
+            "unit": "unidad"
+        }
+    ]
+}

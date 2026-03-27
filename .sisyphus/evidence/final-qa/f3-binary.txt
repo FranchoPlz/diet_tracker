@@ -1,0 +1,11 @@
+=== Scenario 4: Sidecar Binary ===
+Command: ./src-tauri/binaries/diet_parser-x86_64-unknown-linux-gnu parse ABRIL.pdf > /tmp/binary_parse.json
+Exit code: 0
+
+Binary location: src-tauri/binaries/diet_parser-x86_64-unknown-linux-gnu (32.5M)
+
+Diff vs Python script output (/tmp/parse_output.json):
+  /usr/bin/diff <(python -m json.tool /tmp/binary_parse.json) <(python -m json.tool /tmp/parse_output.json)
+  EXIT CODE: 0 ✓
+
+VERDICT: PASS — binary output is IDENTICAL to Python script output

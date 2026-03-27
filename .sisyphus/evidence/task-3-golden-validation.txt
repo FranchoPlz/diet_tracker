@@ -1,0 +1,130 @@
+=== GOLDEN FIXTURE VALIDATION REPORT ===
+Generated: 2026-03-27T09:14:28.894921
+
+=== FILE VALIDATION ===
+  tests/fixtures/abril_golden.json: VALID JSON (34594 bytes)
+  tests/fixtures/sample_selection.json: VALID JSON (4704 bytes)
+  tests/fixtures/expected_totals.json: VALID JSON (2004 bytes)
+  tests/fixtures/expected_export.csv: VALID (UTF-8 BOM: True, 745 bytes)
+
+=== ABRIL_GOLDEN.JSON STRUCTURE ===
+  status: ok
+  diets count: 2
+
+  DIETA 1:
+    ALMUERZO: 1 option(s)
+      - 'ALMUERZO': 4 ingredient lines
+    COMIDA: 2 option(s)
+      - 'OPCIÓN 1 BOCATA': 6 ingredient lines
+      - 'OPCIÓN 2 – COMIDA RAPIDA Y SENCILLA': 4 ingredient lines
+    MERIENDA: 1 option(s)
+      - 'MERIENDA': 3 ingredient lines
+    CENA: 3 option(s)
+      - 'CENA 1 – NUGGETS HEALTHY': 5 ingredient lines
+      - 'OPCIÓN 2': 5 ingredient lines
+      - 'CENA 3 – ENSALADA GRIEGA': 7 ingredient lines
+
+  DIETA 2:
+    ALMUERZO: 2 option(s)
+      - 'OPCIÓN 1': 3 ingredient lines
+      - 'OPCIÓN 2 – BOLLITO A LA TAZA': 6 ingredient lines
+    COMIDA: 2 option(s)
+      - 'OPCIÓN 1 – ENSALADA DE LEGUMBRES': 6 ingredient lines
+      - 'OPCIÓN 2 DE COMIDA – WRAP SALUDABLE': 6 ingredient lines
+    MERIENDA: 1 option(s)
+      - 'MERIENDA': 5 ingredient lines
+    CENA: 3 option(s)
+      - 'OPCIÓN 1 DE CENA': 6 ingredient lines
+      - 'OPCIÓN 2 DE CENA – BURRITO': 6 ingredient lines
+      - 'OPCIÓN 3 DE CENA – TORTILLA DE PATATA AIR FRYER': 4 ingredient lines
+
+  Total ingredient lines: 76
+
+=== SAMPLE_SELECTION.JSON ===
+  weeks: 1
+  pdf_path: ABRIL.pdf
+  days: 7
+    Day 1: DIETA 1
+    Day 2: DIETA 2
+    Day 3: DIETA 1
+    Day 4: DIETA 2
+    Day 5: DIETA 1
+    Day 6: DIETA 2
+    Day 7: DIETA 1
+
+=== EXPECTED_TOTALS.JSON ===
+  Total unique ingredients: 27
+
+  Full totals:
+    aguacate: 300 g
+    barra de pan: 210 g
+    barra de pan a elegir: 880 g
+    crema de cacahuete normal o crunchy: 90 g
+    fresas: 450 g
+    fruta de temporada a elegir: 3 unidad
+    frutos secos a elegir: 60 g
+    garbanzos cocidos: 450 g
+    gelatina 0%: 4 unidad
+    guacamole: 400 g
+    huevo: 11 unidad
+    hummus: 200 g
+    jamón serrano: 90 g
+    leche +proteínas: 750 ml
+    lomo de pavo: 200 g
+    lonchas de jamón serrano a la plancha: 8 unidad
+    merluza: 900 g
+    mermelada sin azúcar a elegir el sabor: 300 g
+    pan de brioche: 150 g
+    pan rallado: 160 g
+    pechuga de pollo: 1200 g
+    quesitos light: 6 unidad
+    queso feta: 150 g
+    vasito de arroz basmati microondas: 6 unidad
+    yogur alpro de sabor a elegir: 800 g
+    yogur de proteinas de sabor a elegir: 3 unidad
+    yogur de proteínas de chocolate: 4 unidad
+
+=== EXPECTED_EXPORT.CSV ===
+  UTF-8 BOM: YES
+  Header: Ingrediente,Cantidad,Unidad
+  Data rows: 27
+
+=== CALCULATION TRACE ===
+
+DIETA 1 (4 days: 1,3,5,7) - per day selections:
+  ALMUERZO opt0, line0 alt0: Barra de Pan a elegir 100g
+  ALMUERZO opt0, line1 alt0: Hummus 50g
+  ALMUERZO opt0, line2 alt0: Lomo de Pavo 50g
+  COMIDA opt0, line0: Barra de pan a elegir 120g
+  COMIDA opt0, line1 alt0: Huevo 1 unidad
+  COMIDA opt0, line2 alt0: Lonchas de jamon serrano a la plancha 2 unidad
+  COMIDA opt0, line3 alt0: Pechuga de pollo 100g
+  COMIDA opt0, line5 alt0: Gelatina 0% 1 unidad
+  MERIENDA opt0, line1 alt0: Yogur de proteinas de chocolate 1 unidad
+  MERIENDA opt0, line2 alt0: Frutos secos a elegir 15g
+  CENA opt0, line0 alt0: Pechuga de pollo 200g
+  CENA opt0, line1: Pan rallado 40g
+  CENA opt0, line2: Huevo 1 unidad
+  CENA opt0, line3 alt0: Guacamole 100g
+  CENA opt0, line4: Yogur Alpro de sabor a elegir 200g
+
+DIETA 2 (3 days: 2,4,6) - per day selections:
+  ALMUERZO opt0, line0 alt0: Barra de pan 70g
+  ALMUERZO opt0, line1 alt0: Jamon serrano 30g
+  ALMUERZO opt0, line2 alt0: Quesitos light 2 unidad
+  COMIDA opt0, line0 alt0: Garbanzos cocidos 150g
+  COMIDA opt0, line1 alt0: Huevo 1 unidad
+  COMIDA opt0, line2 alt0: Queso feta 50g
+  COMIDA opt0, line3 alt0: Vasito de arroz basmati microondas 1 unidad
+  COMIDA opt0, line5 alt0: Fresas 150g
+  MERIENDA opt0, line1: Leche +proteinas 250ml
+  MERIENDA opt0, line2 alt0: Pan de brioche 50g
+  MERIENDA opt0, line3: Mermelada sin azucar a elegir el sabor 100g
+  MERIENDA opt0, line4: Crema de cacahuete normal o crunchy 30g
+  CENA opt0, line0 alt0: Merluza 300g
+  CENA opt0, line1 alt0: Vasito de Arroz Basmati microondas 1 unidad
+  CENA opt0, line2 alt0: Aguacate 100g
+  CENA opt0, line4: Fruta de temporada a elegir 1 unidad
+  CENA opt0, line5: Yogur de Proteinas de sabor a elegir 1 unidad
+
+=== ALL VALIDATIONS PASSED ===

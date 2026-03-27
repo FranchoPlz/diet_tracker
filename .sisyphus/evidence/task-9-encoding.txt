@@ -1,0 +1,13 @@
+## Task 9 - Encoding QA Evidence
+
+### BOM check (xxd /tmp/actual.csv | head -1):
+00000000: efbb bf49 6e67 7265 6469 656e 7465 2c43  ...Ingrediente,C
+
+### BOM bytes: ef bb bf (UTF-8 BOM) ✓
+### Encoding: UTF-8 with BOM ✓
+### Line endings: Unix LF (\n) ✓
+### No Windows CRLF (\r\n) ✓
+
+### File tail (xxd last bytes):
+000002e0: 342c 756e 6964 6164 0a   4,unidad.
+Last byte: 0x0a (\n) - single trailing newline ✓

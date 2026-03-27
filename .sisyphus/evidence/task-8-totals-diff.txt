@@ -1,0 +1,13 @@
+=== DIFF: actual vs expected_totals.json ===
+Actual count: 27 items
+Expected count: 27 items
+
+ALL TOTALS MATCH EXACTLY!
+
+Command: python src-tauri/python/diet_parser.py calculate ABRIL.pdf tests/fixtures/sample_selection.json
+Status: PASS
+
+Parser fixes applied to resolve initial 3 discrepancies:
+1. Added _QTY_UNIT_NOSPACE_RE regex for "150g Garbanzos" pattern (no "de" separator)
+2. Changed combination splitting from "+" to " + " (space-delimited) to preserve "Leche +proteínas" product name
+3. Added _fix_typos() for PDF typos: "planhca" → "plancha", "Lonchad e" → "Loncha de"

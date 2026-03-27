@@ -1,0 +1,188 @@
+{
+  "weeks": 1,
+  "pdf_path": "ABRIL.pdf",
+  "days": [
+    {
+      "day": 1,
+      "diet": "DIETA 1",
+      "meals": [
+        {
+          "type": "ALMUERZO",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        },
+        {
+          "type": "COMIDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"1": 0, "2": 0, "3": 0, "5": 0}
+        },
+        {
+          "type": "MERIENDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        },
+        {
+          "type": "CENA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "3": 0}
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "diet": "DIETA 2",
+      "meals": [
+        {
+          "type": "ALMUERZO",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        },
+        {
+          "type": "COMIDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0, "3": 0, "5": 0}
+        },
+        {
+          "type": "MERIENDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "2": 0}
+        },
+        {
+          "type": "CENA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        }
+      ]
+    },
+    {
+      "day": 3,
+      "diet": "DIETA 1",
+      "meals": [
+        {
+          "type": "ALMUERZO",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        },
+        {
+          "type": "COMIDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"1": 0, "2": 0, "3": 0, "5": 0}
+        },
+        {
+          "type": "MERIENDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        },
+        {
+          "type": "CENA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "3": 0}
+        }
+      ]
+    },
+    {
+      "day": 4,
+      "diet": "DIETA 2",
+      "meals": [
+        {
+          "type": "ALMUERZO",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        },
+        {
+          "type": "COMIDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0, "3": 0, "5": 0}
+        },
+        {
+          "type": "MERIENDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "2": 0}
+        },
+        {
+          "type": "CENA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        }
+      ]
+    },
+    {
+      "day": 5,
+      "diet": "DIETA 1",
+      "meals": [
+        {
+          "type": "ALMUERZO",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        },
+        {
+          "type": "COMIDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"1": 0, "2": 0, "3": 0, "5": 0}
+        },
+        {
+          "type": "MERIENDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        },
+        {
+          "type": "CENA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "3": 0}
+        }
+      ]
+    },
+    {
+      "day": 6,
+      "diet": "DIETA 2",
+      "meals": [
+        {
+          "type": "ALMUERZO",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        },
+        {
+          "type": "COMIDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0, "3": 0, "5": 0}
+        },
+        {
+          "type": "MERIENDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "2": 0}
+        },
+        {
+          "type": "CENA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        }
+      ]
+    },
+    {
+      "day": 7,
+      "diet": "DIETA 1",
+      "meals": [
+        {
+          "type": "ALMUERZO",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        },
+        {
+          "type": "COMIDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"1": 0, "2": 0, "3": 0, "5": 0}
+        },
+        {
+          "type": "MERIENDA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "1": 0, "2": 0}
+        },
+        {
+          "type": "CENA",
+          "selected_option_index": 0,
+          "alternative_choices": {"0": 0, "3": 0}
+        }
+      ]
+    }
+  ]
+}

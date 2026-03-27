@@ -1,0 +1,28 @@
+=== Task 15: PyInstaller Binary QA Evidence ===
+Date: Fri Mar 27 09:55:39 CET 2026
+
+--- Binary Info ---
+-rwxr-xr-x 1 fferriols fferriols 33M Mar 27 09:54 src-tauri/binaries/diet_parser-x86_64-unknown-linux-gnu
+src-tauri/binaries/diet_parser-x86_64-unknown-linux-gnu: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=3d4132e6aade8fe199dfd898058aa768ebd7f197, stripped
+
+--- Test 1: parse command ---
+Binary exit code: 0
+Python exit code: 0
+[ok] Files are identical
+Result: IDENTICAL
+
+--- Test 2: calculate command ---
+Binary exit code: 0
+Result: IDENTICAL
+
+--- Test 3: export command ---
+{"status": "ok", "path": "/tmp/binary_export.csv", "item_count": 27}
+Binary exit code: 0
+{"status": "ok", "path": "/tmp/python_export.csv", "item_count": 27}
+Python exit code: 0
+[ok] Files are identical
+Result: IDENTICAL
+
+--- Summary ---
+All 3 commands (parse, calculate, export) produce identical output.
+Binary is ELF 64-bit x86-64, ready for Tauri sidecar use.

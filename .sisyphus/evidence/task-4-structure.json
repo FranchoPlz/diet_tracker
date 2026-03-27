@@ -1,0 +1,139 @@
+{
+  "task": "task-4-structure",
+  "status": "PASS",
+  "checks": {
+    "diet_count": {
+      "expected": 2,
+      "actual": 2,
+      "pass": true
+    },
+    "meal_option_counts": {
+      "DIETA 1 ALMUERZO": {
+        "expected": 1,
+        "actual": 1,
+        "pass": true
+      },
+      "DIETA 1 COMIDA": {
+        "expected": 2,
+        "actual": 2,
+        "pass": true
+      },
+      "DIETA 1 MERIENDA": {
+        "expected": 1,
+        "actual": 1,
+        "pass": true
+      },
+      "DIETA 1 CENA": {
+        "expected": 3,
+        "actual": 3,
+        "pass": true
+      },
+      "DIETA 2 ALMUERZO": {
+        "expected": 2,
+        "actual": 2,
+        "pass": true
+      },
+      "DIETA 2 COMIDA": {
+        "expected": 2,
+        "actual": 2,
+        "pass": true
+      },
+      "DIETA 2 MERIENDA": {
+        "expected": 1,
+        "actual": 1,
+        "pass": true
+      },
+      "DIETA 2 CENA": {
+        "expected": 3,
+        "actual": 3,
+        "pass": true
+      }
+    },
+    "raw_text_no_dieta_or_meal_header": {
+      "violations": [],
+      "pass": true
+    },
+    "haremos_ayunas_in_intro_not_options": {
+      "in_intro": true,
+      "in_options": [],
+      "pass": true
+    }
+  },
+  "parser_output_summary": [
+    {
+      "name": "DIETA 1",
+      "intro_starts_with": "HAREMOS AYUNAS HASTA LA HORA DEL ALMUERZO\nDURANTE ESTE TIEMP",
+      "meals": [
+        {
+          "type": "ALMUERZO",
+          "option_count": 1,
+          "option_names": [
+            "ALMUERZO"
+          ]
+        },
+        {
+          "type": "COMIDA",
+          "option_count": 2,
+          "option_names": [
+            "OPCIÓN 1 BOCATA",
+            "OPCIÓN 2 – COMIDA RAPIDA Y SENCILLA"
+          ]
+        },
+        {
+          "type": "MERIENDA",
+          "option_count": 1,
+          "option_names": [
+            "MERIENDA"
+          ]
+        },
+        {
+          "type": "CENA",
+          "option_count": 3,
+          "option_names": [
+            "CENA 1 – NUGGETS HEALTHY",
+            "OPCIÓN 2",
+            "CENA 3 – ENSALADA GRIEGA"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DIETA 2",
+      "intro_starts_with": "HAREMOS AYUNAS HASTA LA HORA DEL ALMUERZO\nDURANTE ESTE TIEMP",
+      "meals": [
+        {
+          "type": "ALMUERZO",
+          "option_count": 2,
+          "option_names": [
+            "OPCIÓN 1",
+            "OPCIÓN 2 – BOLLITO A LA TAZA"
+          ]
+        },
+        {
+          "type": "COMIDA",
+          "option_count": 2,
+          "option_names": [
+            "OPCIÓN 1 – ENSALADA DE LEGUMBRES",
+            "OPCIÓN 2 DE COMIDA – WRAP SALUDABLE"
+          ]
+        },
+        {
+          "type": "MERIENDA",
+          "option_count": 1,
+          "option_names": [
+            "MERIENDA"
+          ]
+        },
+        {
+          "type": "CENA",
+          "option_count": 3,
+          "option_names": [
+            "OPCIÓN 1 DE CENA",
+            "OPCIÓN 2 DE CENA – BURRITO",
+            "OPCIÓN 3 DE CENA – TORTILLA DE PATATAAIR FRYER"
+          ]
+        }
+      ]
+    }
+  ]
+}

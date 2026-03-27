@@ -1,0 +1,18 @@
+## Task 9 - CSV Export QA Evidence
+
+### Command run:
+python src-tauri/python/diet_parser.py export tests/fixtures/expected_totals.json /tmp/actual.csv
+
+### Output:
+{"status": "ok", "path": "/tmp/actual.csv", "item_count": 27}
+
+### Diff result (byte-for-byte):
+[ok] Files are identical
+NO DIFF
+
+### Spanish characters preserved:
+jamón serrano,90,g
+leche +proteínas,750,ml
+lonchas de jamón serrano a la plancha,8,unidad
+mermelada sin azúcar a elegir el sabor,300,g
+yogur de proteínas de chocolate,4,unidad
