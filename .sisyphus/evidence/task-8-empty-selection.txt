@@ -1,7 +1,0 @@
-=== EMPTY SELECTION TEST ===
-Input: {"weeks": 4, "days": []}
-stdout: {"status": "ok", "totals": []}
-stderr: 
-exit code: 0
-
-PASS: Output matches expected {"status": "ok", "totals": []}
