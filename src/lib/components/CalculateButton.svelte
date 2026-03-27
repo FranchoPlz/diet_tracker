@@ -30,22 +30,21 @@
         return {
           day: day.day,
           diet: day.diet,
-          meals: MEAL_TYPES.map((mealType, mealTypeIndex) => {
+          meals: MEAL_TYPES.map((mealType) => {
             const optIndex = getEffectiveMealOptionIndex(config, dayIndex, mealType);
+            const mealIndex = diet ? diet.meals.findIndex(m => m.type === mealType) : -1;
 
             const mealAltChoices: Record<string, number> = {};
-            if (diet) {
-              const meal = diet.meals.find(m => m.type === mealType);
-              if (meal) {
-                const option = meal.options[optIndex];
-                if (option) {
-                  option.ingredient_lines.forEach((line, lineIndex) => {
-                    if (line.is_alternatives) {
-                      const altKey = `${mealTypeIndex}-${optIndex}-${lineIndex}`;
-                      mealAltChoices[String(lineIndex)] = getEffectiveAlternativeChoice(config, dayIndex, altKey);
-                    }
-                  });
-                }
+            if (diet && mealIndex !== -1) {
+              const meal = diet.meals[mealIndex];
+              const option = meal.options[optIndex];
+              if (option) {
+                option.ingredient_lines.forEach((line, lineIndex) => {
+                  if (line.is_alternatives) {
+                    const altKey = `${mealIndex}-${optIndex}-${lineIndex}`;
+                    mealAltChoices[String(lineIndex)] = getEffectiveAlternativeChoice(config, dayIndex, altKey);
+                  }
+                });
               }
             }
 

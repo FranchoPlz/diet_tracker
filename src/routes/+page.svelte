@@ -40,7 +40,9 @@
 
         <div class="lg:col-span-1">
           {#if selectedDayIndex !== null}
-            <DayDetail dayIndex={selectedDayIndex} onClose={handleCloseDayDetail} />
+            {#key selectedDayIndex}
+              <DayDetail dayIndex={selectedDayIndex} onClose={handleCloseDayDetail} />
+            {/key}
           {/if}
         </div>
       </div>
