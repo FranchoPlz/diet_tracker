@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Diet Planner",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "com.fferriols.diet",
   "build": {
     "beforeDevCommand": "npm run dev",

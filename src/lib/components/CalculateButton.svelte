@@ -2,6 +2,7 @@
   import { invoke } from '@tauri-apps/api/core';
   import { appState } from '$lib/state.svelte';
   import type { MealType } from '$lib/types';
+  import { getEffectiveMealOptionIndex, getEffectiveAlternativeChoice } from '$lib/utils';
 
   const isTauri = $derived(typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window);
 
@@ -17,30 +18,39 @@
 
   function serializeSelectionForBackend(): string {
     const config = appState.weekConfig;
+    const diets = appState.parsedData?.diets ?? [];
+
     const serialized = {
       weeks: config.weeks,
       pdf_path: config.pdf_path ?? appState.pdfPath,
-      days: config.days.map(day => {
+      days: config.days.map((day, dayIndex) => {
         const dietIndex = day.diet === 'DIETA 1' ? 0 : 1;
+        const diet = diets[dietIndex];
+
         return {
           day: day.day,
           diet: day.diet,
-          meals: day.meals.map(meal => {
-            const mealTypeIndex = MEAL_TYPES.indexOf(meal.type);
-            const optIndex = meal.selected_option_index;
+          meals: MEAL_TYPES.map((mealType, mealTypeIndex) => {
+            const optIndex = getEffectiveMealOptionIndex(config, dayIndex, mealType);
 
-            // Transform global alternative_choices → per-meal format
             const mealAltChoices: Record<string, number> = {};
-            for (const [key, value] of Object.entries(config.alternative_choices)) {
-              const parts = key.split('-').map(Number);
-              const [di, mi, oi, li] = parts;
-              if (di === dietIndex && mi === mealTypeIndex && oi === optIndex) {
-                mealAltChoices[String(li)] = value;
+            if (diet) {
+              const meal = diet.meals.find(m => m.type === mealType);
+              if (meal) {
+                const option = meal.options[optIndex];
+                if (option) {
+                  option.ingredient_lines.forEach((line, lineIndex) => {
+                    if (line.is_alternatives) {
+                      const altKey = `${mealTypeIndex}-${optIndex}-${lineIndex}`;
+                      mealAltChoices[String(lineIndex)] = getEffectiveAlternativeChoice(config, dayIndex, altKey);
+                    }
+                  });
+                }
               }
             }
 
             return {
-              type: meal.type,
+              type: mealType,
               selected_option_index: optIndex,
               alternative_choices: mealAltChoices,
             };

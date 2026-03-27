@@ -37,12 +37,26 @@ export interface ParseResult {
   diets: DietPlan[];
 }
 
-// IMPORTANT: alternative_choices is GLOBAL (not per-day) — one choice per "/" line applies to ALL days
+/**
+ * Global defaults for a single diet (DIETA 1 or DIETA 2).
+ * These apply to ALL days that use this diet unless a per-day exception exists.
+ */
+export interface DietDefaults {
+  /** Which option is selected for each meal type. key: MealType, value: option index */
+  mealOptionIndexes: Record<MealType, number>;
+  /** Alternative ingredient choices. key: "mealIndex-optionIndex-lineIndex", value: selected item index */
+  alternativeChoices: Record<string, number>;
+}
+
 export interface WeekConfig {
   weeks: number;
   pdf_path: string | null;
   days: DaySelection[];
-  alternative_choices: Record<string, number>; // key: "dietIndex-mealIndex-optionIndex-lineIndex", value: selected item index
+  /** Global defaults per diet name. All days of that diet type share these selections. */
+  dietDefaults: Record<string, DietDefaults>;
+  /** Per-day exceptions that override the global defaults. key: day index (0-based) */
+  dayExceptions: Record<number, DayException>;
+  alternative_choices?: Record<string, number>;
 }
 
 export interface DaySelection {
@@ -54,6 +68,16 @@ export interface DaySelection {
 export interface MealSelection {
   type: MealType;
   selected_option_index: number;
+}
+
+/**
+ * Per-day overrides. Only the fields present here override the global defaults.
+ */
+export interface DayException {
+  /** Override meal option indexes for specific meal types */
+  mealOptionIndexes?: Partial<Record<MealType, number>>;
+  /** Override alternative choices for specific keys */
+  alternativeChoices?: Record<string, number>;
 }
 
 export interface ShoppingItem {

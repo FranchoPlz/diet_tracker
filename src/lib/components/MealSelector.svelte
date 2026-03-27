@@ -1,11 +1,18 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
   import type { DietPlan, IngredientItem } from '$lib/types';
-  import { formatQuantity } from '$lib/utils';
+  import { 
+    formatQuantity, 
+    getEffectiveMealOptionIndex, 
+    getEffectiveAlternativeChoice,
+    setMealOptionIndex,
+    setAlternativeChoice,
+  } from '$lib/utils';
 
-  let { dayIndex, dietData } = $props<{ 
+  let { dayIndex, dietData, asException } = $props<{ 
     dayIndex: number;
     dietData: DietPlan;
+    asException: boolean;
   }>();
 
   let day = $derived(appState.weekConfig.days[dayIndex]);
@@ -25,9 +32,7 @@
 
 <div class="flex flex-col gap-6">
   {#each dietData.meals as meal, mealIndex}
-    {@const mealStateIndex = day.meals.findIndex(m => m.type === meal.type)}
-    {@const mealSelection = day.meals[mealStateIndex]}
-    {@const selectedOptionIndex = mealSelection?.selected_option_index ?? 0}
+    {@const selectedOptionIndex = getEffectiveMealOptionIndex(appState.weekConfig, dayIndex, meal.type)}
     {@const option = meal.options[selectedOptionIndex]}
 
     <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
@@ -45,9 +50,7 @@
                 class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 checked={selectedOptionIndex === optIdx}
                 onchange={() => {
-                  if (mealStateIndex !== -1) {
-                    appState.weekConfig.days[dayIndex].meals[mealStateIndex].selected_option_index = optIdx;
-                  }
+                  setMealOptionIndex(appState.weekConfig, dayIndex, meal.type, optIdx, asException);
                 }}
               />
               <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Opción {optIdx + 1}</span>
@@ -63,11 +66,11 @@
           {/if}
           
           {#each option.ingredient_lines as line, lineIndex}
-            {@const altKey = `${dietIndex}-${mealIndex}-${selectedOptionIndex}-${lineIndex}`}
+            {@const altKey = `${mealIndex}-${selectedOptionIndex}-${lineIndex}`}
             
             <div class="flex flex-col py-2 border-b border-gray-50 dark:border-gray-700/50 last:border-0 last:pb-0">
               {#if line.is_alternatives}
-                {@const selectedAltIndex = appState.weekConfig.alternative_choices[altKey] ?? 0}
+                {@const selectedAltIndex = getEffectiveAlternativeChoice(appState.weekConfig, dayIndex, altKey)}
                 <span class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Elegir una opción:</span>
                 <div class="flex flex-col gap-2 pl-2">
                   
@@ -78,7 +81,7 @@
                         name="alt-{dayIndex}-{altKey}"
                         class="mt-1 w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
                         checked={selectedAltIndex === itemIndex}
-                        onchange={() => appState.weekConfig.alternative_choices[altKey] = itemIndex}
+                        onchange={() => setAlternativeChoice(appState.weekConfig, dayIndex, altKey, itemIndex, asException)}
                       />
                       <span class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed group-hover:text-gray-900 dark:group-hover:text-white">
                         {formatItem(item)}

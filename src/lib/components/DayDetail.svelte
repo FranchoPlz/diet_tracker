@@ -1,5 +1,6 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
+  import { hasException, clearException } from '$lib/utils';
   import MealSelector from './MealSelector.svelte';
 
   let { 
@@ -12,6 +13,14 @@
 
   let day = $derived(appState.weekConfig.days[dayIndex]);
   let dietData = $derived(appState.parsedData?.diets.find(d => d.name === day.diet));
+  let isException = $derived(hasException(appState.weekConfig, dayIndex));
+
+  let exceptionMode = $state(false);
+
+  function handleClearException() {
+    clearException(appState.weekConfig, dayIndex);
+    exceptionMode = false;
+  }
 </script>
 
 <div class="flex flex-col bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden sticky top-4 max-h-[calc(100vh-2rem)]">
@@ -31,9 +40,48 @@
     </button>
   </div>
 
+  <div class="flex items-center gap-3 px-5 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-800/30">
+    <label class="flex items-center gap-2 cursor-pointer">
+      <input 
+        type="checkbox" 
+        class="w-4 h-4 text-amber-500 border-gray-300 rounded focus:ring-amber-500"
+        checked={exceptionMode}
+        onchange={() => exceptionMode = !exceptionMode}
+      />
+      <span class="text-sm font-medium text-gray-600 dark:text-gray-400">
+        Excepción para este día
+      </span>
+    </label>
+    
+    {#if isException}
+      <button 
+        class="text-xs font-bold text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 ml-auto"
+        onclick={handleClearException}
+      >
+        Borrar excepciones
+      </button>
+    {/if}
+  </div>
+
+  {#if !exceptionMode && !isException}
+    <div class="px-5 py-2 bg-blue-50/50 dark:bg-blue-900/10 border-b border-gray-100 dark:border-gray-700">
+      <p class="text-xs text-blue-600 dark:text-blue-400">
+        Los cambios se aplican a todos los días de <strong>{day.diet}</strong>
+      </p>
+    </div>
+  {/if}
+
+  {#if exceptionMode || isException}
+    <div class="px-5 py-2 bg-amber-50/50 dark:bg-amber-900/10 border-b border-gray-100 dark:border-gray-700">
+      <p class="text-xs text-amber-600 dark:text-amber-400">
+        Los cambios solo se aplican al <strong>Día {day.day}</strong>
+      </p>
+    </div>
+  {/if}
+
   <div class="p-5 overflow-y-auto">
     {#if dietData}
-      <MealSelector {dayIndex} {dietData} />
+      <MealSelector {dayIndex} {dietData} asException={exceptionMode || isException} />
     {:else}
       <div class="text-red-500 font-bold p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
         Error: No se encontraron datos para {day.diet}

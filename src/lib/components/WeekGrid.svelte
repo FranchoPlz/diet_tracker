@@ -1,5 +1,6 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
+  import { resizeWeeks, hasException } from '$lib/utils';
   
   let { 
     onDayClick, 
@@ -11,7 +12,7 @@
 
   function setWeeks(w: number) {
     if (w >= 1 && w <= 4) {
-      appState.weekConfig.weeks = w;
+      resizeWeeks(appState.weekConfig, w);
     }
   }
 
@@ -51,6 +52,7 @@
             {@const day = appState.weekConfig.days[dayIndex]}
             {@const isD1 = day.diet === 'DIETA 1'}
             {@const isSelected = selectedDayIndex === dayIndex}
+            {@const isException = hasException(appState.weekConfig, dayIndex)}
             
             <button 
               class="relative flex flex-col items-center justify-center p-3 h-24 rounded-xl border text-left
@@ -58,6 +60,9 @@
                 {isSelected ? 'ring-2 ring-blue-500 shadow-md scale-[1.02]' : 'hover:shadow-sm hover:scale-[1.01]'}"
               onclick={() => handleDayClick(dayIndex)}
             >
+              {#if isException}
+                <span class="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-amber-400 dark:bg-amber-500" title="Tiene excepciones"></span>
+              {/if}
               <span class="text-sm font-bold text-gray-500 dark:text-gray-400">Día {day.day}</span>
               <span class="mt-1 text-xs font-black px-2 py-1 rounded-md 
                 {isD1 ? 'bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-300' : 'bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-300'}"
