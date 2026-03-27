@@ -761,7 +761,20 @@ def cmd_export(args):
         sys.exit(1)
 
 
+def _ensure_utf8_stdout():
+    import io, os
+
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    else:
+        sys.stdout = io.TextIOWrapper(
+            os.fdopen(sys.stdout.fileno(), "wb", closefd=False),
+            encoding="utf-8",
+        )
+
+
 def main():
+    _ensure_utf8_stdout()
     parser = argparse.ArgumentParser(description="Diet PDF parser sidecar CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
