@@ -3,6 +3,7 @@
   import { invoke } from '@tauri-apps/api/core';
   import { appState } from '$lib/state.svelte';
   import type { ParseResult } from '$lib/types';
+  import { createDefaultWeekConfig } from '$lib/utils';
 
   let isDragging = $state(false);
 
@@ -34,6 +35,9 @@
       const result: ParseResult = JSON.parse(jsonStr);
       appState.parsedData = result;
       appState.pdfPath = path;
+      appState.weekConfig = createDefaultWeekConfig();
+      appState.shoppingList = [];
+      appState.checkedShoppingItems = {};
     } catch (e) {
       console.error('Error parsing PDF:', e);
       appState.error = String(e);
@@ -110,6 +114,9 @@
       const goldenJson = await import('../../../tests/fixtures/abril_golden.json');
       appState.parsedData = goldenJson.default as ParseResult;
       appState.pdfPath = 'tests/fixtures/abril_golden.json';
+      appState.weekConfig = createDefaultWeekConfig();
+      appState.shoppingList = [];
+      appState.checkedShoppingItems = {};
     } catch (e) {
       console.error('Error loading mock data:', e);
       appState.error = 'Error cargando datos de prueba: ' + String(e);

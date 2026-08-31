@@ -4,8 +4,9 @@ import { createDefaultWeekConfig } from './utils';
 export const appState = $state({
   parsedData: null as ParseResult | null,
   pdfPath: null as string | null,
-  weekConfig: createDefaultWeekConfig(4) as WeekConfig,
+  weekConfig: createDefaultWeekConfig(1) as WeekConfig,
   shoppingList: [] as ShoppingItem[],
+  checkedShoppingItems: {} as Record<string, boolean>,
   darkMode: false,
   loading: false,
   error: null as string | null,

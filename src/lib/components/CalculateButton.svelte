@@ -1,12 +1,9 @@
 <script lang="ts">
   import { invoke } from '@tauri-apps/api/core';
   import { appState } from '$lib/state.svelte';
-  import type { MealType } from '$lib/types';
-  import { getEffectiveMealOptionIndex, getEffectiveAlternativeChoice } from '$lib/utils';
+  import { buildBackendSelection } from '$lib/utils';
 
   const isTauri = $derived(typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window);
-
-  const MEAL_TYPES: MealType[] = ['ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA'];
 
   const hasEnabledDays = $derived(appState.weekConfig.days.length > 0);
 
@@ -15,50 +12,6 @@
     !hasEnabledDays ||
     appState.loading
   );
-
-  function serializeSelectionForBackend(): string {
-    const config = appState.weekConfig;
-    const diets = appState.parsedData?.diets ?? [];
-
-    const serialized = {
-      weeks: config.weeks,
-      pdf_path: config.pdf_path ?? appState.pdfPath,
-      days: config.days.map((day, dayIndex) => {
-        const dietIndex = day.diet === 'DIETA 1' ? 0 : 1;
-        const diet = diets[dietIndex];
-
-        return {
-          day: day.day,
-          diet: day.diet,
-          meals: MEAL_TYPES.map((mealType) => {
-            const optIndex = getEffectiveMealOptionIndex(config, dayIndex, mealType);
-            const mealIndex = diet ? diet.meals.findIndex(m => m.type === mealType) : -1;
-
-            const mealAltChoices: Record<string, number> = {};
-            if (diet && mealIndex !== -1) {
-              const meal = diet.meals[mealIndex];
-              const option = meal.options[optIndex];
-              if (option) {
-                option.ingredient_lines.forEach((line, lineIndex) => {
-                  if (line.is_alternatives) {
-                    const altKey = `${mealIndex}-${optIndex}-${lineIndex}`;
-                    mealAltChoices[String(lineIndex)] = getEffectiveAlternativeChoice(config, dayIndex, altKey);
-                  }
-                });
-              }
-            }
-
-            return {
-              type: mealType,
-              selected_option_index: optIndex,
-              alternative_choices: mealAltChoices,
-            };
-          }),
-        };
-      }),
-    };
-    return JSON.stringify(serialized);
-  }
 
   async function handleCalculate() {
     if (!appState.pdfPath) {
@@ -70,18 +23,23 @@
     appState.error = null;
 
     try {
-      const selectionJson = serializeSelectionForBackend();
+      const selectionJson = JSON.stringify(buildBackendSelection(
+        appState.weekConfig,
+        appState.parsedData?.diets ?? [],
+        appState.pdfPath,
+      ));
       const jsonStr = await invoke<string>('calculate_totals', {
         pdfPath: appState.pdfPath,
         selectionJson,
       });
-      const result = JSON.parse(jsonStr) as { status: string; totals: Array<{ ingredient: string; quantity: number; unit: string }> };
+      const result = JSON.parse(jsonStr) as { status: string; totals: Array<{ ingredient: string; quantity: number | null; unit: string | null; count?: number }> };
       appState.shoppingList = result.totals.map(t => ({
         name: t.ingredient,
         quantity: t.quantity,
         unit: t.unit,
-        count: 1,
+        count: t.count ?? 1,
       }));
+      appState.checkedShoppingItems = {};
     } catch (e) {
       console.error('Error calculating totals:', e);
       appState.error = 'Error al calcular la lista: ' + String(e);
@@ -98,19 +56,19 @@
 <div class="w-full">
   {#if isTauri}
     <button
-      class="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow"
+      class="w-full px-6 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-sm"
       onclick={handleCalculate}
       disabled={isDisabled}
     >
       {#if appState.loading}
         Calculando...
       {:else}
-        Calcular Lista de Compra
+        Crear lista de compra
       {/if}
     </button>
   {:else}
     <button
-      class="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow"
+      class="w-full px-6 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-sm"
       onclick={handleMockCalculate}
       disabled={isDisabled}
     >

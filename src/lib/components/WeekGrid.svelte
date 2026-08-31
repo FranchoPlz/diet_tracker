@@ -1,78 +1,60 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
-  import { resizeWeeks, hasException } from '$lib/utils';
-  
-  let { 
-    onDayClick, 
-    selectedDayIndex
-  } = $props<{ 
+  import type { DaySelection } from '$lib/types';
+  import { hasException, setDayDiet } from '$lib/utils';
+
+  let { onDayClick, selectedDayIndex } = $props<{
     onDayClick: (dayIndex: number) => void;
     selectedDayIndex: number | null;
   }>();
 
-  function setWeeks(w: number) {
-    if (w >= 1 && w <= 4) {
-      resizeWeeks(appState.weekConfig, w);
-    }
-  }
+  const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
-  function handleDayClick(dayIndex: number) {
-    onDayClick(dayIndex);
+  function changeDiet(dayIndex: number, diet: DaySelection['diet']) {
+    setDayDiet(appState.weekConfig, dayIndex, diet);
+    appState.shoppingList = [];
+    appState.checkedShoppingItems = {};
   }
 </script>
 
-<div class="flex flex-col gap-6 w-full max-w-4xl mx-auto p-4">
-  <div class="flex items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-    <h2 class="text-xl font-black text-gray-800 dark:text-white tracking-tight">Planificador</h2>
-    <div class="flex items-center gap-3">
-      <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Semanas:</span>
-      <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-        {#each [1, 2, 3, 4] as w}
-          <button 
-            class="w-10 h-8 rounded-md text-sm font-bold {appState.weekConfig.weeks === w ? 'bg-white dark:bg-gray-600 shadow text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
-            onclick={() => setWeeks(w)}
-          >
-            {w}
-          </button>
-        {/each}
-      </div>
+<section class="rounded-3xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900 sm:p-6">
+  <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">Paso 1</p>
+      <h2 class="mt-1 text-2xl font-black tracking-tight text-stone-900 dark:text-white">Organiza tu semana</h2>
+      <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">Asigna una dieta a cada día y abre el día para elegir sus platos.</p>
     </div>
+    <div class="rounded-full bg-stone-100 px-3 py-1.5 text-xs font-bold text-stone-600 dark:bg-stone-800 dark:text-stone-300">7 días</div>
   </div>
 
-  <div class="flex flex-col gap-8">
-    {#each Array.from({ length: appState.weekConfig.weeks }) as _, weekIndex}
-      <div class="flex flex-col gap-3">
-        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">
-          Semana {weekIndex + 1}
-        </h3>
-        
-        <div class="grid grid-cols-7 gap-2 md:gap-4">
-          {#each Array.from({ length: 7 }) as _, dayOfWeek}
-            {@const dayIndex = weekIndex * 7 + dayOfWeek}
-            {@const day = appState.weekConfig.days[dayIndex]}
-            {@const isD1 = day.diet === 'DIETA 1'}
-            {@const isSelected = selectedDayIndex === dayIndex}
-            {@const isException = hasException(appState.weekConfig, dayIndex)}
-            
-            <button 
-              class="relative flex flex-col items-center justify-center p-3 h-24 rounded-xl border text-left
-                {isD1 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800/30' : 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800/30'}
-                {isSelected ? 'ring-2 ring-blue-500 shadow-md scale-[1.02]' : 'hover:shadow-sm hover:scale-[1.01]'}"
-              onclick={() => handleDayClick(dayIndex)}
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-7">
+    {#each appState.weekConfig.days.slice(0, 7) as day, dayIndex}
+      {@const isSelected = selectedDayIndex === dayIndex}
+      {@const isException = hasException(appState.weekConfig, dayIndex)}
+      <article class="rounded-2xl border p-3 transition {isSelected ? 'border-orange-500 bg-orange-50 shadow-md dark:bg-orange-950/30' : 'border-stone-200 bg-stone-50 hover:border-stone-300 dark:border-stone-700 dark:bg-stone-800/60'}">
+        <button class="mb-3 flex w-full items-center justify-between text-left" onclick={() => onDayClick(dayIndex)}>
+          <span>
+            <span class="block text-xs font-bold uppercase tracking-wider text-stone-400">{dayNames[dayIndex]}</span>
+            <span class="text-base font-black text-stone-900 dark:text-white">Día {day.day}</span>
+          </span>
+          <span class="grid size-7 place-items-center rounded-full {isSelected ? 'bg-orange-600 text-white' : 'bg-white text-stone-400 dark:bg-stone-700'}" aria-hidden="true">→</span>
+        </button>
+
+        <div class="grid grid-cols-2 gap-1 rounded-xl bg-white p-1 dark:bg-stone-900">
+          {#each ['DIETA 1', 'DIETA 2'] as diet}
+            <button
+              class="rounded-lg px-2 py-2 text-xs font-black transition {day.diet === diet ? (diet === 'DIETA 1' ? 'bg-amber-200 text-amber-950' : 'bg-teal-200 text-teal-950') : 'text-stone-400 hover:text-stone-700 dark:hover:text-stone-200'}"
+              onclick={() => changeDiet(dayIndex, diet as DaySelection['diet'])}
+              aria-pressed={day.diet === diet}
             >
-              {#if isException}
-                <span class="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-amber-400 dark:bg-amber-500" title="Tiene excepciones"></span>
-              {/if}
-              <span class="text-sm font-bold text-gray-500 dark:text-gray-400">Día {day.day}</span>
-              <span class="mt-1 text-xs font-black px-2 py-1 rounded-md 
-                {isD1 ? 'bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-300' : 'bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-300'}"
-              >
-                {isD1 ? 'D1' : 'D2'}
-              </span>
+              {diet === 'DIETA 1' ? 'Dieta 1' : 'Dieta 2'}
             </button>
           {/each}
         </div>
-      </div>
+        {#if isException}
+          <p class="mt-2 text-center text-[11px] font-bold text-amber-700 dark:text-amber-400">Selección personalizada</p>
+        {/if}
+      </article>
     {/each}
   </div>
-</div>
+</section>

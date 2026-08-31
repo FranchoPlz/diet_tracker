@@ -87,6 +87,22 @@ export interface ShoppingItem {
   count: number;
 }
 
+export interface BackendMealSelection {
+  type: MealType;
+  selected_option_index: number;
+  alternative_choices: Record<string, number>;
+}
+
+export interface BackendSelection {
+  weeks: number;
+  pdf_path: string | null;
+  days: Array<{
+    day: number;
+    diet: DaySelection['diet'];
+    meals: BackendMealSelection[];
+  }>;
+}
+
 export interface ShoppingList {
   status: string;
   items: ShoppingItem[];

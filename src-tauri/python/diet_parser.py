@@ -4,6 +4,8 @@ import argparse
 import json
 import re
 import sys
+import zipfile
+from xml.sax.saxutils import escape
 
 
 MEAL_TYPES = ["ALMUERZO", "COMIDA", "MERIENDA", "CENA"]
@@ -158,15 +160,16 @@ def _fix_typos(text: str) -> str:
 
 # ─── Ingredient parsing ───────────────────────────────────────────────────────
 
-# Matches: 100g de X / 100 g de X / 100ml de X / 100 ml de X
+# Matches: 100g de X / 1,5 kg de X / 0.5 l de X
+_NUMBER_PATTERN = r"(?:\d+(?:[.,]\d+)?|[¼½¾]|\d+\s*/\s*\d+)"
 _QTY_UNIT_DE_RE = re.compile(
-    r"^(\d+(?:\.\d+)?)\s*(g|ml)\s+de\s+(.+)$",
+    rf"^({_NUMBER_PATTERN})\s*(kg|g|ml|l|litros?|gramos?|kilos?)\s+de\s+(.+)$",
     re.IGNORECASE,
 )
 
 # Matches: 150g Garbanzos (quantity+unit directly attached to name, no "de")
 _QTY_UNIT_NOSPACE_RE = re.compile(
-    r"^(\d+(?:\.\d+)?)\s*(g|ml)\s+([A-ZÁÉÍÓÚÑ].+)$",
+    rf"^({_NUMBER_PATTERN})\s*(kg|g|ml|l|litros?|gramos?|kilos?)\s+([A-ZÁÉÍÓÚÑ].+)$",
     re.UNICODE,
 )
 
@@ -178,13 +181,13 @@ _QTY_MISSING_UNIT_RE = re.compile(
 
 # Matches: N Cucharada/Loncha/Onza/Puñado/Vasito/Bola/Lata de X
 _QTY_NAMED_UNIT_DE_RE = re.compile(
-    r"^(\d+(?:\.\d+)?)\s+(Cucharadas?|Lonchas?|Onzas?|Puñados?|Vasitos?|Bolas?|Latas?)\s+de\s+(.+)$",
+    rf"^({_NUMBER_PATTERN})\s+(Cucharadas?|Lonchas?|Onzas?|Puñados?|Vasitos?|Bolas?|Latas?|Paquetes?|Botes?|Tarros?|Tarrinas?|Botellas?)\s+de\s+(.+)$",
     re.IGNORECASE,
 )
 
 # Matches: N Cucharada/Loncha/Onza/Puñado/Vasito/Bola/Lata X (no "de")
 _QTY_NAMED_UNIT_RE = re.compile(
-    r"^(\d+(?:\.\d+)?)\s+(Cucharadas?|Lonchas?|Lonchad?|Onzas?|Puñados?|Vasitos?|Bolas?|Latas?)\s+(.+)$",
+    rf"^({_NUMBER_PATTERN})\s+(Cucharadas?|Lonchas?|Lonchad?|Onzas?|Puñados?|Vasitos?|Bolas?|Latas?|Paquetes?|Botes?|Tarros?|Tarrinas?|Botellas?)\s+(.+)$",
     re.IGNORECASE,
 )
 
@@ -196,9 +199,47 @@ _QTY_COUNT_RE = re.compile(
 
 # Matches: ½ X
 _HALF_RE = re.compile(
-    r"^½\s+(.+)$",
+    r"^([¼½¾]|\d+\s*/\s*\d+)\s+(.+)$",
     re.IGNORECASE,
 )
+
+_UNICODE_FRACTIONS = {"¼": 0.25, "½": 0.5, "¾": 0.75}
+_NAMED_UNITS = {
+    "cucharada": "cucharada",
+    "loncha": "loncha",
+    "lonchad": "loncha",
+    "onza": "onza",
+    "puñado": "puñado",
+    "vasito": "vasito",
+    "bola": "bola",
+    "lata": "lata",
+    "paquete": "paquete",
+    "bote": "bote",
+    "tarro": "tarro",
+    "tarrina": "tarrina",
+    "botella": "botella",
+}
+
+
+def _parse_quantity(value: str) -> float:
+    value = value.strip()
+    if value in _UNICODE_FRACTIONS:
+        return _UNICODE_FRACTIONS[value]
+    if "/" in value:
+        numerator, denominator = value.split("/", 1)
+        return float(numerator.strip()) / float(denominator.strip())
+    return float(value.replace(",", "."))
+
+
+def _normalize_measure(quantity: float, unit: str) -> tuple:
+    unit = unit.lower()
+    if unit in ("kg", "kilo", "kilos"):
+        return quantity * 1000, "g"
+    if unit in ("l", "litro", "litros"):
+        return quantity * 1000, "ml"
+    if unit in ("gramo", "gramos"):
+        return quantity, "g"
+    return quantity, unit
 
 
 def _extract_note_from_name(name: str) -> tuple:
@@ -262,10 +303,10 @@ def _parse_single_item(raw: str) -> dict:
     # Try: N g/ml de X
     m = _QTY_UNIT_DE_RE.match(raw)
     if m:
-        qty = float(m.group(1))
+        qty = _parse_quantity(m.group(1))
         if qty == int(qty):
             qty = int(qty)
-        unit = m.group(2).lower()
+        qty, unit = _normalize_measure(qty, m.group(2))
         name = m.group(3).strip().rstrip(".,;")
         name, paren_note = _extract_note_from_name(name)
         if paren_note and not note:
@@ -278,10 +319,10 @@ def _parse_single_item(raw: str) -> dict:
     # Try: 150g Garbanzos (no "de", uppercase start = ingredient name)
     m = _QTY_UNIT_NOSPACE_RE.match(raw)
     if m:
-        qty = float(m.group(1))
+        qty = _parse_quantity(m.group(1))
         if qty == int(qty):
             qty = int(qty)
-        unit = m.group(2).lower()
+        qty, unit = _normalize_measure(qty, m.group(2))
         name = m.group(3).strip().rstrip(".,;")
         name, paren_note = _extract_note_from_name(name)
         if paren_note and not note:
@@ -294,7 +335,7 @@ def _parse_single_item(raw: str) -> dict:
     # Try: N de X (missing unit — assume g)
     m = _QTY_MISSING_UNIT_RE.match(raw)
     if m:
-        qty = float(m.group(1))
+        qty = _parse_quantity(m.group(1))
         if qty == int(qty):
             qty = int(qty)
         name = m.group(2).strip().rstrip(".,;")
@@ -309,34 +350,16 @@ def _parse_single_item(raw: str) -> dict:
     # Try: N NamedUnit de X
     m = _QTY_NAMED_UNIT_DE_RE.match(raw)
     if m:
-        qty = float(m.group(1))
+        qty = _parse_quantity(m.group(1))
         if qty == int(qty):
             qty = int(qty)
         unit_word = m.group(2)
-        # Determine unit: "Loncha" stays as unidad (for display "Loncha de X")
-        # but name includes the unit word prefix
         unit_lower = unit_word.lower().rstrip("s")
-        if unit_lower in ("loncha", "lonchad"):
-            # "1 Loncha de Queso" → name="Loncha de Queso havarti light", unit=unidad
-            name = f"{unit_word} de {m.group(3).strip().rstrip('.,;')}"
-        elif unit_lower in ("puñado",):
-            name = f"{unit_word} de {m.group(3).strip().rstrip('.,;')}"
-        elif unit_lower in ("vasito",):
-            name = f"{unit_word} de {m.group(3).strip().rstrip('.,;')}"
-        elif unit_lower in ("bola",):
-            name = f"{unit_word} de {m.group(3).strip().rstrip('.,;')}"
-        elif unit_lower in ("lata",):
-            name = f"{unit_lower} de {m.group(3).strip().rstrip('.,;')}"
-        elif unit_lower in ("onza",):
-            name = f"{unit_word} de {m.group(3).strip().rstrip('.,;')}"
-        elif unit_lower in ("cucharada",):
-            name = f"{unit_word} de {m.group(3).strip().rstrip('.,;')}"
-        else:
-            name = m.group(3).strip().rstrip(".,;")
+        name = m.group(3).strip().rstrip(".,;")
         name, paren_note = _extract_note_from_name(name)
         if paren_note and not note:
             note = paren_note
-        item = {"name": name, "quantity": qty, "unit": "unidad"}
+        item = {"name": name, "quantity": qty, "unit": _NAMED_UNITS.get(unit_lower, "unidad")}
         if note:
             item["note"] = note
         return item
@@ -344,22 +367,17 @@ def _parse_single_item(raw: str) -> dict:
     # Try: N NamedUnit X (no "de")
     m = _QTY_NAMED_UNIT_RE.match(raw)
     if m:
-        qty = float(m.group(1))
+        qty = _parse_quantity(m.group(1))
         if qty == int(qty):
             qty = int(qty)
         unit_word = m.group(2)
         rest = m.group(3).strip().rstrip(".,;")
         unit_lower = unit_word.lower().rstrip("s")
-        if unit_lower in ("loncha", "lonchad"):
-            name = f"{unit_word} {rest}"
-        elif unit_lower in ("puñado",):
-            name = f"{unit_word} {rest}"
-        else:
-            name = rest
+        name = rest
         name, paren_note = _extract_note_from_name(name)
         if paren_note and not note:
             note = paren_note
-        item = {"name": name, "quantity": qty, "unit": "unidad"}
+        item = {"name": name, "quantity": qty, "unit": _NAMED_UNITS.get(unit_lower, "unidad")}
         if note:
             item["note"] = note
         return item
@@ -367,12 +385,13 @@ def _parse_single_item(raw: str) -> dict:
     # Try: ½ X
     m = _HALF_RE.match(raw)
     if m:
-        rest = m.group(1).strip().rstrip(".,;")
+        qty = _parse_quantity(m.group(1))
+        rest = m.group(2).strip().rstrip(".,;")
         # Check for "Bola de X"
         rest, paren_note = _extract_note_from_name(rest)
         if paren_note and not note:
             note = paren_note
-        item = {"name": rest, "quantity": 0.5, "unit": "unidad"}
+        item = {"name": rest, "quantity": qty, "unit": "unidad"}
         if note:
             item["note"] = note
         return item
@@ -464,7 +483,7 @@ def _join_wrapped_lines(raw_text: str) -> list:
             if current is not None:
                 logical_lines.append(current)
             current = stripped
-        elif re.match(r"^(?:\d+\s*(?:g|ml)\b|\d+\s*[A-ZÁÉÍÓÚÑ]|½\s+)", stripped):
+        elif re.match(r"^(?:\d+(?:[.,]\d+)?\s*(?:kg|g|ml|l)\b|\d+\s*[A-ZÁÉÍÓÚÑ]|[¼½¾]\s+|\d+\s*/\s*\d+\s+)", stripped):
             if current is not None and current.rstrip().endswith("/"):
                 current = current + " " + stripped
                 continue
@@ -717,9 +736,10 @@ def cmd_calculate(args):
                             _add_item(aggregation, item)
 
         totals = []
-        for (name_key, unit), qty in sorted(aggregation.items(), key=lambda x: x[0][0]):
-            qty_out = int(qty) if qty == int(qty) else qty
-            totals.append({"ingredient": name_key, "quantity": qty_out, "unit": unit})
+        for (name_key, unit), entry in sorted(aggregation.items(), key=lambda x: x[0][0]):
+            qty = entry["quantity"]
+            qty_out = int(qty) if qty is not None and qty == int(qty) else qty
+            totals.append({"ingredient": name_key, "quantity": qty_out, "unit": unit, "count": entry["count"]})
 
         print(json.dumps({"status": "ok", "totals": totals}, ensure_ascii=False))
 
@@ -732,11 +752,14 @@ def _add_item(aggregation, item):
     qty = item.get("quantity")
     unit = item.get("unit")
     name = item.get("name", "")
-    if qty is None:
-        return
     name_key = name.lower().strip()
     key = (name_key, unit)
-    aggregation[key] = aggregation.get(key, 0) + qty
+    entry = aggregation.setdefault(key, {"quantity": 0 if qty is not None else None, "count": 0})
+    entry["count"] += 1
+    if qty is not None:
+        if entry["quantity"] is None:
+            entry["quantity"] = 0
+        entry["quantity"] += qty
 
 
 def cmd_export(args):
@@ -767,6 +790,104 @@ def cmd_export(args):
             json.dumps({"status": "ok", "path": output_path, "item_count": len(totals)})
         )
 
+    except Exception as exc:
+        print(json.dumps({"status": "error", "message": str(exc)}))
+        sys.exit(1)
+
+
+def _xlsx_cell(reference: str, value) -> str:
+    if isinstance(value, (int, float)):
+        return f'<c r="{reference}"><v>{value}</v></c>'
+    text = "" if value is None else str(value)
+    return f'<c r="{reference}" t="inlineStr"><is><t>{escape(text)}</t></is></c>'
+
+
+def _xlsx_column(index: int) -> str:
+    label = ""
+    while index:
+        index, remainder = divmod(index - 1, 26)
+        label = chr(65 + remainder) + label
+    return label
+
+
+def _xlsx_sheet(rows: list) -> str:
+    xml_rows = []
+    for row_index, row in enumerate(rows, 1):
+        cells = "".join(
+            _xlsx_cell(f"{_xlsx_column(column_index)}{row_index}", value)
+            for column_index, value in enumerate(row, 1)
+        )
+        xml_rows.append(f'<row r="{row_index}">{cells}</row>')
+    return (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+        f'<sheetData>{"".join(xml_rows)}</sheetData></worksheet>'
+    )
+
+
+def _write_xlsx(plan: dict, output_path: str):
+    plan_rows = [["Día", "Dieta", "Comida", "Opción", "Ingredientes"]]
+    for day in plan.get("days", []):
+        for meal in day.get("meals", []):
+            plan_rows.append([
+                day.get("day"),
+                day.get("diet"),
+                meal.get("type"),
+                meal.get("option"),
+                " · ".join(meal.get("ingredients", [])),
+            ])
+
+    shopping_rows = [["Comprado", "Ingrediente", "Cantidad", "Unidad", "Apariciones"]]
+    for item in plan.get("shopping_list", []):
+        shopping_rows.append([
+            "",
+            item.get("name"),
+            item.get("quantity"),
+            item.get("unit"),
+            item.get("count", 1),
+        ])
+
+    content_types = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+</Types>'''
+    root_rels = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>'''
+    workbook = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheets><sheet name="Plan semanal" sheetId="1" r:id="rId1"/><sheet name="Lista de compra" sheetId="2" r:id="rId2"/></sheets>
+</workbook>'''
+    workbook_rels = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
+</Relationships>'''
+
+    with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as workbook_file:
+        workbook_file.writestr("[Content_Types].xml", content_types)
+        workbook_file.writestr("_rels/.rels", root_rels)
+        workbook_file.writestr("xl/workbook.xml", workbook)
+        workbook_file.writestr("xl/_rels/workbook.xml.rels", workbook_rels)
+        workbook_file.writestr("xl/worksheets/sheet1.xml", _xlsx_sheet(plan_rows))
+        workbook_file.writestr("xl/worksheets/sheet2.xml", _xlsx_sheet(shopping_rows))
+
+
+def cmd_export_plan(args):
+    try:
+        with open(args.plan_json_path, "r", encoding="utf-8") as source:
+            plan = json.load(source)
+        if args.format == "json":
+            with open(args.output_path, "w", encoding="utf-8") as output:
+                json.dump(plan, output, ensure_ascii=False, indent=2)
+        else:
+            _write_xlsx(plan, args.output_path)
+        print(json.dumps({"status": "ok", "path": args.output_path}))
     except Exception as exc:
         print(json.dumps({"status": "error", "message": str(exc)}))
         sys.exit(1)
@@ -804,6 +925,12 @@ def main():
     export_parser.add_argument("totals_json_path", help="Path to totals JSON file")
     export_parser.add_argument("output_csv_path", help="Path for output CSV file")
     export_parser.set_defaults(func=cmd_export)
+
+    plan_export_parser = subparsers.add_parser("export-plan", help="Export a weekly plan")
+    plan_export_parser.add_argument("plan_json_path")
+    plan_export_parser.add_argument("output_path")
+    plan_export_parser.add_argument("format", choices=["json", "xlsx"])
+    plan_export_parser.set_defaults(func=cmd_export_plan)
 
     args = parser.parse_args()
     args.func(args)

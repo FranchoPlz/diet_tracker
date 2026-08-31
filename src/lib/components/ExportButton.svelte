@@ -1,40 +1,40 @@
 <script lang="ts">
   import { invoke } from '@tauri-apps/api/core';
   import { appState } from '$lib/state.svelte';
+  import { buildExportPayload } from '$lib/utils';
 
   const isTauri = $derived(typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window);
+  const isDisabled = $derived(!appState.parsedData || appState.shoppingList.length === 0 || appState.loading);
 
-  const isDisabled = $derived(
-    appState.shoppingList.length === 0 ||
-    appState.loading
-  );
-
-  async function handleExport() {
+  async function handleExport(format: 'json' | 'xlsx') {
+    if (!appState.parsedData) return;
     appState.loading = true;
     appState.error = null;
 
     try {
       const { save } = await import('@tauri-apps/plugin-dialog');
-      const outputPath = await save({ filters: [{ name: 'CSV', extensions: ['csv'] }] });
-
-      if (!outputPath) {
-        // User cancelled the dialog
-        return;
-      }
-
-      const totalsJson = JSON.stringify({
-        totals: appState.shoppingList.map(item => ({
-          ingredient: item.name,
-          quantity: item.quantity,
-          unit: item.unit,
-        })),
+      const label = format === 'json' ? 'JSON' : 'Excel';
+      const outputPath = await save({
+        defaultPath: `plan-semanal.${format}`,
+        filters: [{ name: label, extensions: [format] }],
       });
+      if (!outputPath) return;
 
-      await invoke<string>('export_csv', { totalsJson, outputPath });
-      alert('CSV guardado en ' + outputPath);
-    } catch (e) {
-      console.error('Error exporting CSV:', e);
-      appState.error = 'Error al exportar CSV: ' + String(e);
+      const payload = buildExportPayload(
+        appState.parsedData,
+        appState.weekConfig,
+        appState.pdfPath,
+        appState.shoppingList,
+      );
+      await invoke<string>('export_plan', {
+        planJson: JSON.stringify(payload),
+        outputPath,
+        format,
+      });
+      alert(`${label} guardado en ${outputPath}`);
+    } catch (error) {
+      console.error('Error exporting plan:', error);
+      appState.error = 'Error al exportar: ' + String(error);
     } finally {
       appState.loading = false;
     }
@@ -42,23 +42,12 @@
 </script>
 
 {#if isTauri}
-  <div class="w-full">
-    <button
-      class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow"
-      onclick={handleExport}
-      disabled={isDisabled}
-    >
-      {#if appState.loading}
-        Exportando...
-      {:else}
-        Exportar CSV
-      {/if}
+  <div class="grid grid-cols-2 gap-2">
+    <button class="rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-bold text-stone-700 hover:border-orange-500 disabled:opacity-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" onclick={() => handleExport('json')} disabled={isDisabled}>
+      Exportar JSON
     </button>
-
-    {#if appState.error}
-      <div class="mt-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded dark:bg-red-900/30 dark:border-red-800 dark:text-red-400 text-sm">
-        {appState.error}
-      </div>
-    {/if}
+    <button class="rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-bold text-stone-700 hover:border-orange-500 disabled:opacity-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" onclick={() => handleExport('xlsx')} disabled={isDisabled}>
+      Exportar Excel
+    </button>
   </div>
 {/if}

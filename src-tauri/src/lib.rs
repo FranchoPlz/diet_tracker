@@ -5,7 +5,8 @@ async fn parse_pdf(app: tauri::AppHandle, path: String) -> Result<String, String
     if !std::path::Path::new(&path).exists() {
         return Err(format!("Archivo no encontrado: {}", path));
     }
-    let output = app.shell()
+    let output = app
+        .shell()
         .sidecar("diet_parser")
         .map_err(|e| format!("Error iniciando sidecar: {}", e))?
         .args(["parse", &path])
@@ -30,7 +31,8 @@ async fn calculate_totals(
     std::fs::write(&temp_path, &selection_json).map_err(|e| e.to_string())?;
     let temp_str = temp_path.to_string_lossy().to_string();
 
-    let output = app.shell()
+    let output = app
+        .shell()
         .sidecar("diet_parser")
         .map_err(|e| e.to_string())?
         .args(["calculate", &pdf_path, &temp_str])
@@ -54,10 +56,37 @@ async fn export_csv(
     std::fs::write(&temp_path, &totals_json).map_err(|e| e.to_string())?;
     let temp_str = temp_path.to_string_lossy().to_string();
 
-    let output = app.shell()
+    let output = app
+        .shell()
         .sidecar("diet_parser")
         .map_err(|e| e.to_string())?
         .args(["export", &temp_str, &output_path])
+        .output()
+        .await
+        .map_err(|e| e.to_string())?;
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).to_string())
+    }
+}
+
+#[tauri::command]
+async fn export_plan(
+    app: tauri::AppHandle,
+    plan_json: String,
+    output_path: String,
+    format: String,
+) -> Result<String, String> {
+    let temp_path = std::env::temp_dir().join("diet_weekly_plan.json");
+    std::fs::write(&temp_path, &plan_json).map_err(|e| e.to_string())?;
+    let temp_str = temp_path.to_string_lossy().to_string();
+
+    let output = app
+        .shell()
+        .sidecar("diet_parser")
+        .map_err(|e| e.to_string())?
+        .args(["export-plan", &temp_str, &output_path, &format])
         .output()
         .await
         .map_err(|e| e.to_string())?;
@@ -76,7 +105,12 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .invoke_handler(tauri::generate_handler![parse_pdf, calculate_totals, export_csv])
+        .invoke_handler(tauri::generate_handler![
+            parse_pdf,
+            calculate_totals,
+            export_csv,
+            export_plan
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

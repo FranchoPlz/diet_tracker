@@ -28,22 +28,27 @@
     const qty = formatQuantity(item.quantity, item.unit);
     return qty === 'variable' ? item.name : `${item.name} ${qty}`;
   }
+
+  function invalidateShoppingList() {
+    appState.shoppingList = [];
+    appState.checkedShoppingItems = {};
+  }
 </script>
 
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-4">
   {#each dietData.meals as meal, mealIndex}
     {@const selectedOptionIndex = getEffectiveMealOptionIndex(appState.weekConfig, dayIndex, meal.type)}
     {@const option = meal.options[selectedOptionIndex]}
 
-    <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+    <div class="bg-white dark:bg-stone-900 rounded-2xl p-4 border border-stone-200 dark:border-stone-700">
       <div class="flex items-center justify-between mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
-        <h4 class="text-lg font-black tracking-tight text-gray-800 dark:text-white">{meal.type}</h4>
+        <h4 class="text-sm font-black tracking-[0.12em] text-stone-800 dark:text-white">{meal.type}</h4>
       </div>
 
       {#if meal.options.length > 1}
-        <div class="flex flex-wrap gap-3 mb-5 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg">
+        <div class="grid grid-cols-1 gap-2 mb-5 bg-stone-50 dark:bg-stone-950/50 p-2 rounded-xl sm:grid-cols-2">
           {#each meal.options as opt, optIdx}
-            <label class="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-md {selectedOptionIndex === optIdx ? 'bg-white dark:bg-gray-700 shadow-sm ring-1 ring-gray-200 dark:ring-gray-600' : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50'}">
+            <label class="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg {selectedOptionIndex === optIdx ? 'bg-white dark:bg-stone-700 shadow-sm ring-1 ring-orange-300' : 'hover:bg-stone-200/50 dark:hover:bg-stone-700/50'}">
               <input 
                 type="radio" 
                 name="meal-{dayIndex}-{meal.type}"
@@ -51,9 +56,10 @@
                 checked={selectedOptionIndex === optIdx}
                 onchange={() => {
                   setMealOptionIndex(appState.weekConfig, dayIndex, meal.type, optIdx, asException);
+                  invalidateShoppingList();
                 }}
               />
-              <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Opción {optIdx + 1}</span>
+              <span class="text-sm font-bold text-stone-700 dark:text-stone-300">{opt.name || `Opción ${optIdx + 1}`}</span>
             </label>
           {/each}
         </div>
@@ -81,7 +87,10 @@
                         name="alt-{dayIndex}-{altKey}"
                         class="mt-1 w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
                         checked={selectedAltIndex === itemIndex}
-                        onchange={() => setAlternativeChoice(appState.weekConfig, dayIndex, altKey, itemIndex, asException)}
+                        onchange={() => {
+                          setAlternativeChoice(appState.weekConfig, dayIndex, altKey, itemIndex, asException);
+                          invalidateShoppingList();
+                        }}
                       />
                       <span class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed group-hover:text-gray-900 dark:group-hover:text-white">
                         {formatItem(item)}

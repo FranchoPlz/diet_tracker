@@ -46,8 +46,15 @@
         alert('Formato de configuración inválido.');
         return;
       }
-      
+
+      data.weekConfig.weeks = 1;
+      data.weekConfig.days = data.weekConfig.days.slice(0, 7);
+      data.weekConfig.dayExceptions = Object.fromEntries(
+        Object.entries(data.weekConfig.dayExceptions ?? {}).filter(([dayIndex]) => Number(dayIndex) < 7),
+      );
       appState.weekConfig = data.weekConfig;
+      appState.shoppingList = [];
+      appState.checkedShoppingItems = {};
       alert('Configuración cargada correctamente.');
     } catch (err) {
       console.error(err);

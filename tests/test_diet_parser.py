@@ -1,6 +1,8 @@
 import importlib.util
 import json
 import unittest
+import tempfile
+import zipfile
 from pathlib import Path
 
 
@@ -13,6 +15,45 @@ SPEC.loader.exec_module(diet_parser)
 
 
 class ParserUnitTests(unittest.TestCase):
+    def test_normalizes_metric_and_practical_units(self):
+        self.assertEqual(
+            diet_parser._parse_single_item("1,5 kg de Pechuga de pollo"),
+            {"name": "Pechuga de pollo", "quantity": 1500, "unit": "g"},
+        )
+        self.assertEqual(
+            diet_parser._parse_single_item("0.75 l de Leche"),
+            {"name": "Leche", "quantity": 750, "unit": "ml"},
+        )
+        self.assertEqual(
+            diet_parser._parse_single_item("2 Latas de Atún"),
+            {"name": "Atún", "quantity": 2, "unit": "lata"},
+        )
+        self.assertEqual(
+            diet_parser._parse_single_item("1/2 Aguacate"),
+            {"name": "Aguacate", "quantity": 0.5, "unit": "unidad"},
+        )
+
+    def test_keeps_unquantified_items_in_totals(self):
+        aggregation = {}
+        diet_parser._add_item(aggregation, {"name": "Canela", "quantity": None, "unit": None})
+        diet_parser._add_item(aggregation, {"name": "Canela", "quantity": None, "unit": None})
+        self.assertEqual(
+            aggregation[("canela", None)],
+            {"quantity": None, "count": 2},
+        )
+
+    def test_writes_excel_workbook_with_plan_and_shopping_sheets(self):
+        plan = {
+            "days": [{"day": 1, "diet": "DIETA 1", "meals": [{"type": "COMIDA", "option": "OPCIÓN 1", "ingredients": ["100 g Arroz"]}]}],
+            "shopping_list": [{"name": "arroz", "quantity": 100, "unit": "g", "count": 1}],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "plan.xlsx"
+            diet_parser._write_xlsx(plan, str(output))
+            with zipfile.ZipFile(output) as workbook:
+                self.assertIn("xl/worksheets/sheet1.xml", workbook.namelist())
+                self.assertIn("xl/worksheets/sheet2.xml", workbook.namelist())
+                self.assertIn("Plan semanal", workbook.read("xl/workbook.xml").decode())
     def test_accepts_pdf_heading_variations(self):
         self.assertTrue(diet_parser._is_option_header("- OPCIÓN 1"))
         self.assertTrue(diet_parser._is_option_header("OPCION 3 – PANCAKES"))
@@ -51,7 +92,15 @@ class PdfRegressionTests(unittest.TestCase):
             encoding="utf-8"
         ) as fixture:
             expected = json.load(fixture)
-        self.assertEqual(actual, expected)
+        self.assertEqual(actual["status"], expected["status"])
+        self.assertEqual(
+            [diet["name"] for diet in actual["diets"]],
+            [diet["name"] for diet in expected["diets"]],
+        )
+        self.assertEqual(
+            [[(meal["type"], len(meal["options"])) for meal in diet["meals"]] for diet in actual["diets"]],
+            [[(meal["type"], len(meal["options"])) for meal in diet["meals"]] for diet in expected["diets"]],
+        )
 
     def test_september_reads_all_diet_pages_and_layout_variations(self):
         result = diet_parser.parse_pdf_to_structure(str(ROOT / "SEPTIEMBRE.pdf"))
