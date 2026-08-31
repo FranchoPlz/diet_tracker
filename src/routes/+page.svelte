@@ -39,9 +39,15 @@
         </div>
 
         <aside class="space-y-4 xl:sticky xl:top-4">
-          <div class="rounded-3xl border border-stone-200 bg-stone-950 p-5 text-white shadow-sm dark:border-stone-700">
-            <p class="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-orange-400">Tu semana está lista</p>
-            <h2 class="mb-4 text-xl font-black">Suma lo que necesitas</h2>
+          <div class="overflow-hidden rounded-3xl border border-teal-200 bg-gradient-to-br from-teal-50 to-white p-5 shadow-sm dark:border-teal-900 dark:from-teal-950/60 dark:to-stone-900">
+            <div class="mb-4 flex items-start gap-3">
+              <span class="grid size-10 shrink-0 place-items-center rounded-2xl bg-teal-700 font-black text-white">3</span>
+              <div>
+                <p class="text-xs font-bold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">Lista de compra</p>
+                <h2 class="mt-0.5 text-xl font-black text-stone-900 dark:text-white">Calcula las cantidades</h2>
+                <p class="mt-1 text-sm leading-relaxed text-stone-500 dark:text-stone-400">Sumaremos los ingredientes de los siete días según tus elecciones.</p>
+              </div>
+            </div>
             <CalculateButton />
           </div>
           <ShoppingList />

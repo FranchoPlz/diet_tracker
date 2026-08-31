@@ -1,4 +1,4 @@
-import { cleanup, render, waitFor } from '@testing-library/svelte';
+import { cleanup, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { appState } from '$lib/state.svelte';
@@ -35,21 +35,30 @@ describe('PdfUpload', () => {
 
   it('parses the PDF path received from a native Tauri drop event', async () => {
     let listener: (event: { payload: { type: string; paths: string[] } }) => void = () => {};
+    let finishParsing: (value: string) => void = () => {};
     mocks.onDragDropEvent.mockImplementation(async (callback) => {
       listener = callback;
       return vi.fn();
     });
-    mocks.invoke.mockResolvedValue(JSON.stringify({ status: 'ok', diets: [] }));
+    mocks.invoke.mockImplementation(() => new Promise((resolve) => {
+      finishParsing = resolve;
+    }));
 
     render(PdfUpload);
     await waitFor(() => expect(mocks.onDragDropEvent).toHaveBeenCalledOnce());
     listener({ payload: { type: 'drop', paths: ['/plans/SEPTIEMBRE.pdf'] } });
 
     await waitFor(() => {
+      expect(screen.getByRole('status').textContent).toContain('Leyendo y organizando tu dieta');
+    });
+    finishParsing(JSON.stringify({ status: 'ok', diets: [] }));
+
+    await waitFor(() => {
       expect(mocks.invoke).toHaveBeenCalledWith('parse_pdf', {
         path: '/plans/SEPTIEMBRE.pdf',
       });
       expect(appState.pdfPath).toBe('/plans/SEPTIEMBRE.pdf');
+      expect(screen.getByRole('region', { name: 'PDF cargado' }).textContent).toContain('SEPTIEMBRE.pdf');
     });
   });
 });

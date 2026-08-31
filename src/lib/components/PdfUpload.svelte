@@ -6,6 +6,7 @@
   import { createDefaultWeekConfig } from '$lib/utils';
 
   let isDragging = $state(false);
+  let isParsing = $state(false);
 
   // Detect if we are in Tauri context
   const isTauri = $derived(typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window);
@@ -26,6 +27,7 @@
   }
 
   async function processFile(path: string) {
+    isParsing = true;
     appState.loading = true;
     appState.error = null;
 
@@ -43,6 +45,7 @@
       appState.error = String(e);
       appState.parsedData = null;
     } finally {
+      isParsing = false;
       appState.loading = false;
     }
   }
@@ -108,6 +111,7 @@
   }
 
   async function loadMockData() {
+    isParsing = true;
     appState.loading = true;
     appState.error = null;
     try {
@@ -121,50 +125,77 @@
       console.error('Error loading mock data:', e);
       appState.error = 'Error cargando datos de prueba: ' + String(e);
     } finally {
+      isParsing = false;
       appState.loading = false;
     }
   }
+
+  function fileName(path: string): string {
+    return path.split(/[\\/]/).pop() || path;
+  }
 </script>
 
-<div class="w-full mb-8">
-  <div
-    class="border-2 border-dashed rounded-lg p-8 text-center {isDragging ? 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500'}"
-    ondragenter={handleDragEnter}
-    ondragleave={handleDragLeave}
-    ondragover={handleDragOver}
-    ondrop={handleDrop}
-    role="region"
-    aria-label="Subir PDF"
-  >
-    <div class="flex flex-col items-center justify-center space-y-4">
-      <span class="text-4xl" role="img" aria-label="PDF file">📄</span>
-      <p class="text-lg text-gray-700 dark:text-gray-300">Arrastra tu PDF aquí o selecciona un archivo</p>
-
-      <div class="flex flex-wrap justify-center gap-4">
-        {#if isTauri}
-          <button
-            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded shadow"
-            onclick={handleTauriFileSelect}
-            disabled={appState.loading}
-          >
-            Seleccionar archivo
-          </button>
-        {:else}
-          <button
-            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded shadow"
-            onclick={loadMockData}
-            disabled={appState.loading}
-          >
-            Cargar datos de prueba
-          </button>
-        {/if}
+<div class="mb-8 w-full">
+  {#if isParsing}
+    <div class="relative overflow-hidden rounded-2xl border border-teal-200 bg-white px-5 py-5 shadow-sm dark:border-teal-900 dark:bg-stone-900" role="status" aria-live="polite">
+      <div class="absolute inset-x-0 bottom-0 h-1 overflow-hidden bg-teal-100 dark:bg-teal-950">
+        <div class="h-full w-1/3 animate-[loading_1.2s_ease-in-out_infinite] rounded-full bg-teal-600"></div>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="grid size-11 shrink-0 place-items-center rounded-full bg-teal-100 dark:bg-teal-950">
+          <span class="size-5 animate-spin rounded-full border-2 border-teal-700 border-t-transparent"></span>
+        </span>
+        <div>
+          <p class="font-black text-stone-900 dark:text-white">Leyendo y organizando tu dieta</p>
+          <p class="mt-0.5 text-sm text-stone-500 dark:text-stone-400">Estamos reconociendo comidas, opciones y cantidades del PDF.</p>
+        </div>
       </div>
     </div>
-  </div>
-
-  {#if appState.loading}
-    <div class="mt-4 text-center text-blue-600 dark:text-blue-400">
-      Cargando...
+  {:else if appState.parsedData && appState.pdfPath}
+    <div
+      class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white/70 px-4 py-3 text-sm shadow-sm dark:border-stone-800 dark:bg-stone-900/70"
+      ondragenter={handleDragEnter}
+      ondragleave={handleDragLeave}
+      ondragover={handleDragOver}
+      ondrop={handleDrop}
+      role="region"
+      aria-label="PDF cargado"
+    >
+      <div class="flex min-w-0 items-center gap-3">
+        <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">✓</span>
+        <span class="min-w-0">
+          <span class="block text-xs font-bold uppercase tracking-wider text-stone-400">PDF cargado</span>
+          <span class="block truncate font-bold text-stone-700 dark:text-stone-200">{fileName(appState.pdfPath)}</span>
+        </span>
+      </div>
+      {#if isTauri}
+        <button class="rounded-lg px-3 py-2 font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={handleTauriFileSelect}>Cambiar PDF</button>
+      {:else}
+        <button class="rounded-lg px-3 py-2 font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={loadMockData}>Recargar datos</button>
+      {/if}
+    </div>
+  {:else}
+    <div
+      class="rounded-3xl border-2 border-dashed p-8 text-center transition {isDragging ? 'border-teal-500 bg-teal-50 dark:bg-teal-950/30' : 'border-stone-300 bg-white/50 hover:border-teal-500 dark:border-stone-700 dark:bg-stone-900/50'}"
+      ondragenter={handleDragEnter}
+      ondragleave={handleDragLeave}
+      ondragover={handleDragOver}
+      ondrop={handleDrop}
+      role="region"
+      aria-label="Subir PDF"
+    >
+      <div class="flex flex-col items-center justify-center space-y-4">
+        <span class="grid size-14 place-items-center rounded-2xl bg-teal-100 text-2xl dark:bg-teal-950" role="img" aria-label="Archivo PDF">PDF</span>
+        <div>
+          <p class="text-lg font-black text-stone-800 dark:text-stone-100">Carga tu plan de dieta</p>
+          <p class="mt-1 text-sm text-stone-500">Arrastra el PDF aquí o selecciónalo desde tu equipo.</p>
+        </div>
+        {#if isTauri}
+          <button class="rounded-xl bg-teal-700 px-5 py-2.5 font-bold text-white shadow-sm hover:bg-teal-800" onclick={handleTauriFileSelect}>Seleccionar PDF</button>
+        {:else}
+          <button class="rounded-xl bg-teal-700 px-5 py-2.5 font-bold text-white shadow-sm hover:bg-teal-800" onclick={loadMockData}>Cargar datos de prueba</button>
+        {/if}
+      </div>
     </div>
   {/if}
 
@@ -174,3 +205,10 @@
     </div>
   {/if}
 </div>
+
+<style>
+  @keyframes loading {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(400%); }
+  }
+</style>

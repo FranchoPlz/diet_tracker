@@ -56,7 +56,7 @@
 <div class="w-full">
   {#if isTauri}
     <button
-      class="w-full px-6 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-sm"
+      class="w-full px-6 py-3 bg-teal-700 hover:bg-teal-800 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-sm"
       onclick={handleCalculate}
       disabled={isDisabled}
     >
@@ -68,7 +68,7 @@
     </button>
   {:else}
     <button
-      class="w-full px-6 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-sm"
+      class="w-full px-6 py-3 bg-teal-700 hover:bg-teal-800 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-sm"
       onclick={handleMockCalculate}
       disabled={isDisabled}
     >
