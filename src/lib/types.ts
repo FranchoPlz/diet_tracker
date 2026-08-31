@@ -81,10 +81,36 @@ export interface DayException {
 }
 
 export interface ShoppingItem {
+  id?: string;
   name: string;
   quantity: number | null;
   unit: string | null;
   count: number;
+  category?: ShoppingCategory;
+  checked?: boolean;
+  custom?: boolean;
+}
+
+export type ShoppingCategory = 'Fruta y verdura' | 'Carne y pescado' | 'Lácteos y huevos' | 'Panadería' | 'Despensa' | 'Congelados' | 'Bebidas' | 'Otros';
+
+export interface SavedShoppingList {
+  id: string;
+  schemaVersion: 1;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  items: Required<Pick<ShoppingItem, 'id' | 'name' | 'quantity' | 'unit' | 'count' | 'category' | 'checked' | 'custom'>>[];
+}
+
+export interface SavedPlan {
+  id: string;
+  schemaVersion: 1;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  parsedData: ParseResult;
+  weekConfig: WeekConfig;
+  shoppingListId?: string;
 }
 
 export interface BackendMealSelection {

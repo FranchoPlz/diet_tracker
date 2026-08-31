@@ -63,4 +63,8 @@
       <div class="flex justify-center pt-2"><ConfigButtons /></div>
     </div>
   {/if}
+
+  {#if !appState.parsedData && appState.activeListId}
+    <div class="mx-auto mt-8 max-w-2xl"><ShoppingList /></div>
+  {/if}
 </main>

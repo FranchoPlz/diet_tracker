@@ -20,19 +20,24 @@
     "@tauri-apps/plugin-fs": "^2.4.5",
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-shell": "^2.3.5",
-    "tailwindcss": "^4.2.2"
+    "fflate": "^0.8.2",
+    "idb": "^8.0.3",
+    "pdfjs-dist": "^5.4.149",
+    "tailwindcss": "^4.2.2",
+    "uqr": "^0.1.2"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.6",
-    "@testing-library/svelte": "^5.2.8",
     "@sveltejs/kit": "^2.9.0",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tauri-apps/cli": "^2",
+    "@testing-library/svelte": "^5.2.8",
+    "fake-indexeddb": "^6.2.2",
+    "jsdom": "^26.1.0",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "typescript": "~5.6.2",
     "vite": "^6.0.3",
-    "vitest": "^3.2.4",
-    "jsdom": "^26.1.0"
+    "vitest": "^3.2.4"
   }
 }
