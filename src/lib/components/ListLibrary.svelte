@@ -1,22 +1,20 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { appState } from '$lib/state.svelte';
-  import { applyList, initializeLists, newStandaloneList } from '$lib/list-controller';
-  import { deleteShoppingList } from '$lib/storage';
+  import { applyList, initializeLists, newStandaloneList, removeShoppingList } from '$lib/list-controller';
 
   let open = $state(false);
   onMount(() => { void initializeLists(); });
 
   async function remove(id: string) {
-    await deleteShoppingList(id);
-    await initializeLists();
+    await removeShoppingList(id);
   }
 </script>
 
 <div class="relative">
   <button class="rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm font-bold text-stone-600 shadow-sm dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" onclick={() => open = !open}>Mis listas</button>
   {#if open}
-    <div class="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-stone-200 bg-white p-3 shadow-xl dark:border-stone-700 dark:bg-stone-900">
+    <div class="fixed inset-x-4 top-16 z-50 rounded-2xl border border-stone-200 bg-white p-3 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-88">
       <button class="mb-2 w-full rounded-xl bg-teal-700 px-3 py-2.5 text-sm font-bold text-white" onclick={() => { void newStandaloneList(); open = false; }}>+ Nueva lista</button>
       <div class="max-h-72 space-y-1 overflow-y-auto">
         {#each appState.savedLists as list}

@@ -1,6 +1,6 @@
 import { appState } from './state.svelte';
 import { createShoppingList, normalizeShoppingItem } from './shopping';
-import { listShoppingLists, saveShoppingList } from './storage';
+import { deleteShoppingList, listShoppingLists, saveShoppingList } from './storage';
 import type { SavedShoppingList, ShoppingItem } from './types';
 
 export async function initializeLists(): Promise<void> {
@@ -34,4 +34,15 @@ export async function newStandaloneList(): Promise<void> {
   await saveShoppingList(list);
   appState.savedLists = await listShoppingLists();
   applyList(list);
+}
+
+export async function removeShoppingList(id: string): Promise<void> {
+  await deleteShoppingList(id);
+  if (appState.activeListId === id) {
+    appState.activeListId = null;
+    appState.activeListName = 'Lista de la semana';
+    appState.shoppingList = [];
+    appState.checkedShoppingItems = {};
+  }
+  appState.savedLists = await listShoppingLists();
 }

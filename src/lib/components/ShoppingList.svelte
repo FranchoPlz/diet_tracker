@@ -1,6 +1,6 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
-  import { persistCurrentList } from '$lib/list-controller';
+  import { persistCurrentList, removeShoppingList } from '$lib/list-controller';
   import { SHOPPING_CATEGORIES, normalizeShoppingItem } from '$lib/shopping';
   import { formatQuantity } from '$lib/utils';
   import type { ShoppingCategory } from '$lib/types';
@@ -35,6 +35,11 @@
 
   function removeItem(id: string) {
     appState.shoppingList = appState.shoppingList.filter(item => normalizeShoppingItem(item).id !== id);
+  }
+
+  async function removeCurrentList() {
+    if (!appState.activeListId || !confirm(`¿Eliminar "${appState.activeListName}"? Esta acción no se puede deshacer.`)) return;
+    await removeShoppingList(appState.activeListId);
   }
 </script>
 
@@ -95,8 +100,11 @@
       {/each}
     </div>
 
-    <div class="border-t border-stone-200 p-4 dark:border-stone-700">
+    <div class="flex flex-col gap-2 border-t border-stone-200 p-4 dark:border-stone-700 sm:flex-row">
       <button class="w-full rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-stone-700 dark:bg-white dark:text-stone-900" onclick={() => void persistCurrentList()}>Guardar en este dispositivo</button>
+      {#if appState.activeListId}
+        <button class="w-full rounded-xl border border-red-200 px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40" onclick={() => void removeCurrentList()}>Eliminar esta lista</button>
+      {/if}
     </div>
   </section>
 {/if}
