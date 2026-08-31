@@ -8,8 +8,8 @@
   let { children } = $props();
 </script>
 
-<div class="min-h-screen bg-[#f7f4ee] dark:bg-stone-950 text-stone-900 dark:text-stone-100" class:compact-view={appState.compactView}>
-  <header class="p-4 flex justify-end gap-2 items-center max-w-[1480px] mx-auto w-full">
+<div class="min-h-screen w-full min-w-0 overflow-x-clip bg-[#f7f4ee] text-stone-900 dark:bg-stone-950 dark:text-stone-100" class:compact-view={appState.compactView}>
+  <header class="mx-auto flex w-full max-w-[1480px] flex-wrap items-center justify-end gap-2 p-4">
     <PlanLibrary />
     <ListLibrary />
     <SettingsMenu />

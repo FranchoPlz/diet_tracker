@@ -21,7 +21,7 @@
     ⚙
   </summary>
 
-  <div class="absolute right-0 top-12 z-50 w-72 rounded-2xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900">
+  <div class="fixed inset-x-4 top-16 z-50 rounded-2xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-72">
     <p class="text-xs font-black uppercase tracking-[0.18em] text-stone-400">Ajustes</p>
     <label class="mt-3 flex cursor-pointer items-start justify-between gap-4 rounded-xl p-2 hover:bg-stone-50 dark:hover:bg-stone-800">
       <span>

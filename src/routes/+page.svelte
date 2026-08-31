@@ -16,7 +16,7 @@
 
 <svelte:head><title>Mi semana · Planificador de dieta</title></svelte:head>
 
-<main class="mx-auto max-w-[1480px] px-4 pb-16 sm:px-6 lg:px-8">
+<main class="mx-auto w-full min-w-0 max-w-[1480px] px-4 pb-16 sm:px-6 lg:px-8">
   <ShareImport />
   <header class="mb-8 max-w-3xl">
     <p class="mb-2 text-xs font-black uppercase tracking-[0.28em] text-orange-600">Plan semanal</p>
@@ -37,8 +37,8 @@
     <div class="mt-8 space-y-6">
       <WeekGrid onDayClick={(index) => selectedDayIndex = index} {selectedDayIndex} />
 
-      <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
-        <div>
+      <div class="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
+        <div class="min-w-0">
           {#if selectedDayIndex !== null}
             {#key selectedDayIndex}
               <DayDetail dayIndex={selectedDayIndex} onClose={() => selectedDayIndex = null} />
@@ -48,7 +48,7 @@
           {/if}
         </div>
 
-        <aside class="space-y-4 xl:sticky xl:top-4">
+        <aside class="min-w-0 space-y-4 xl:sticky xl:top-4">
           <div class="overflow-hidden rounded-3xl border border-teal-200 bg-gradient-to-br from-teal-50 to-white p-5 shadow-sm dark:border-teal-900 dark:from-teal-950/60 dark:to-stone-900">
             <div class="mb-4 flex items-start gap-3">
               <span class="grid size-10 shrink-0 place-items-center rounded-2xl bg-teal-700 font-black text-white">3</span>

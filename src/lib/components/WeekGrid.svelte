@@ -17,7 +17,7 @@
   }
 </script>
 
-<section class="compact-week rounded-3xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900 sm:p-6">
+<section class="compact-week min-w-0 max-w-full overflow-hidden rounded-3xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900 sm:p-6">
   <div class="compact-week-header mb-5 flex flex-wrap items-end justify-between gap-3">
     <div>
       <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">Paso 1</p>
@@ -31,7 +31,7 @@
     {#each appState.weekConfig.days.slice(0, 7) as day, dayIndex}
       {@const isSelected = selectedDayIndex === dayIndex}
       {@const isException = hasException(appState.weekConfig, dayIndex)}
-      <article class="compact-day-card rounded-2xl border p-3 transition {isSelected ? 'border-orange-500 bg-orange-50 shadow-md dark:bg-orange-950/30' : 'border-stone-200 bg-stone-50 hover:border-stone-300 dark:border-stone-700 dark:bg-stone-800/60'}">
+      <article class="compact-day-card min-w-0 overflow-hidden rounded-2xl border p-3 transition {isSelected ? 'border-orange-500 bg-orange-50 shadow-md dark:bg-orange-950/30' : 'border-stone-200 bg-stone-50 hover:border-stone-300 dark:border-stone-700 dark:bg-stone-800/60'}">
         <button class="compact-day-heading mb-3 flex w-full items-center justify-between text-left" onclick={() => onDayClick(dayIndex)}>
           <span>
             <span class="block text-xs font-bold uppercase tracking-wider text-stone-400">{dayNames[dayIndex]}</span>
