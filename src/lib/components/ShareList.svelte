@@ -1,30 +1,13 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { appState } from '$lib/state.svelte';
   import { applyList, initializeLists, persistCurrentList } from '$lib/list-controller';
-  import { buildShareUrl, createListEnvelope, parseListFile, readSharedListFromHash } from '$lib/share';
+  import { buildShareUrl, createListEnvelope, parseListFile } from '$lib/share';
   import { saveShoppingList } from '$lib/storage';
 
   let shareUrl = $state('');
   let qrMarkup = $state('');
   let message = $state('');
   let fileInput = $state<HTMLInputElement>();
-
-  onMount(() => {
-    try {
-      const imported = readSharedListFromHash(location.hash);
-      if (imported) {
-        void saveShoppingList(imported).then(async () => {
-          await initializeLists();
-          applyList(imported);
-          history.replaceState(null, '', location.pathname + location.search);
-          message = 'Lista compartida importada como una copia independiente.';
-        });
-      }
-    } catch (error) {
-      message = String(error);
-    }
-  });
 
   async function currentList() {
     return persistCurrentList();

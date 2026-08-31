@@ -7,6 +7,7 @@
   import ExportButton from '$lib/components/ExportButton.svelte';
   import PdfUpload from '$lib/components/PdfUpload.svelte';
   import ShoppingList from '$lib/components/ShoppingList.svelte';
+  import ShareImport from '$lib/components/ShareImport.svelte';
   import ShareList from '$lib/components/ShareList.svelte';
   import WeekGrid from '$lib/components/WeekGrid.svelte';
 
@@ -16,6 +17,7 @@
 <svelte:head><title>Mi semana · Planificador de dieta</title></svelte:head>
 
 <main class="mx-auto max-w-[1480px] px-4 pb-16 sm:px-6 lg:px-8">
+  <ShareImport />
   <header class="mb-8 max-w-3xl">
     <p class="mb-2 text-xs font-black uppercase tracking-[0.28em] text-orange-600">Plan semanal</p>
     <h1 class="text-4xl font-black tracking-[-0.04em] text-stone-950 dark:text-white sm:text-6xl">Del menú al carro,<br /><span class="text-stone-400">sin hacer cuentas.</span></h1>
