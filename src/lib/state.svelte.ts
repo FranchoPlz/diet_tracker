@@ -1,4 +1,4 @@
-import type { ParseResult, WeekConfig, ShoppingItem, SavedShoppingList } from './types';
+import type { ParseResult, WeekConfig, ShoppingItem, SavedPlan, SavedShoppingList } from './types';
 import { createDefaultWeekConfig } from './utils';
 
 export const appState = $state({
@@ -10,6 +10,10 @@ export const appState = $state({
   activeListId: null as string | null,
   activeListName: 'Lista de la semana',
   savedLists: [] as SavedShoppingList[],
+  activePlanId: null as string | null,
+  activePlanName: 'Mi plan semanal',
+  savedPlans: [] as SavedPlan[],
+  planSourceLabel: null as string | null,
   persistenceReady: false,
   darkMode: false,
   compactView: false,

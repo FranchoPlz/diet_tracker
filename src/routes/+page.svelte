@@ -24,6 +24,13 @@
 
   <PdfUpload />
 
+  {#if appState.parsedData && !appState.pdfPath && appState.planSourceLabel}
+    <div class="mb-8 flex items-center gap-3 rounded-2xl border border-teal-200 bg-teal-50/70 px-4 py-3 text-sm dark:border-teal-900 dark:bg-teal-950/30">
+      <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-teal-700 font-black text-white">✓</span>
+      <span><span class="block text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-300">Fuente recuperada</span><span class="font-bold text-stone-700 dark:text-stone-200">{appState.planSourceLabel}</span></span>
+    </div>
+  {/if}
+
   {#if appState.parsedData}
     <div class="mt-8 space-y-6">
       <WeekGrid onDayClick={(index) => selectedDayIndex = index} {selectedDayIndex} />
@@ -50,6 +57,7 @@
               </div>
             </div>
             <CalculateButton />
+            {#if appState.activePlanId && !appState.pdfPath}<p class="mt-2 text-center text-xs text-stone-500 dark:text-stone-400">Se calculará desde los datos guardados, sin necesitar el PDF original.</p>{/if}
           </div>
           <ShoppingList />
           <ShareList />

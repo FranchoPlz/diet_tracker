@@ -17,7 +17,7 @@ export function applyList(list: SavedShoppingList): void {
 
 export async function persistCurrentList(): Promise<SavedShoppingList> {
   const existing = appState.savedLists.find(list => list.id === appState.activeListId);
-  const list = existing ? structuredClone(existing) : createShoppingList(appState.activeListName);
+  const list = existing ? JSON.parse(JSON.stringify(existing)) as SavedShoppingList : createShoppingList(appState.activeListName);
   list.name = appState.activeListName;
   list.items = appState.shoppingList.map((item: ShoppingItem) => ({
     ...normalizeShoppingItem(item),

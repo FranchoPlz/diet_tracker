@@ -30,10 +30,16 @@ export async function deleteShoppingList(id: string): Promise<void> {
 }
 
 export async function savePlan(plan: SavedPlan): Promise<void> {
-  plan.updatedAt = new Date().toISOString();
-  await (await database()).put('plans', structuredClone(plan));
+  const portable = JSON.parse(JSON.stringify(plan)) as SavedPlan;
+  portable.updatedAt = new Date().toISOString();
+  portable.weekConfig.pdf_path = null;
+  await (await database()).put('plans', portable);
 }
 
 export async function listPlans(): Promise<SavedPlan[]> {
   return (await (await database()).getAllFromIndex('plans', 'updatedAt')).reverse();
+}
+
+export async function deletePlan(id: string): Promise<void> {
+  await (await database()).delete('plans', id);
 }
