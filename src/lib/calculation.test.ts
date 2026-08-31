@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import abrilFixture from '../../tests/fixtures/abril_golden.json';
 import type { DietPlan, IngredientLine, ParseResult } from './types';
-import { calculateShoppingList } from './calculation';
+import { calculateShoppingList, canonicalIngredientName } from './calculation';
 import { createDefaultWeekConfig } from './utils';
 
 function dietWithComidaOptions(options: IngredientLine[][]): DietPlan {
@@ -27,6 +27,38 @@ function oneDayConfig() {
 }
 
 describe('calculateShoppingList', () => {
+  it('uses conservative Spanish singular keys', () => {
+    expect(canonicalIngredientName('Huevos')).toBe('huevo');
+    expect(canonicalIngredientName('Tomates')).toBe('tomate');
+    expect(canonicalIngredientName('Yogures')).toBe('yogur');
+    expect(canonicalIngredientName('Nueces')).toBe('nuez');
+    expect(canonicalIngredientName('Hummus')).toBe('hummus');
+    expect(canonicalIngredientName('Cuscús')).toBe('cuscús');
+    expect(canonicalIngredientName('Huevos cocidos')).toBe('huevos cocidos');
+  });
+
+  it('combines singular and plural ingredients into one item', () => {
+    const parsedData: ParseResult = {
+      status: 'ok',
+      diets: [dietWithComidaOptions([[
+        {
+          items: [{ name: 'Huevos', quantity: 2, unit: 'unidad', note: null }],
+          is_alternatives: false,
+          is_combination: false,
+        },
+        {
+          items: [{ name: 'Huevo', quantity: 1, unit: 'unidad', note: null }],
+          is_alternatives: false,
+          is_combination: false,
+        },
+      ]])],
+    };
+
+    expect(calculateShoppingList(parsedData, oneDayConfig())).toContainEqual({
+      name: 'huevo', quantity: 3, unit: 'unidad', count: 2,
+    });
+  });
+
   it('normalizes, groups, sums, counts, unpacks combinations, and sorts names', () => {
     const parsedData: ParseResult = {
       status: 'ok',

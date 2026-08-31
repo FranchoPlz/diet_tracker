@@ -8,6 +8,21 @@ interface AggregatedItem {
   count: number;
 }
 
+const INVARIABLE_ENDINGS = ['us', 'is', 'ís', 'ús', 'és'];
+const IRREGULAR_SINGULARS: Record<string, string> = {
+  yogures: 'yogur',
+};
+
+export function canonicalIngredientName(value: string): string {
+  const name = value.toLowerCase().trim().replace(/\s+/g, ' ');
+  if (name.includes(' ') || INVARIABLE_ENDINGS.some(ending => name.endsWith(ending))) return name;
+  if (IRREGULAR_SINGULARS[name]) return IRREGULAR_SINGULARS[name];
+  if (name.length > 5 && name.endsWith('ces')) return `${name.slice(0, -3)}z`;
+  if (name.length > 4 && /[aeiouáéíóú]s$/i.test(name)) return name.slice(0, -1);
+  if (name.length > 5 && /[^aeiouáéíóú]es$/i.test(name)) return name.slice(0, -2);
+  return name;
+}
+
 export function calculateShoppingList(
   parsedData: ParseResult,
   config: WeekConfig,
@@ -20,7 +35,8 @@ export function calculateShoppingList(
 
   function addItem(item: IngredientItem): void {
     const name = item.name.toLowerCase().trim();
-    const key = JSON.stringify([name, item.unit]);
+    const canonicalName = canonicalIngredientName(name);
+    const key = JSON.stringify([canonicalName, item.unit]);
     let entry = aggregation.get(key);
 
     if (!entry) {
@@ -31,6 +47,8 @@ export function calculateShoppingList(
         count: 0,
       };
       aggregation.set(key, entry);
+    } else if (name === canonicalName) {
+      entry.name = name;
     }
 
     entry.count += 1;
