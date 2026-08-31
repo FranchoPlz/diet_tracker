@@ -7,12 +7,14 @@ import PdfUpload from './PdfUpload.svelte';
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn(),
   onDragDropEvent: vi.fn(),
+  parsePdf: vi.fn(),
 }));
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: mocks.invoke }));
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ onDragDropEvent: mocks.onDragDropEvent }),
 }));
+vi.mock('$lib/pdf', () => ({ parsePdf: mocks.parsePdf }));
 
 describe('PdfUpload', () => {
   beforeEach(() => {
@@ -26,6 +28,7 @@ describe('PdfUpload', () => {
     appState.pdfPath = null;
     mocks.invoke.mockReset();
     mocks.onDragDropEvent.mockReset();
+    mocks.parsePdf.mockReset();
   });
 
   afterEach(() => {
@@ -60,5 +63,23 @@ describe('PdfUpload', () => {
       expect(appState.pdfPath).toBe('/plans/SEPTIEMBRE.pdf');
       expect(screen.getByRole('region', { name: 'PDF cargado' }).textContent).toContain('SEPTIEMBRE.pdf');
     });
+  });
+
+  it('parses a selected PDF in the browser without Tauri', async () => {
+    delete (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
+    mocks.parsePdf.mockResolvedValue({ status: 'ok', diets: [] });
+    const { container } = render(PdfUpload);
+    const file = new File(['%PDF-test'], 'ABRIL.pdf', { type: 'application/pdf' });
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+
+    Object.defineProperty(input, 'files', { value: [file] });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+
+    await waitFor(() => {
+      expect(mocks.parsePdf).toHaveBeenCalledWith(file);
+      expect(appState.pdfPath).toBe('ABRIL.pdf');
+    });
+    expect(appState.activePlanName).toBe('ABRIL');
+    expect(mocks.invoke).not.toHaveBeenCalled();
   });
 });

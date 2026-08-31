@@ -2,11 +2,13 @@
   import { onMount } from 'svelte';
   import { invoke } from '@tauri-apps/api/core';
   import { appState } from '$lib/state.svelte';
+  import { parsePdf } from '$lib/pdf';
   import type { ParseResult } from '$lib/types';
   import { createDefaultWeekConfig } from '$lib/utils';
 
   let isDragging = $state(false);
   let isParsing = $state(false);
+  let fileInput = $state<HTMLInputElement>();
 
   // Detect if we are in Tauri context
   const isTauri = $derived(typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window);
@@ -26,7 +28,19 @@
     isDragging = true;
   }
 
-  async function processFile(path: string) {
+  function applyResult(result: ParseResult, sourceName: string, pdfPath: string | null) {
+    appState.parsedData = result;
+    appState.pdfPath = pdfPath ?? sourceName;
+    appState.weekConfig = createDefaultWeekConfig();
+    appState.shoppingList = [];
+    appState.checkedShoppingItems = {};
+    appState.activeListId = null;
+    appState.activePlanId = null;
+    appState.activePlanName = sourceName.replace(/\.pdf$/i, '') || 'Mi plan semanal';
+    appState.planSourceLabel = null;
+  }
+
+  async function processTauriPath(path: string) {
     isParsing = true;
     appState.loading = true;
     appState.error = null;
@@ -35,14 +49,26 @@
       // Rust returns raw JSON string — must JSON.parse()
       const jsonStr = await invoke<string>('parse_pdf', { path });
       const result: ParseResult = JSON.parse(jsonStr);
-      appState.parsedData = result;
-      appState.pdfPath = path;
-      appState.weekConfig = createDefaultWeekConfig();
-      appState.shoppingList = [];
-      appState.checkedShoppingItems = {};
+      applyResult(result, fileName(path), path);
     } catch (e) {
       console.error('Error parsing PDF:', e);
       appState.error = String(e);
+      appState.parsedData = null;
+    } finally {
+      isParsing = false;
+      appState.loading = false;
+    }
+  }
+
+  async function processBrowserFile(file: File) {
+    isParsing = true;
+    appState.loading = true;
+    appState.error = null;
+    try {
+      applyResult(await parsePdf(file), file.name, null);
+    } catch (e) {
+      console.error('Error parsing PDF:', e);
+      appState.error = e instanceof Error ? e.message : String(e);
       appState.parsedData = null;
     } finally {
       isParsing = false;
@@ -54,12 +80,12 @@
     e.preventDefault();
     isDragging = false;
 
-    if (!isTauri) {
-      appState.error = 'Arrastrar archivos solo funciona en modo Tauri. Usa el botón "Cargar datos de prueba" para explorar la interfaz.';
+    const file = e.dataTransfer?.files[0];
+    if (!isTauri && file) {
+      await processBrowserFile(file);
       return;
     }
 
-    const file = e.dataTransfer?.files[0];
     if (file && !file.name.toLowerCase().endsWith('.pdf')) {
       appState.error = 'Por favor, selecciona un archivo PDF válido.';
     }
@@ -85,7 +111,7 @@
           appState.error = 'Por favor, selecciona un archivo PDF válido.';
           return;
         }
-        void processFile(path);
+        void processTauriPath(path);
       });
       if (disposed) unlisten();
     }).catch((e) => {
@@ -103,31 +129,16 @@
     try {
       const { open } = await import('@tauri-apps/plugin-dialog');
       const path = await open({ filters: [{ name: 'PDF', extensions: ['pdf'] }] });
-      if (path) await processFile(path as string);
+      if (path) await processTauriPath(path as string);
     } catch (e) {
       console.error('Error opening file dialog:', e);
       appState.error = String(e);
     }
   }
 
-  async function loadMockData() {
-    isParsing = true;
-    appState.loading = true;
-    appState.error = null;
-    try {
-      const goldenJson = await import('../../../tests/fixtures/abril_golden.json');
-      appState.parsedData = goldenJson.default as ParseResult;
-      appState.pdfPath = 'tests/fixtures/abril_golden.json';
-      appState.weekConfig = createDefaultWeekConfig();
-      appState.shoppingList = [];
-      appState.checkedShoppingItems = {};
-    } catch (e) {
-      console.error('Error loading mock data:', e);
-      appState.error = 'Error cargando datos de prueba: ' + String(e);
-    } finally {
-      isParsing = false;
-      appState.loading = false;
-    }
+  async function handleBrowserFileSelect(event: Event) {
+    const file = (event.currentTarget as HTMLInputElement).files?.[0];
+    if (file) await processBrowserFile(file);
   }
 
   function fileName(path: string): string {
@@ -171,7 +182,7 @@
       {#if isTauri}
         <button class="rounded-lg px-3 py-2 font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={handleTauriFileSelect}>Cambiar PDF</button>
       {:else}
-        <button class="rounded-lg px-3 py-2 font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={loadMockData}>Recargar datos</button>
+        <button class="rounded-lg px-3 py-2 font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={() => fileInput?.click()}>Cambiar PDF</button>
       {/if}
     </div>
   {:else}
@@ -193,10 +204,14 @@
         {#if isTauri}
           <button class="rounded-xl bg-teal-700 px-5 py-2.5 font-bold text-white shadow-sm hover:bg-teal-800" onclick={handleTauriFileSelect}>Seleccionar PDF</button>
         {:else}
-          <button class="rounded-xl bg-teal-700 px-5 py-2.5 font-bold text-white shadow-sm hover:bg-teal-800" onclick={loadMockData}>Cargar datos de prueba</button>
+          <button class="rounded-xl bg-teal-700 px-5 py-2.5 font-bold text-white shadow-sm hover:bg-teal-800" onclick={() => fileInput?.click()}>Seleccionar PDF</button>
         {/if}
       </div>
     </div>
+  {/if}
+
+  {#if !isTauri}
+    <input bind:this={fileInput} type="file" accept="application/pdf,.pdf" class="hidden" onchange={handleBrowserFileSelect} />
   {/if}
 
   {#if appState.error}
