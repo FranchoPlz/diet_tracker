@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { invoke } from '@tauri-apps/api/core';
   import { appState } from '$lib/state.svelte';
   import type { ParseResult } from '$lib/types';
@@ -52,45 +51,21 @@
       return;
     }
 
-    const file = e.dataTransfer?.files[0];
-    if (file && !file.name.toLowerCase().endsWith('.pdf')) {
-      appState.error = 'Por favor, selecciona un archivo PDF válido.';
+    if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.name.toLowerCase().endsWith('.pdf')) {
+        const fileObj = file as unknown as { path?: string };
+        const path = fileObj.path;
+        if (path) {
+          await processFile(path);
+        } else {
+          appState.error = "No se pudo obtener la ruta del archivo. Por favor, use el botón 'Seleccionar archivo'.";
+        }
+      } else {
+        appState.error = 'Por favor, selecciona un archivo PDF válido.';
+      }
     }
   }
-
-  onMount(() => {
-    if (!isTauri) return;
-
-    let disposed = false;
-    let unlisten: (() => void) | undefined;
-    void import('@tauri-apps/api/window').then(async ({ getCurrentWindow }) => {
-      unlisten = await getCurrentWindow().onDragDropEvent((event) => {
-        if (event.payload.type === 'enter' || event.payload.type === 'over') {
-          isDragging = true;
-          return;
-        }
-
-        isDragging = false;
-        if (event.payload.type !== 'drop') return;
-
-        const path = event.payload.paths.find((droppedPath) => droppedPath.toLowerCase().endsWith('.pdf'));
-        if (!path) {
-          appState.error = 'Por favor, selecciona un archivo PDF válido.';
-          return;
-        }
-        void processFile(path);
-      });
-      if (disposed) unlisten();
-    }).catch((e) => {
-      console.error('Error registering drag and drop:', e);
-      appState.error = String(e);
-    });
-
-    return () => {
-      disposed = true;
-      unlisten?.();
-    };
-  });
 
   async function handleTauriFileSelect() {
     try {
