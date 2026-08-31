@@ -9,10 +9,11 @@
     setAlternativeChoice,
   } from '$lib/utils';
 
-  let { dayIndex, dietData, asException } = $props<{ 
+  let { dayIndex, dietData, asException, ignoreDayException = false } = $props<{
     dayIndex: number;
     dietData: DietPlan;
     asException: boolean;
+    ignoreDayException?: boolean;
   }>();
 
   let day = $derived(appState.weekConfig.days[dayIndex]);
@@ -43,6 +44,18 @@
       expandedMeals[mealIndex] = expanded;
     });
   }
+
+  function selectedMealOption(mealType: DietPlan['meals'][number]['type']): number {
+    return ignoreDayException
+      ? appState.weekConfig.dietDefaults[day.diet]?.mealOptionIndexes[mealType] ?? 0
+      : getEffectiveMealOptionIndex(appState.weekConfig, dayIndex, mealType);
+  }
+
+  function selectedAlternative(altKey: string): number {
+    return ignoreDayException
+      ? appState.weekConfig.dietDefaults[day.diet]?.alternativeChoices[altKey] ?? 0
+      : getEffectiveAlternativeChoice(appState.weekConfig, dayIndex, altKey);
+  }
 </script>
 
 <div class="compact-meals flex flex-col gap-4">
@@ -53,7 +66,7 @@
   </div>
 
   {#each dietData.meals as meal, mealIndex}
-    {@const selectedOptionIndex = getEffectiveMealOptionIndex(appState.weekConfig, dayIndex, meal.type)}
+    {@const selectedOptionIndex = selectedMealOption(meal.type)}
     {@const option = meal.options[selectedOptionIndex]}
 
     <section class="compact-meal-card overflow-hidden rounded-2xl border border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900">
@@ -106,7 +119,7 @@
 
                 <div class="flex flex-col py-2 border-b border-gray-50 dark:border-gray-700/50 last:border-0 last:pb-0">
                   {#if line.is_alternatives}
-                    {@const selectedAltIndex = getEffectiveAlternativeChoice(appState.weekConfig, dayIndex, altKey)}
+                    {@const selectedAltIndex = selectedAlternative(altKey)}
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Elegir una opción:</span>
                     <div class="flex flex-col gap-2 pl-2">
                       {#each line.items as item, itemIndex}

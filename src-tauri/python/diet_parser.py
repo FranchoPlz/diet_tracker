@@ -592,6 +592,144 @@ def _parse_ingredients(raw_text: str) -> list:
     return ingredient_lines
 
 
+_TRAINING_DAY_RE = re.compile(r"^\s*D[IÍ]A\s+([\d\sYy,]+)\s*[–-]\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
+
+
+def _clean_training_lines(raw_text: str) -> list:
+    lines = []
+    for raw_line in raw_text.split("\n"):
+        line = re.sub(r"\s+", " ", raw_line.strip())
+        if not line:
+            continue
+        if lines and lines[-1].endswith("-"):
+            lines[-1] = lines[-1][:-1] + line
+        else:
+            lines.append(line)
+    return lines
+
+
+def _parse_exercise_rows(raw_text: str) -> list:
+    lines = [line for line in _clean_training_lines(raw_text) if not re.match(r"^EJERCICIOS\s+SERIES\s+REPETICIONES\s+DETALLES$", line, re.IGNORECASE)]
+    rows = []
+    pending = []
+    index = 0
+    while index < len(lines):
+        inline = re.match(r"^(.+?)\s+(\d+)\s+(.+)$", lines[index]) if not pending else None
+        if inline and not re.match(r"^\d+[ºª]\s*-", lines[index], re.IGNORECASE):
+            rows.append({"exercise": inline.group(1), "series": inline.group(2), "repetitions": inline.group(3), "details": ""})
+            index += 1
+            continue
+
+        series_match = re.match(r"^(\d+)(?:\s+(.+))?$", lines[index])
+        if not series_match:
+            pending.append(lines[index])
+            index += 1
+            continue
+
+        series = series_match.group(1)
+        first_repetition = series_match.group(2)
+        index += 1
+        is_superset = bool(pending and pending[0].upper() == "SUPERSERIE")
+        exercise_lines = pending[1:] if is_superset else pending
+        exercise_lines = [re.sub(r"^-\s*", "", line) for line in exercise_lines if line != "+"]
+        pending = []
+        if not exercise_lines:
+            continue
+
+        repetitions = [first_repetition] if first_repetition else []
+        if is_superset:
+            while index < len(lines) and len(repetitions) < len(exercise_lines) and not re.match(r"^\d+$", lines[index]):
+                repetitions.append(lines[index])
+                index += 1
+        elif re.match(r"^1[ºª]\s*-", first_repetition or (lines[index] if index < len(lines) else ""), re.IGNORECASE):
+            while index < len(lines) and re.match(r"^\d+[ºª]\s*-", lines[index], re.IGNORECASE):
+                repetitions.append(lines[index])
+                index += 1
+        elif not repetitions and index < len(lines):
+            repetitions.append(lines[index])
+            index += 1
+
+        details = []
+        while index < len(lines) and re.match(r"^(?:CON CADA|SIN PARAR|\d+\s*SEG\.?\s*DESCANSO|¿?QU[EÉ] ES UN DROP SET|VAMOS A SUBIR|[ÚU]LTIMA SERIE|REPES|PESO Y|SEGUIMOS|AS[IÍ] SUCESIVAMENTE|HASTA QUE|CADA \d|AGUANTAMOS)", lines[index], re.IGNORECASE):
+            details.append(lines[index])
+            index += 1
+        exercise = " + ".join(exercise_lines) if is_superset else " ".join(exercise_lines)
+        row = {"exercise": exercise, "series": series, "repetitions": "\n".join(repetitions), "details": " ".join(details)}
+        if is_superset:
+            row["supersetExercises"] = exercise_lines
+        rows.append(row)
+    return rows
+
+
+def _clean_table_cell(value) -> str:
+    return " ".join(_clean_training_lines(value or ""))
+
+
+def _parse_training_table(table: list) -> list:
+    rows = []
+    for columns in table[1:]:
+        if not columns or not columns[0]:
+            continue
+        raw_exercise = columns[0]
+        is_superset = raw_exercise.strip().upper().startswith("SUPERSERIE")
+        exercise_lines = _clean_training_lines(re.sub(r"^\s*SUPERSERIE\s*", "", raw_exercise, flags=re.IGNORECASE))
+        exercise_lines = [re.sub(r"^-\s*", "", line) for line in exercise_lines if line != "+"]
+        row = {
+            "exercise": " + ".join(exercise_lines) if is_superset else " ".join(exercise_lines),
+            "series": _clean_table_cell(columns[1] if len(columns) > 1 else ""),
+            "repetitions": "\n".join(_clean_training_lines(columns[2] if len(columns) > 2 else "")),
+            "details": _clean_table_cell(columns[3] if len(columns) > 3 else ""),
+        }
+        if is_superset:
+            row["supersetExercises"] = exercise_lines
+        rows.append(row)
+    return rows
+
+
+def _parse_training(page_texts: list, page_tables=None):
+    training_start = next((index for index, text in enumerate(page_texts) if re.search(r"^\s*ENTRENAMIENTO\s*$", text, re.IGNORECASE | re.MULTILINE)), None)
+    if training_start is None:
+        return None
+    joined_training_pages = "\n".join(page_texts[training_start:])
+    header = re.search(r"^\s*ENTRENAMIENTO\s*$", joined_training_pages, re.IGNORECASE | re.MULTILINE)
+    training_text = joined_training_pages[header.end():] if header else joined_training_pages
+    day_matches = list(_TRAINING_DAY_RE.finditer(training_text))
+    tips_text = training_text[:day_matches[0].start()] if day_matches else training_text
+    tips = []
+    for line in _clean_training_lines(tips_text):
+        if re.match(r"^(?:ENTRENAMIENTO|TIPS PARA CADA ENTRENAMIENTO)$", line, re.IGNORECASE):
+            continue
+        if line.startswith("-"):
+            tips.append(re.sub(r"^-\s*", "", line))
+        elif tips:
+            tips[-1] += " " + line
+    rest_match = re.search(r"descansos? entre series.*?(\d+)\s*segundos?", " ".join(tips), re.IGNORECASE)
+    days = []
+    for index, match in enumerate(day_matches):
+        end = day_matches[index + 1].start() if index + 1 < len(day_matches) else len(training_text)
+        body = training_text[match.end():end].strip()
+        title = match.group(2).strip()
+        active_rest = bool(re.search(r"DESCANSO\s+ACTIVO", title, re.IGNORECASE))
+        days.append({
+            "days": [int(value) for value in re.findall(r"\d+", match.group(1))],
+            "title": title,
+            "activeRest": active_rest,
+            "details": " ".join(_clean_training_lines(body)) if active_rest else "",
+            "exercises": [] if active_rest else _parse_exercise_rows(body),
+        })
+    if page_tables:
+        for page_text, tables in zip(page_texts, page_tables):
+            page_day = _TRAINING_DAY_RE.search(page_text)
+            table = next((value for value in tables if value and value[0] and value[0][:4] == ["EJERCICIOS", "SERIES", "REPETICIONES", "DETALLES"]), None)
+            if not page_day or not table:
+                continue
+            day_numbers = [int(value) for value in re.findall(r"\d+", page_day.group(1))]
+            day = next((value for value in days if value["days"] == day_numbers), None)
+            if day is not None:
+                day["exercises"] = _parse_training_table(table)
+    return {"tips": tips, "defaultRestSeconds": int(rest_match.group(1)) if rest_match else None, "days": days}
+
+
 # ─── Main structure parsing ───────────────────────────────────────────────────
 
 
@@ -603,18 +741,19 @@ def parse_pdf_to_structure(pdf_path: str) -> dict:
 
     try:
         with pdfplumber.open(pdf_path) as pdf:
-            page_texts = []
-            for page in pdf.pages:
-                text = page.extract_text() or ""
-                if re.search(r"^\s*(?:SUPLEMENTACI[ÓO]N|ENTRENAMIENTO)\s*$", text, re.MULTILINE):
-                    break
-                page_texts.append(text)
+            all_page_texts = [page.extract_text() or "" for page in pdf.pages]
+            all_page_tables = [page.extract_tables() for page in pdf.pages]
     except FileNotFoundError:
         return {"status": "error", "message": f"File not found: {pdf_path}"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-    full_text = "\n".join(page_texts)
+    diet_page_texts = []
+    for text in all_page_texts:
+        if re.search(r"^\s*(?:SUPLEMENTACI[ÓO]N|ENTRENAMIENTO)\s*$", text, re.MULTILINE):
+            break
+        diet_page_texts.append(text)
+    full_text = "\n".join(diet_page_texts)
 
     diet_chunks = _split_into_diets(full_text)
     if not diet_chunks:
@@ -642,7 +781,11 @@ def parse_pdf_to_structure(pdf_path: str) -> dict:
 
         diets.append({"name": diet_name, "intro": intro, "meals": meals})
 
-    return {"status": "ok", "diets": diets}
+    result = {"status": "ok", "diets": diets}
+    training = _parse_training(all_page_texts, all_page_tables)
+    if training is not None:
+        result["training"] = training
+    return result
 
 
 def cmd_parse(args):

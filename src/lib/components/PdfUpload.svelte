@@ -4,7 +4,7 @@
   import { appState } from '$lib/state.svelte';
   import { parsePdf } from '$lib/pdf';
   import type { ParseResult } from '$lib/types';
-  import { createDefaultWeekConfig } from '$lib/utils';
+  import { createWorkspaceFromDocument } from '$lib/workspace-controller';
 
   let isDragging = $state(false);
   let isParsing = $state(false);
@@ -28,16 +28,8 @@
     isDragging = true;
   }
 
-  function applyResult(result: ParseResult, sourceName: string, pdfPath: string | null) {
-    appState.parsedData = result;
-    appState.pdfPath = pdfPath ?? sourceName;
-    appState.weekConfig = createDefaultWeekConfig();
-    appState.shoppingList = [];
-    appState.checkedShoppingItems = {};
-    appState.activeListId = null;
-    appState.activePlanId = null;
-    appState.activePlanName = sourceName.replace(/\.pdf$/i, '') || 'Mi plan semanal';
-    appState.planSourceLabel = null;
+  function confirmReplacement(): boolean {
+    return !appState.parsedData || confirm('¿Quieres sustituir el plan actual? Se conservará en Mis planes, pero la configuración activa cambiará al nuevo PDF.');
   }
 
   async function processTauriPath(path: string) {
@@ -49,11 +41,10 @@
       // Rust returns raw JSON string — must JSON.parse()
       const jsonStr = await invoke<string>('parse_pdf', { path });
       const result: ParseResult = JSON.parse(jsonStr);
-      applyResult(result, fileName(path), path);
+      await createWorkspaceFromDocument(result, fileName(path));
     } catch (e) {
       console.error('Error parsing PDF:', e);
       appState.error = String(e);
-      appState.parsedData = null;
     } finally {
       isParsing = false;
       appState.loading = false;
@@ -65,11 +56,10 @@
     appState.loading = true;
     appState.error = null;
     try {
-      applyResult(await parsePdf(file), file.name, null);
+      await createWorkspaceFromDocument(await parsePdf(file), file.name);
     } catch (e) {
       console.error('Error parsing PDF:', e);
       appState.error = e instanceof Error ? e.message : String(e);
-      appState.parsedData = null;
     } finally {
       isParsing = false;
       appState.loading = false;
@@ -82,6 +72,7 @@
 
     const file = e.dataTransfer?.files[0];
     if (!isTauri && file) {
+      if (!confirmReplacement()) return;
       await processBrowserFile(file);
       return;
     }
@@ -111,7 +102,7 @@
           appState.error = 'Por favor, selecciona un archivo PDF válido.';
           return;
         }
-        void processTauriPath(path);
+        if (confirmReplacement()) void processTauriPath(path);
       });
       if (disposed) unlisten();
     }).catch((e) => {
@@ -126,6 +117,7 @@
   });
 
   async function handleTauriFileSelect() {
+    if (!confirmReplacement()) return;
     try {
       const { open } = await import('@tauri-apps/plugin-dialog');
       const path = await open({ filters: [{ name: 'PDF', extensions: ['pdf'] }] });
@@ -139,6 +131,10 @@
   async function handleBrowserFileSelect(event: Event) {
     const file = (event.currentTarget as HTMLInputElement).files?.[0];
     if (file) await processBrowserFile(file);
+  }
+
+  function requestBrowserFileSelect() {
+    if (confirmReplacement()) fileInput?.click();
   }
 
   function fileName(path: string): string {
@@ -162,7 +158,7 @@
         </div>
       </div>
     </div>
-  {:else if appState.parsedData && appState.pdfPath}
+  {:else if appState.parsedData}
     <div
       class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white/70 px-4 py-3 text-sm shadow-sm dark:border-stone-800 dark:bg-stone-900/70"
       ondragenter={handleDragEnter}
@@ -176,13 +172,13 @@
         <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">✓</span>
         <span class="min-w-0">
           <span class="block text-xs font-bold uppercase tracking-wider text-stone-400">PDF cargado</span>
-          <span class="block truncate font-bold text-stone-700 dark:text-stone-200">{fileName(appState.pdfPath)}</span>
+          <span class="block truncate font-bold text-stone-700 dark:text-stone-200">{appState.pdfPath ? fileName(appState.pdfPath) : `${appState.activePlanName}.pdf`}</span>
         </span>
       </div>
       {#if isTauri}
         <button class="rounded-lg px-3 py-2 font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={handleTauriFileSelect}>Cambiar PDF</button>
       {:else}
-        <button class="rounded-lg px-3 py-2 font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={() => fileInput?.click()}>Cambiar PDF</button>
+        <button class="rounded-lg px-3 py-2 font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={requestBrowserFileSelect}>Cambiar PDF</button>
       {/if}
     </div>
   {:else}
@@ -204,7 +200,7 @@
         {#if isTauri}
           <button class="rounded-xl bg-teal-700 px-5 py-2.5 font-bold text-white shadow-sm hover:bg-teal-800" onclick={handleTauriFileSelect}>Seleccionar PDF</button>
         {:else}
-          <button class="rounded-xl bg-teal-700 px-5 py-2.5 font-bold text-white shadow-sm hover:bg-teal-800" onclick={() => fileInput?.click()}>Seleccionar PDF</button>
+          <button class="rounded-xl bg-teal-700 px-5 py-2.5 font-bold text-white shadow-sm hover:bg-teal-800" onclick={requestBrowserFileSelect}>Seleccionar PDF</button>
         {/if}
       </div>
     </div>

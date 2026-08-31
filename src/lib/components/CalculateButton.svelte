@@ -1,6 +1,7 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
   import { calculateShoppingList } from '$lib/calculation';
+  import { scheduleWorkspaceAutosave } from '$lib/workspace-controller';
 
   const hasEnabledDays = $derived(appState.weekConfig.days.length > 0);
 
@@ -24,6 +25,7 @@
       appState.checkedShoppingItems = {};
       appState.activeListId = null;
       appState.activeListName = `${appState.activePlanName} - compra`;
+      scheduleWorkspaceAutosave(0);
     } catch (e) {
       console.error('Error calculating totals:', e);
       appState.error = 'Error al calcular la lista: ' + String(e);

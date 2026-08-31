@@ -27,6 +27,7 @@ beforeEach(() => {
   appState.activeListId = null;
   appState.activePlanId = null;
   appState.activePlanName = 'Semana abril';
+  appState.configured = false;
 });
 
 describe('plan controller', () => {
@@ -47,6 +48,7 @@ describe('plan controller', () => {
     expect(appState.pdfPath).toBeNull();
     expect(appState.weekConfig.pdf_path).toBeNull();
     expect(appState.planSourceLabel).toBe('Plan guardado: Semana abril');
+    expect(appState.configured).toBe(false);
   });
 
   it('calculates from restored parsed data without a PDF path', async () => {

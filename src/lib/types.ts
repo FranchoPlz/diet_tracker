@@ -35,6 +35,29 @@ export interface IngredientItem {
 export interface ParseResult {
   status: string;
   diets: DietPlan[];
+  training?: TrainingPlan;
+}
+
+export interface TrainingPlan {
+  tips: string[];
+  defaultRestSeconds: number | null;
+  days: TrainingDay[];
+}
+
+export interface TrainingDay {
+  days: number[];
+  title: string;
+  activeRest: boolean;
+  details: string;
+  exercises: ExerciseRow[];
+}
+
+export interface ExerciseRow {
+  exercise: string;
+  series: string;
+  repetitions: string;
+  details: string;
+  supersetExercises?: string[];
 }
 
 /**
@@ -104,7 +127,8 @@ export interface SavedShoppingList {
 
 export interface SavedPlan {
   id: string;
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
+  configured?: boolean;
   name: string;
   createdAt: string;
   updatedAt: string;

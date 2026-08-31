@@ -81,6 +81,24 @@ class ParserUnitTests(unittest.TestCase):
             lines, ["-80g de Pasta / 250g de Garbanzos / 160g de Gnocchis."]
         )
 
+    def test_parses_training_shape_and_superseries(self):
+        training = diet_parser._parse_training([
+            "SUPLEMENTACIÓN\n- Creatina\nENTRENAMIENTO\nTIPS PARA CADA ENTRENAMIENTO\n- Los descansos entre series van a ser de 60 segundos de máximo.\n- Beber agua.",
+            "DÍA 1 – TORSO\nEJERCICIOS SERIES REPETICIONES DETALLES\nSUPERSERIE\nCurl de bíceps\n+\nPres francés\n4\n12 - 10 - 8 - 8\n10 - 10 - 10 - 10",
+            "DÍA 2 y 3 – DESCANSO ACTIVO\n45 MINUTOS DE CAMINATA",
+        ])
+        self.assertEqual(training["defaultRestSeconds"], 60)
+        self.assertNotIn("Creatina", " ".join(training["tips"]))
+        self.assertEqual(training["days"][0]["exercises"][0], {
+            "exercise": "Curl de bíceps + Pres francés",
+            "series": "4",
+            "repetitions": "12 - 10 - 8 - 8\n10 - 10 - 10 - 10",
+            "details": "",
+            "supersetExercises": ["Curl de bíceps", "Pres francés"],
+        })
+        self.assertEqual(training["days"][1]["days"], [2, 3])
+        self.assertTrue(training["days"][1]["activeRest"])
+
 
 @unittest.skipUnless(
     importlib.util.find_spec("pdfplumber"), "install src-tauri/python/requirements.txt"
@@ -101,6 +119,10 @@ class PdfRegressionTests(unittest.TestCase):
             [[(meal["type"], len(meal["options"])) for meal in diet["meals"]] for diet in actual["diets"]],
             [[(meal["type"], len(meal["options"])) for meal in diet["meals"]] for diet in expected["diets"]],
         )
+        self.assertEqual(actual["training"]["defaultRestSeconds"], 60)
+        self.assertEqual([day["days"] for day in actual["training"]["days"]], [[1], [2], [3], [4], [5], [6, 7]])
+        self.assertEqual(actual["training"]["days"][2]["title"], "DESCANSO ACTIVO")
+        self.assertTrue(any(row.get("supersetExercises") for row in actual["training"]["days"][0]["exercises"]))
 
     def test_september_reads_all_diet_pages_and_layout_variations(self):
         result = diet_parser.parse_pdf_to_structure(str(ROOT / "SEPTIEMBRE.pdf"))
@@ -130,6 +152,10 @@ class PdfRegressionTests(unittest.TestCase):
         self.assertIn("OPCIÓN 3 – SMASH BURGUER", [
             option["name"] for option in dinner_2["options"]
         ])
+        self.assertEqual(result["training"]["defaultRestSeconds"], 60)
+        self.assertEqual([day["days"] for day in result["training"]["days"]], [[1], [2], [3], [4], [5], [6, 7]])
+        self.assertEqual(result["training"]["days"][0]["title"], "TORSO")
+        self.assertTrue(any(row.get("supersetExercises") for row in result["training"]["days"][1]["exercises"]))
 
 
 if __name__ == "__main__":

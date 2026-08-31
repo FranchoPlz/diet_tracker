@@ -1,7 +1,7 @@
 import { calculateShoppingList } from './calculation';
 import { applyList, persistCurrentList } from './list-controller';
 import { appState } from './state.svelte';
-import { listPlans, listShoppingLists, savePlan, saveShoppingList } from './storage';
+import { listPlans, listShoppingLists, savePlan, saveShoppingList, setActivePlanId } from './storage';
 import type { SavedPlan, SavedShoppingList, WeekConfig } from './types';
 
 function cloneData<T>(value: T): T {
@@ -19,7 +19,8 @@ function createPlan(name: string): SavedPlan {
   const now = new Date().toISOString();
   return {
     id: crypto.randomUUID(),
-    schemaVersion: 1,
+    schemaVersion: 2,
+    configured: appState.configured,
     name,
     createdAt: now,
     updatedAt: now,
@@ -38,6 +39,8 @@ export async function persistCurrentPlan(): Promise<SavedPlan> {
   if (!appState.parsedData) throw new Error('No hay una dieta cargada para guardar.');
 
   plan.name = appState.activePlanName.trim() || 'Mi plan semanal';
+  plan.schemaVersion = 2;
+  plan.configured = appState.configured;
   plan.parsedData = cloneData(appState.parsedData);
   plan.weekConfig = portableWeekConfig(appState.weekConfig);
   if (appState.shoppingList.length > 0 || appState.activeListId) {
@@ -47,8 +50,10 @@ export async function persistCurrentPlan(): Promise<SavedPlan> {
   }
 
   await savePlan(plan);
+  await setActivePlanId(plan.id);
   appState.activePlanId = plan.id;
   appState.activePlanName = plan.name;
+  appState.configured = plan.configured ?? true;
   appState.planSourceLabel = `Plan guardado: ${plan.name}`;
   appState.savedPlans = await listPlans();
   return plan;
@@ -57,11 +62,13 @@ export async function persistCurrentPlan(): Promise<SavedPlan> {
 export async function restorePlan(plan: SavedPlan): Promise<void> {
   appState.activePlanId = plan.id;
   appState.activePlanName = plan.name;
+  appState.configured = plan.configured ?? true;
   appState.parsedData = cloneData(plan.parsedData);
   appState.weekConfig = portableWeekConfig(plan.weekConfig);
   appState.pdfPath = null;
   appState.planSourceLabel = `Plan guardado: ${plan.name}`;
   appState.error = null;
+  await setActivePlanId(plan.id);
 
   const linkedList = plan.shoppingListId
     ? (await listShoppingLists()).find(list => list.id === plan.shoppingListId)

@@ -18,6 +18,14 @@ La versión web se publica en GitHub Pages en `https://franchoplz.github.io/diet
 3. Crea la lista de la compra, corrige categorías o cantidades y guárdala con un nombre.
 4. Guarda el plan para recuperarlo sin conservar el PDF original.
 
+Una vez configurado, el plan se organiza en tres pestañas:
+
+- **Dieta** muestra `DIETA 1` y `DIETA 2` en modo consulta, con acceso a la reconfiguración y a excepciones por día.
+- **Ejercicios** muestra la rutina, series, repeticiones, detalles y descansos extraídos del PDF.
+- **Compra** contiene la lista calculada, editable y compartible.
+
+El último PDF procesado se conserva como plan activo en el dispositivo. Al volver a abrir la aplicación se recuperan sus datos estructurados, configuración y lista sin guardar el archivo PDF original.
+
 Las listas se pueden compartir como copia independiente mediante el menú de la lista:
 
 - Enlace con los datos comprimidos en el fragmento `#share=...`; el contenido no se envía al servidor web.

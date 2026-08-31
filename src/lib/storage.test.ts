@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { deletePlan, listPlans, savePlan } from './storage';
+import { deletePlan, getActivePlanId, listPlans, savePlan, setActivePlanId } from './storage';
 import type { SavedPlan } from './types';
 import { createDefaultWeekConfig } from './utils';
 
@@ -31,5 +31,36 @@ describe('plan storage', () => {
     expect(JSON.stringify(saved)).not.toContain('/private/original.pdf');
     await deletePlan('two');
     expect((await listPlans()).map(plan => plan.id)).toEqual(['one']);
+  });
+
+  it('stores active plan metadata and clears it with the active plan', async () => {
+    await setActivePlanId('one');
+    expect(await getActivePlanId()).toBe('one');
+    await deletePlan('one');
+    expect(await getActivePlanId()).toBeNull();
+  });
+
+  it('normalizes v1 plans on read without requiring an eager database rewrite', async () => {
+    const legacy: SavedPlan = {
+      id: 'legacy', schemaVersion: 1, name: 'Anterior',
+      createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
+      parsedData: { status: 'ok', diets: [] },
+      weekConfig: createDefaultWeekConfig(),
+    };
+    const request = indexedDB.open('diet-planner', 2);
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction('plans', 'readwrite');
+      transaction.objectStore('plans').put(legacy);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    db.close();
+
+    const migrated = (await listPlans()).find(plan => plan.id === 'legacy');
+    expect(migrated).toMatchObject({ schemaVersion: 2, configured: true });
   });
 });

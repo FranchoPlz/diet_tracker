@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   invoke: vi.fn(),
   onDragDropEvent: vi.fn(),
   parsePdf: vi.fn(),
+  createWorkspaceFromDocument: vi.fn(),
 }));
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: mocks.invoke }));
@@ -15,6 +16,7 @@ vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ onDragDropEvent: mocks.onDragDropEvent }),
 }));
 vi.mock('$lib/pdf', () => ({ parsePdf: mocks.parsePdf }));
+vi.mock('$lib/workspace-controller', () => ({ createWorkspaceFromDocument: mocks.createWorkspaceFromDocument }));
 
 describe('PdfUpload', () => {
   beforeEach(() => {
@@ -29,6 +31,13 @@ describe('PdfUpload', () => {
     mocks.invoke.mockReset();
     mocks.onDragDropEvent.mockReset();
     mocks.parsePdf.mockReset();
+    mocks.createWorkspaceFromDocument.mockReset();
+    mocks.createWorkspaceFromDocument.mockImplementation(async (result, sourceName) => {
+      appState.parsedData = result;
+      appState.pdfPath = null;
+      appState.activePlanName = sourceName.replace(/\.pdf$/i, '');
+      appState.configured = false;
+    });
   });
 
   afterEach(() => {
@@ -60,7 +69,8 @@ describe('PdfUpload', () => {
       expect(mocks.invoke).toHaveBeenCalledWith('parse_pdf', {
         path: '/plans/SEPTIEMBRE.pdf',
       });
-      expect(appState.pdfPath).toBe('/plans/SEPTIEMBRE.pdf');
+      expect(mocks.createWorkspaceFromDocument).toHaveBeenCalledWith({ status: 'ok', diets: [] }, 'SEPTIEMBRE.pdf');
+      expect(appState.pdfPath).toBeNull();
       expect(screen.getByRole('region', { name: 'PDF cargado' }).textContent).toContain('SEPTIEMBRE.pdf');
     });
   });
@@ -77,9 +87,29 @@ describe('PdfUpload', () => {
 
     await waitFor(() => {
       expect(mocks.parsePdf).toHaveBeenCalledWith(file);
-      expect(appState.pdfPath).toBe('ABRIL.pdf');
+      expect(mocks.createWorkspaceFromDocument).toHaveBeenCalledWith({ status: 'ok', diets: [] }, 'ABRIL.pdf');
+      expect(appState.pdfPath).toBeNull();
     });
     expect(appState.activePlanName).toBe('ABRIL');
     expect(mocks.invoke).not.toHaveBeenCalled();
+  });
+
+  it('keeps the current plan when replacement parsing fails', async () => {
+    delete (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
+    appState.parsedData = { status: 'ok', diets: [{ name: 'DIETA 1', intro: '', meals: [] }] };
+    appState.activePlanName = 'Plan actual';
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    mocks.parsePdf.mockRejectedValue(new Error('PDF dañado'));
+    const { container } = render(PdfUpload);
+    const file = new File(['%PDF-broken'], 'NUEVO.pdf', { type: 'application/pdf' });
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+
+    Object.defineProperty(input, 'files', { value: [file] });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+
+    await waitFor(() => expect(appState.error).toBe('PDF dañado'));
+    expect(appState.activePlanName).toBe('Plan actual');
+    expect(appState.parsedData.diets[0].name).toBe('DIETA 1');
+    expect(mocks.createWorkspaceFromDocument).not.toHaveBeenCalled();
   });
 });

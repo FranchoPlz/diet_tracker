@@ -1,14 +1,17 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { appState } from '$lib/state.svelte';
   import { hasException, clearException } from '$lib/utils';
   import MealSelector from './MealSelector.svelte';
 
   let { 
     dayIndex, 
-    onClose 
+    onClose,
+    initialExceptionMode = false,
   } = $props<{ 
     dayIndex: number;
     onClose: () => void;
+    initialExceptionMode?: boolean;
   }>();
 
   let day = $derived(appState.weekConfig.days[dayIndex]);
@@ -16,6 +19,10 @@
   let isException = $derived(hasException(appState.weekConfig, dayIndex));
 
   let exceptionMode = $state(false);
+
+  onMount(() => {
+    exceptionMode = initialExceptionMode;
+  });
 
   function handleClearException() {
     clearException(appState.weekConfig, dayIndex);

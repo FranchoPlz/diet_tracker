@@ -5,7 +5,6 @@ import type { SavedShoppingList, ShoppingItem } from './types';
 
 export async function initializeLists(): Promise<void> {
   appState.savedLists = await listShoppingLists();
-  appState.persistenceReady = true;
 }
 
 export function applyList(list: SavedShoppingList): void {

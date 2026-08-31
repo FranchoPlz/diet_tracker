@@ -12,6 +12,8 @@ export const appState = $state({
   savedLists: [] as SavedShoppingList[],
   activePlanId: null as string | null,
   activePlanName: 'Mi plan semanal',
+  configured: false,
+  activeTab: 'diet' as 'diet' | 'training' | 'shopping',
   savedPlans: [] as SavedPlan[],
   planSourceLabel: null as string | null,
   persistenceReady: false,
