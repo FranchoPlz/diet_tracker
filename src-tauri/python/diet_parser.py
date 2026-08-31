@@ -15,10 +15,10 @@ _MEAL_HEADER_RE = re.compile(r"^\s*(" + "|".join(MEAL_TYPES) + r")\s*$")
 # OPCIÓN N DE CENA / OPCIÓN N DE CENA – TITLE / OPCIÓN N BOCATA /
 # CENA N / CENA N – TITLE
 _OPTION_HEADER_RE = re.compile(
-    r"^\s*"
+    r"^\s*-?\s*"
     r"("
-    r"(?:OPCIÓN\s+\d+(?:\s+DE\s+\w+)?(?:\s*[–-]\s*.+)?)"
-    r"|(?:OPCIÓN\s+\d+\s+\w.*?)"
+    r"(?:OPCI[ÓO]N\s+\d+(?:\s+DE\s+\w+)?(?:\s*[–-]\s*.+)?)"
+    r"|(?:OPCI[ÓO]N\s+\d+\s+\w.*?)"
     r"|(?:CENA\s+\d+(?:\s*[–-]\s*.+)?)"
     r")"
     r"\s*$",
@@ -47,7 +47,7 @@ def _is_meal_header(line: str) -> bool:
 
 
 def _parse_option_name(header_line: str) -> tuple:
-    name = header_line.strip()
+    name = re.sub(r"^\s*-\s*", "", header_line).strip()
     return name, None
 
 
@@ -451,6 +451,9 @@ def _join_wrapped_lines(raw_text: str) -> list:
             current = current[:-1] + stripped
             continue
 
+        if stripped == "-":
+            continue
+
         if stripped.startswith("-"):
             content_after_dash = stripped.lstrip("-").strip()
             if _is_recipe_dash_line(content_after_dash):
@@ -461,6 +464,13 @@ def _join_wrapped_lines(raw_text: str) -> list:
             if current is not None:
                 logical_lines.append(current)
             current = stripped
+        elif re.match(r"^(?:\d+\s*(?:g|ml)\b|\d+\s*[A-ZÁÉÍÓÚÑ]|½\s+)", stripped):
+            if current is not None and current.rstrip().endswith("/"):
+                current = current + " " + stripped
+                continue
+            if current is not None:
+                logical_lines.append(current)
+            current = "-" + stripped
         else:
             if _is_recipe_line(stripped):
                 if current is not None:
@@ -575,10 +585,11 @@ def parse_pdf_to_structure(pdf_path: str) -> dict:
     try:
         with pdfplumber.open(pdf_path) as pdf:
             page_texts = []
-            for i, page in enumerate(pdf.pages):
-                if i >= 6:
+            for page in pdf.pages:
+                text = page.extract_text() or ""
+                if re.search(r"^\s*(?:SUPLEMENTACI[ÓO]N|ENTRENAMIENTO)\s*$", text, re.MULTILINE):
                     break
-                page_texts.append(page.extract_text() or "")
+                page_texts.append(text)
     except FileNotFoundError:
         return {"status": "error", "message": f"File not found: {pdf_path}"}
     except Exception as e:
@@ -779,7 +790,7 @@ def main():
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     parse_parser = subparsers.add_parser(
-        "parse", help="Extract structured diet data from PDF pages 1-6"
+        "parse", help="Extract structured diet data from a PDF"
     )
     parse_parser.add_argument("pdf_path", help="Path to the PDF file")
     parse_parser.set_defaults(func=cmd_parse)
