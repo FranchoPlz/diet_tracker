@@ -12,6 +12,7 @@ export const appState = $state({
   savedLists: [] as SavedShoppingList[],
   persistenceReady: false,
   darkMode: false,
+  compactView: false,
   loading: false,
   error: null as string | null,
 });

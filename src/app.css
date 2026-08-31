@@ -14,3 +14,106 @@ body {
 button, input, summary {
   transition-duration: 150ms;
 }
+
+.compact-view .compact-week {
+  padding: 0.75rem;
+  border-radius: 1rem;
+}
+
+.compact-view .compact-week-header {
+  margin-bottom: 0.75rem;
+}
+
+.compact-view .compact-week-header h2,
+.compact-view .compact-day-detail-header h2 {
+  font-size: 1.125rem;
+}
+
+.compact-view .compact-week-header p:not(:first-child) {
+  display: none;
+}
+
+.compact-view .compact-week-grid {
+  gap: 0.375rem;
+}
+
+.compact-view .compact-day-card {
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+}
+
+.compact-view .compact-day-heading {
+  margin-bottom: 0.375rem;
+}
+
+.compact-view .compact-day-heading > span:last-child {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.compact-view .compact-day-detail {
+  border-radius: 1rem;
+}
+
+.compact-view .compact-day-detail-header,
+.compact-view .compact-day-body,
+.compact-view .compact-shopping-header {
+  padding: 0.75rem;
+}
+
+.compact-view .compact-day-controls {
+  padding: 0.5rem 0.75rem;
+}
+
+.compact-view .compact-meals {
+  gap: 0.5rem;
+}
+
+.compact-view .compact-meal-card {
+  border-radius: 0.75rem;
+}
+
+.compact-view .compact-meal-heading {
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.compact-view .compact-meal-heading > span:first-child {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.compact-view .compact-meal-body {
+  padding: 0.625rem;
+}
+
+.compact-view .compact-option-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  padding: 0.25rem;
+}
+
+.compact-view .compact-option-grid label {
+  gap: 0.375rem;
+  padding: 0.375rem 0.5rem;
+}
+
+.compact-view .compact-shopping {
+  border-radius: 1rem;
+}
+
+.compact-view .compact-shopping-item {
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+@media (max-width: 639px) {
+  .compact-view .compact-week-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .compact-view .compact-option-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

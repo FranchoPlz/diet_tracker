@@ -39,8 +39,8 @@
 </script>
 
 {#if appState.shoppingList.length > 0 || appState.activeListId}
-  <section class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
-    <div class="border-b border-stone-200 p-5 dark:border-stone-700">
+  <section class="compact-shopping overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
+    <div class="compact-shopping-header border-b border-stone-200 p-5 dark:border-stone-700">
       <p class="text-xs font-bold uppercase tracking-[0.2em] text-teal-700 dark:text-teal-300">En el supermercado</p>
       <input bind:value={appState.activeListName} aria-label="Nombre de la lista" class="mt-1 w-full bg-transparent text-2xl font-black text-stone-900 outline-none dark:text-white" />
       <div class="mt-1 flex items-center justify-between gap-3">
@@ -64,7 +64,7 @@
             <div class="divide-y divide-stone-100 dark:divide-stone-800">
               {#each items as item (item.id)}
                 {@const key = `${item.name}|${item.unit ?? ''}`}
-                <div class="flex items-start gap-3 px-5 py-3.5">
+                <div class="compact-shopping-item flex items-start gap-3 px-5 py-3.5">
                   <input type="checkbox" bind:checked={appState.checkedShoppingItems[key]} class="mt-1 size-5 shrink-0 accent-teal-700" aria-label="Marcar {item.name}" />
                   <div class="min-w-0 flex-1">
                     {#if editingId === item.id}

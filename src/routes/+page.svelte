@@ -7,6 +7,7 @@
   import ExportButton from '$lib/components/ExportButton.svelte';
   import PdfUpload from '$lib/components/PdfUpload.svelte';
   import ShoppingList from '$lib/components/ShoppingList.svelte';
+  import ShareList from '$lib/components/ShareList.svelte';
   import WeekGrid from '$lib/components/WeekGrid.svelte';
 
   let selectedDayIndex = $state<number | null>(0);
@@ -51,6 +52,7 @@
             <CalculateButton />
           </div>
           <ShoppingList />
+          <ShareList />
           {#if appState.shoppingList.length > 0}<ExportButton />{/if}
         </aside>
       </div>
@@ -65,6 +67,6 @@
   {/if}
 
   {#if !appState.parsedData && appState.activeListId}
-    <div class="mx-auto mt-8 max-w-2xl"><ShoppingList /></div>
+    <div class="mx-auto mt-8 max-w-2xl space-y-4"><ShoppingList /><ShareList /></div>
   {/if}
 </main>

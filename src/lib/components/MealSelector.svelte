@@ -45,7 +45,7 @@
   }
 </script>
 
-<div class="flex flex-col gap-4">
+<div class="compact-meals flex flex-col gap-4">
   <div class="flex items-center justify-end gap-1 px-1">
     <button class="rounded-lg px-2.5 py-1.5 text-xs font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={() => setAllExpanded(true)}>Abrir todo</button>
     <span class="text-stone-300 dark:text-stone-700">·</span>
@@ -56,9 +56,9 @@
     {@const selectedOptionIndex = getEffectiveMealOptionIndex(appState.weekConfig, dayIndex, meal.type)}
     {@const option = meal.options[selectedOptionIndex]}
 
-    <section class="overflow-hidden rounded-2xl border border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900">
+    <section class="compact-meal-card overflow-hidden rounded-2xl border border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900">
       <button
-        class="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-stone-50 dark:hover:bg-stone-800/70"
+        class="compact-meal-heading flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-stone-50 dark:hover:bg-stone-800/70"
         onclick={() => expandedMeals[mealIndex] = !isExpanded(mealIndex)}
         aria-expanded={isExpanded(mealIndex)}
         aria-controls="meal-{dayIndex}-{mealIndex}"
@@ -74,9 +74,9 @@
       </button>
 
       {#if isExpanded(mealIndex)}
-        <div id="meal-{dayIndex}-{mealIndex}" class="border-t border-stone-100 p-4 dark:border-stone-800">
+        <div id="meal-{dayIndex}-{mealIndex}" class="compact-meal-body border-t border-stone-100 p-4 dark:border-stone-800">
           {#if meal.options.length > 1}
-            <div class="grid grid-cols-1 gap-2 mb-5 bg-stone-50 dark:bg-stone-950/50 p-2 rounded-xl sm:grid-cols-2">
+            <div class="compact-option-grid grid grid-cols-1 gap-2 mb-5 bg-stone-50 dark:bg-stone-950/50 p-2 rounded-xl sm:grid-cols-2">
               {#each meal.options as opt, optIdx}
                 <label class="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg {selectedOptionIndex === optIdx ? 'bg-white dark:bg-stone-700 shadow-sm ring-1 ring-teal-300' : 'hover:bg-stone-200/50 dark:hover:bg-stone-700/50'}">
                   <input

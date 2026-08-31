@@ -23,8 +23,8 @@
   }
 </script>
 
-<div class="flex flex-col bg-white dark:bg-stone-900 rounded-3xl shadow-sm border border-stone-200 dark:border-stone-700 overflow-hidden xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)]">
-  <div class="flex items-center justify-between p-5 border-b border-stone-100 dark:border-stone-700 bg-stone-50/70 dark:bg-stone-800/50">
+<div class="compact-day-detail flex flex-col bg-white dark:bg-stone-900 rounded-3xl shadow-sm border border-stone-200 dark:border-stone-700 overflow-hidden xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)]">
+  <div class="compact-day-detail-header flex items-center justify-between p-5 border-b border-stone-100 dark:border-stone-700 bg-stone-50/70 dark:bg-stone-800/50">
     <div class="flex flex-col">
       <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">Paso 2</p>
       <h2 class="text-2xl font-black tracking-tight text-stone-900 dark:text-white">Día {day.day} · {day.diet}</h2>
@@ -41,7 +41,7 @@
     </button>
   </div>
 
-  <div class="flex items-center gap-3 px-5 py-3 border-b border-stone-100 dark:border-stone-700 bg-stone-50/30 dark:bg-stone-800/30">
+  <div class="compact-day-controls flex items-center gap-3 px-5 py-3 border-b border-stone-100 dark:border-stone-700 bg-stone-50/30 dark:bg-stone-800/30">
     <label class="flex items-center gap-2 cursor-pointer">
       <input 
         type="checkbox" 
@@ -80,7 +80,7 @@
     </div>
   {/if}
 
-  <div class="p-5 overflow-y-auto">
+  <div class="compact-day-body p-5 overflow-y-auto">
     {#if dietData}
       <MealSelector {dayIndex} {dietData} asException={exceptionMode || isException} />
     {:else}

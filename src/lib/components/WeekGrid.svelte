@@ -17,8 +17,8 @@
   }
 </script>
 
-<section class="rounded-3xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900 sm:p-6">
-  <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+<section class="compact-week rounded-3xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900 sm:p-6">
+  <div class="compact-week-header mb-5 flex flex-wrap items-end justify-between gap-3">
     <div>
       <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">Paso 1</p>
       <h2 class="mt-1 text-2xl font-black tracking-tight text-stone-900 dark:text-white">Organiza tu semana</h2>
@@ -27,12 +27,12 @@
     <div class="rounded-full bg-stone-100 px-3 py-1.5 text-xs font-bold text-stone-600 dark:bg-stone-800 dark:text-stone-300">7 días</div>
   </div>
 
-  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-7">
+  <div class="compact-week-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-7">
     {#each appState.weekConfig.days.slice(0, 7) as day, dayIndex}
       {@const isSelected = selectedDayIndex === dayIndex}
       {@const isException = hasException(appState.weekConfig, dayIndex)}
-      <article class="rounded-2xl border p-3 transition {isSelected ? 'border-orange-500 bg-orange-50 shadow-md dark:bg-orange-950/30' : 'border-stone-200 bg-stone-50 hover:border-stone-300 dark:border-stone-700 dark:bg-stone-800/60'}">
-        <button class="mb-3 flex w-full items-center justify-between text-left" onclick={() => onDayClick(dayIndex)}>
+      <article class="compact-day-card rounded-2xl border p-3 transition {isSelected ? 'border-orange-500 bg-orange-50 shadow-md dark:bg-orange-950/30' : 'border-stone-200 bg-stone-50 hover:border-stone-300 dark:border-stone-700 dark:bg-stone-800/60'}">
+        <button class="compact-day-heading mb-3 flex w-full items-center justify-between text-left" onclick={() => onDayClick(dayIndex)}>
           <span>
             <span class="block text-xs font-bold uppercase tracking-wider text-stone-400">{dayNames[dayIndex]}</span>
             <span class="text-base font-black text-stone-900 dark:text-white">Día {day.day}</span>
