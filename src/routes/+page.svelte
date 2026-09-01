@@ -90,27 +90,29 @@
 
 <svelte:head><title>Mi semana · Planificador de dieta</title></svelte:head>
 
-<main class="mx-auto w-full min-w-0 max-w-[1480px] px-4 pb-20 sm:px-6 lg:px-8">
+<main class="w-full min-w-0 pb-20">
   <ShareImport />
 
   {#if !appState.persistenceReady}
-    <div class="grid min-h-64 place-items-center" role="status">
+    <div class="mx-auto grid min-h-64 max-w-[1480px] place-items-center px-4 sm:px-6 lg:px-8" role="status">
       <p class="font-bold text-stone-500">Recuperando tu plan…</p>
     </div>
   {:else if !appState.parsedData}
-    <header class="mb-8 max-w-3xl">
-      <p class="mb-2 text-xs font-black uppercase tracking-[0.28em] text-orange-600">Plan semanal</p>
-      <h1 class="text-4xl font-black tracking-[-0.04em] text-stone-950 dark:text-white sm:text-6xl">Del menú al carro,<br /><span class="text-stone-400">sin hacer cuentas.</span></h1>
-      <p class="mt-4 max-w-2xl text-base leading-relaxed text-stone-600 dark:text-stone-400">Carga tu dieta para configurar tus comidas, consultar el entrenamiento y preparar la compra.</p>
-    </header>
-    <PdfUpload />
-    {#if appState.activeListId}
-      <div class="mx-auto mt-8 max-w-2xl space-y-4"><ShoppingList /><ShareList /></div>
-    {/if}
+    <div class="mx-auto max-w-[1480px] px-4 sm:px-6 lg:px-8">
+      <header class="mb-8 max-w-3xl">
+        <p class="mb-2 text-xs font-black uppercase tracking-[0.28em] text-orange-600">Plan semanal</p>
+        <h1 class="text-4xl font-black tracking-[-0.04em] text-stone-950 dark:text-white sm:text-6xl">Del menú al carro,<br /><span class="text-stone-400">sin hacer cuentas.</span></h1>
+        <p class="mt-4 max-w-2xl text-base leading-relaxed text-stone-600 dark:text-stone-400">Carga tu dieta para configurar tus comidas, consultar el entrenamiento y preparar la compra.</p>
+      </header>
+      <PdfUpload />
+      {#if appState.activeListId}
+        <div class="mx-auto mt-8 max-w-2xl space-y-4"><ShoppingList /><ShareList /></div>
+      {/if}
+    </div>
   {:else}
     <AppTabs active={appState.activeTab} onChange={setTab} shoppingCount={appState.shoppingList.length} />
 
-    <div class="mt-4 touch-pan-y" role="tabpanel" tabindex="0">
+    <div class="mx-auto mt-4 max-w-[1480px] touch-pan-y px-4 sm:px-6 lg:px-8" role="tabpanel" tabindex="0">
       {#if appState.activeTab === 'home'}
         <HomeOverview />
       {:else if appState.activeTab === 'diet'}
