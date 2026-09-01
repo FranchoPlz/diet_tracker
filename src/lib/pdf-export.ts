@@ -19,11 +19,26 @@ const PAGE_WIDTH = 595.28;
 const PAGE_HEIGHT = 841.89;
 const MARGIN = 42;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
-const ROW_PADDING = 5;
+const ROW_PADDING = 6;
 
 interface PdfPage {
   content: string;
 }
+
+type PdfColor = [number, number, number];
+
+const COLORS = {
+  ink: [0.08, 0.08, 0.09] as PdfColor,
+  muted: [0.34, 0.34, 0.38] as PdfColor,
+  border: [0.82, 0.82, 0.85] as PdfColor,
+  header: [0.05, 0.05, 0.06] as PdfColor,
+  red: [0.86, 0.15, 0.15] as PdfColor,
+  orange: [0.98, 0.45, 0.10] as PdfColor,
+  orangeSoft: [1, 0.94, 0.86] as PdfColor,
+  row: [1, 1, 1] as PdfColor,
+  rowAlt: [0.985, 0.985, 0.99] as PdfColor,
+  white: [1, 1, 1] as PdfColor,
+};
 
 function normalizeText(value: string): string {
   return value
@@ -59,136 +74,122 @@ function wrapText(text: string, maxChars: number): string[] {
   return lines.length ? lines : [''];
 }
 
-function textCommand(text: string, x: number, y: number, size: number, font = 'F1'): string {
-  return `BT /${font} ${size} Tf ${x.toFixed(2)} ${y.toFixed(2)} Td ${pdfString(text)} Tj ET\n`;
+function colorCommand(color: PdfColor, operator: 'rg' | 'RG'): string {
+  return `${color.join(' ')} ${operator}`;
 }
 
-function fillRect(x: number, y: number, width: number, height: number, color: [number, number, number]): string {
-  return `${color.join(' ')} rg ${x.toFixed(2)} ${y.toFixed(2)} ${width.toFixed(2)} ${height.toFixed(2)} re f\n`;
+function textCommand(text: string, x: number, y: number, size: number, font = 'F1', color = COLORS.ink): string {
+  return `${colorCommand(color, 'rg')} BT /${font} ${size} Tf ${x.toFixed(2)} ${y.toFixed(2)} Td ${pdfString(text)} Tj ET\n`;
 }
 
-function strokeRect(x: number, y: number, width: number, height: number, color: [number, number, number], lineWidth = 0.8): string {
-  return `${color.join(' ')} RG ${lineWidth} w ${x.toFixed(2)} ${y.toFixed(2)} ${width.toFixed(2)} ${height.toFixed(2)} re S\n`;
+function fillRect(x: number, y: number, width: number, height: number, color: PdfColor): string {
+  return `${colorCommand(color, 'rg')} ${x.toFixed(2)} ${y.toFixed(2)} ${width.toFixed(2)} ${height.toFixed(2)} re f\n`;
 }
 
-function strokeLine(x1: number, y1: number, x2: number, y2: number, color: [number, number, number], lineWidth = 0.6): string {
-  return `${color.join(' ')} RG ${lineWidth} w ${x1.toFixed(2)} ${y1.toFixed(2)} m ${x2.toFixed(2)} ${y2.toFixed(2)} l S\n`;
+function strokeRect(x: number, y: number, width: number, height: number, color: PdfColor, lineWidth = 0.6): string {
+  return `${colorCommand(color, 'RG')} ${lineWidth} w ${x.toFixed(2)} ${y.toFixed(2)} ${width.toFixed(2)} ${height.toFixed(2)} re S\n`;
+}
+
+function strokeLine(x1: number, y1: number, x2: number, y2: number, color: PdfColor, lineWidth = 0.5): string {
+  return `${colorCommand(color, 'RG')} ${lineWidth} w ${x1.toFixed(2)} ${y1.toFixed(2)} m ${x2.toFixed(2)} ${y2.toFixed(2)} l S\n`;
 }
 
 export function createPlanPdfBytes(payload: ExportPayload, title = 'Plan semanal'): Uint8Array {
   const pages: PdfPage[] = [];
   let content = '';
   let y = PAGE_HEIGHT - MARGIN;
-  const tableX = MARGIN;
-  const columnWidths = [76, 132, CONTENT_WIDTH - 76 - 132];
-  const tableBorder: [number, number, number] = [0.84, 0.84, 0.86];
-  const tableHeader: [number, number, number] = [0.98, 0.33, 0.12];
-  const dayHeader: [number, number, number] = [0.86, 0.15, 0.15];
-  const rowAlt: [number, number, number] = [0.98, 0.98, 0.98];
 
-  function newPage() {
+  function newPage(): void {
     if (content) pages.push({ content });
     content = '';
     y = PAGE_HEIGHT - MARGIN;
   }
 
-  function ensureSpace(height: number) {
-    if (y - height < MARGIN + 22) newPage();
+  function ensureSpace(height: number): void {
+    if (y - height < MARGIN + 24) newPage();
   }
 
-  function line(text: string, size = 10, indent = 0, font = 'F1') {
-    const maxChars = Math.max(28, Math.floor((CONTENT_WIDTH - indent) / (size * 0.46)));
-    for (const wrapped of wrapText(text, maxChars)) {
-      ensureSpace(size + 5);
-      content += textCommand(wrapped, MARGIN + indent, y, size, font);
-      y -= size + 5;
+  function drawWrapped(text: string, x: number, size: number, maxChars: number, font = 'F1', color = COLORS.ink): number {
+    let used = 0;
+    for (const line of wrapText(text, maxChars)) {
+      content += textCommand(line, x, y - used, size, font, color);
+      used += size + 4;
+    }
+    return used;
+  }
+
+  function drawFooter(pageNumber: number): string {
+    return `${strokeLine(MARGIN, 31, PAGE_WIDTH - MARGIN, 31, COLORS.border)}${textCommand(`Pagina ${pageNumber}`, PAGE_WIDTH - MARGIN - 54, 18, 8, 'F1', COLORS.muted)}`;
+  }
+
+  function drawDocumentHeader(): void {
+    content += fillRect(0, PAGE_HEIGHT - 108, PAGE_WIDTH, 108, COLORS.header);
+    content += fillRect(0, PAGE_HEIGHT - 108, PAGE_WIDTH, 7, COLORS.orange);
+    content += textCommand(title, MARGIN, PAGE_HEIGHT - 58, 22, 'F2', COLORS.white);
+    content += textCommand(`Dieta seleccionada · ${new Date(payload.generated_at).toLocaleDateString('es-ES')}`, MARGIN, PAGE_HEIGHT - 82, 10, 'F1', [0.88, 0.88, 0.90]);
+    y = PAGE_HEIGHT - 134;
+  }
+
+  function drawDayHeader(day: ExportDay, continued = false): void {
+    ensureSpace(36);
+    content += fillRect(MARGIN, y - 25, CONTENT_WIDTH, 25, COLORS.red);
+    content += textCommand(`Dia ${day.day}${continued ? ' (continuacion)' : ''}`, MARGIN + 10, y - 17, 11, 'F2', COLORS.white);
+    content += textCommand(day.diet, MARGIN + 146, y - 17, 11, 'F2', COLORS.white);
+    y -= 34;
+  }
+
+  function drawMealHeader(day: ExportDay, meal: ExportMeal): void {
+    if (y - 42 < MARGIN + 24) {
+      newPage();
+      drawDayHeader(day, true);
+    }
+    content += fillRect(MARGIN, y - 24, CONTENT_WIDTH, 24, COLORS.orangeSoft);
+    content += strokeRect(MARGIN, y - 24, CONTENT_WIDTH, 24, COLORS.border);
+    content += textCommand(meal.type, MARGIN + 10, y - 16, 9, 'F2', COLORS.ink);
+    const optionLines = wrapText(meal.option, 62);
+    content += textCommand(optionLines[0] ?? meal.option, MARGIN + 96, y - 16, 9, 'F1', COLORS.ink);
+    y -= 24;
+    for (const extra of optionLines.slice(1)) {
+      ensureSpace(13);
+      content += textCommand(extra, MARGIN + 96, y - 9, 8, 'F1', COLORS.muted);
+      y -= 13;
     }
   }
 
-  function drawPageFooter(pageNumber: number) {
-    return `${strokeLine(MARGIN, 31, PAGE_WIDTH - MARGIN, 31, tableBorder, 0.5)}${textCommand(`Pagina ${pageNumber}`, PAGE_WIDTH - MARGIN - 54, 18, 8)}`;
-  }
-
-  function drawTableHeader() {
-    const height = 20;
-    ensureSpace(height + 8);
-    content += fillRect(tableX, y - height, CONTENT_WIDTH, height, tableHeader);
-    content += textCommand('Comida', tableX + ROW_PADDING, y - 13, 8.5, 'F2');
-    content += textCommand('Opcion', tableX + columnWidths[0] + ROW_PADDING, y - 13, 8.5, 'F2');
-    content += textCommand('Ingrediente', tableX + columnWidths[0] + columnWidths[1] + ROW_PADDING, y - 13, 8.5, 'F2');
-    y -= height;
-  }
-
-  function drawIngredientRow(cells: [string, string, string], shaded: boolean) {
-    const wrappedCells = [
-      wrapText(cells[0], 12),
-      wrapText(cells[1], 23),
-      wrapText(cells[2], 56),
-    ];
-    const rowHeight = Math.max(...wrappedCells.map(lines => lines.length)) * 10 + ROW_PADDING * 2;
-    if (y - rowHeight < MARGIN + 22) {
+  function drawIngredientRow(day: ExportDay, meal: ExportMeal, ingredient: string, index: number): void {
+    const lines = wrapText(ingredient, 90);
+    const rowHeight = lines.length * 10 + ROW_PADDING * 2;
+    if (y - rowHeight < MARGIN + 24) {
       newPage();
-      drawTableHeader();
+      drawDayHeader(day, true);
+      drawMealHeader(day, meal);
     }
     const bottom = y - rowHeight;
-    if (shaded) content += fillRect(tableX, bottom, CONTENT_WIDTH, rowHeight, rowAlt);
-    content += strokeRect(tableX, bottom, CONTENT_WIDTH, rowHeight, tableBorder, 0.45);
-    content += strokeLine(tableX + columnWidths[0], bottom, tableX + columnWidths[0], y, tableBorder, 0.45);
-    content += strokeLine(tableX + columnWidths[0] + columnWidths[1], bottom, tableX + columnWidths[0] + columnWidths[1], y, tableBorder, 0.45);
-    wrappedCells.forEach((lines, index) => {
-      const x = tableX + columnWidths.slice(0, index).reduce((sum, width) => sum + width, 0) + ROW_PADDING;
-      let textY = y - ROW_PADDING - 7;
-      for (const wrapped of lines) {
-        if (!wrapped) continue;
-        content += textCommand(wrapped, x, textY, 8, index === 0 ? 'F2' : 'F1');
-        textY -= 10;
-      }
-    });
+    content += fillRect(MARGIN, bottom, CONTENT_WIDTH, rowHeight, index % 2 === 0 ? COLORS.row : COLORS.rowAlt);
+    content += strokeRect(MARGIN, bottom, CONTENT_WIDTH, rowHeight, COLORS.border, 0.4);
+    let textY = y - ROW_PADDING - 8;
+    for (const line of lines) {
+      content += textCommand(line, MARGIN + 12, textY, 8.5, 'F1', COLORS.ink);
+      textY -= 10;
+    }
     y = bottom;
   }
 
-  function drawMealRows(meal: ExportMeal, mealIndex: number) {
-    const ingredients = meal.ingredients.length ? meal.ingredients : ['Sin ingredientes'];
-    ingredients.forEach((ingredient, ingredientIndex) => {
-      drawIngredientRow([
-        ingredientIndex === 0 ? meal.type : '',
-        ingredientIndex === 0 ? meal.option : '',
-        ingredient,
-      ], (mealIndex + ingredientIndex) % 2 === 1);
-    });
-  }
-
-  function estimateMealHeight(meal: ExportMeal): number {
-    const ingredients = meal.ingredients.length ? meal.ingredients : ['Sin ingredientes'];
-    return ingredients.reduce((sum, ingredient, index) => {
-      const cells = [index === 0 ? meal.type : '', index === 0 ? meal.option : '', ingredient];
-      const lines = Math.max(wrapText(cells[0], 12).length, wrapText(cells[1], 23).length, wrapText(cells[2], 56).length);
-      return sum + lines * 10 + ROW_PADDING * 2;
-    }, 0);
-  }
-
-  function estimateDayHeight(day: ExportDay): number {
-    return 24 + 24 + day.meals.reduce((sum, meal) => sum + estimateMealHeight(meal), 0) + 18;
-  }
-
-  content += fillRect(0, PAGE_HEIGHT - 108, PAGE_WIDTH, 108, [0.05, 0.05, 0.06]);
-  content += fillRect(0, PAGE_HEIGHT - 108, PAGE_WIDTH, 7, [0.98, 0.33, 0.12]);
-  content += textCommand(title, MARGIN, PAGE_HEIGHT - 58, 22, 'F2');
-  content += textCommand(`Dieta seleccionada · ${new Date(payload.generated_at).toLocaleDateString('es-ES')}`, MARGIN, PAGE_HEIGHT - 82, 10);
-  y = PAGE_HEIGHT - 136;
+  drawDocumentHeader();
 
   for (const day of payload.days) {
-    ensureSpace(Math.min(estimateDayHeight(day), 180));
-    content += fillRect(MARGIN, y - 24, CONTENT_WIDTH, 24, dayHeader);
-    content += textCommand(`Dia ${day.day}`, MARGIN + 10, y - 16, 11, 'F2');
-    content += textCommand(day.diet, MARGIN + 74, y - 16, 11, 'F2');
-    y -= 28;
-    drawTableHeader();
-    day.meals.forEach(drawMealRows);
-    y -= 16;
+    drawDayHeader(day);
+    for (const meal of day.meals) {
+      drawMealHeader(day, meal);
+      const ingredients = meal.ingredients.length ? meal.ingredients : ['Sin ingredientes'];
+      ingredients.forEach((ingredient, index) => drawIngredientRow(day, meal, ingredient, index));
+      y -= 10;
+    }
+    y -= 8;
   }
+
   if (content) pages.push({ content });
-  pages.forEach((page, index) => page.content += drawPageFooter(index + 1));
+  pages.forEach((page, index) => page.content += drawFooter(index + 1));
 
   const objects: string[] = [];
   const catalogId = 1;
