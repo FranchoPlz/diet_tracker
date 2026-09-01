@@ -144,7 +144,7 @@
           </section>
           <ShoppingList />
           <ShareList />
-          {#if appState.shoppingList.length > 0}<ExportButton />{/if}
+          <ExportButton />
         </div>
       {/if}
     </div>
