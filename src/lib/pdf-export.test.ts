@@ -18,10 +18,12 @@ describe('PDF plan export', () => {
     expect(content).toContain('Plan prueba');
     expect(content).toContain('Comida');
     expect(content).toContain('Opcion');
-    expect(content).toContain('Ingredientes');
+    expect(content).toContain('Ingrediente');
     expect(content).toContain('COMIDA');
     expect(content).toContain('Opción arroz');
-    expect(content).toContain('100 g arroz · 2 huevos');
+    expect(content).toContain('100 g arroz');
+    expect(content).toContain('2 huevos');
+    expect(content).not.toContain('100 g arroz · 2 huevos');
     expect(content).toContain(' re f');
     expect(content).toContain(' re S');
     expect(content).toContain('Pagina 1');
