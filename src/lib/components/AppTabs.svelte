@@ -28,7 +28,7 @@
   aria-label="Secciones de la aplicación"
 >
   <div
-    class="mx-auto grid w-full max-w-xl grid-cols-4 gap-1 rounded-2xl p-0.5"
+    class="grid w-full grid-cols-4 gap-1 rounded-2xl p-0.5"
     role="tablist"
   >
     {#each tabs as tab}
