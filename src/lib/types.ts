@@ -60,6 +60,15 @@ export interface ExerciseRow {
   supersetExercises?: string[];
 }
 
+/** Browser-session key for an optional preview assigned to a training exercise. */
+export type ExercisePreviewKey = `${number}:${number}`;
+
+/** PDF-space rectangle used only while processing a browser-uploaded PDF. */
+export interface ExerciseCropSource {
+  page: number;
+  bounds: { left: number; bottom: number; right: number; top: number };
+}
+
 /**
  * Global defaults for a single diet (DIETA 1 or DIETA 2).
  * These apply to ALL days that use this diet unless a per-day exception exists.

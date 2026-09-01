@@ -1,6 +1,7 @@
 import { calculateShoppingList } from './calculation';
 import { applyList, persistCurrentList } from './list-controller';
 import { appState } from './state.svelte';
+import { clearExercisePreviews } from './exercise-preview-controller';
 import { listPlans, listShoppingLists, savePlan, saveShoppingList, setActivePlanId } from './storage';
 import type { SavedPlan, SavedShoppingList, WeekConfig } from './types';
 
@@ -60,6 +61,7 @@ export async function persistCurrentPlan(): Promise<SavedPlan> {
 }
 
 export async function restorePlan(plan: SavedPlan): Promise<void> {
+  clearExercisePreviews();
   appState.activePlanId = plan.id;
   appState.activePlanName = plan.name;
   appState.configured = plan.configured ?? true;

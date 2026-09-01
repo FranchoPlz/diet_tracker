@@ -1,7 +1,17 @@
-import type { DietPlan, ExerciseRow, IngredientItem, IngredientLine, Meal, MealOption, ParseResult, TrainingDay, TrainingPlan } from './types';
+import type { DietPlan, ExerciseCropSource, ExercisePreviewKey, ExerciseRow, IngredientItem, IngredientLine, Meal, MealOption, ParseResult, TrainingDay, TrainingPlan } from './types';
 
-export type TrainingTable = [string, string, string, string][];
+export interface TrainingTableRow {
+  columns: [string, string, string, string];
+  bounds?: ExerciseCropSource['bounds'];
+}
+export interface TrainingTable {
+  rows: TrainingTableRow[];
+}
 export type DietPageText = string | { page: number; text: string; trainingTable?: TrainingTable };
+export interface RichParseResult {
+  result: ParseResult;
+  exerciseCropSources: Partial<Record<ExercisePreviewKey, ExerciseCropSource>>;
+}
 
 const MEAL_TYPES = ['ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA'] as const;
 const MEAL_HEADER_RE = /^\s*(ALMUERZO|COMIDA|MERIENDA|CENA)\s*$/;
@@ -303,8 +313,9 @@ function parseExerciseRows(rawText: string): ExerciseRow[] {
   return rows;
 }
 
-function parseTrainingTable(table: TrainingTable): ExerciseRow[] {
-  return table.slice(1).flatMap((columns) => {
+function parseTrainingTable(table: TrainingTable): Array<{ exercise: ExerciseRow; source: TrainingTableRow }> {
+  return table.rows.slice(1).flatMap((source) => {
+    const { columns } = source;
     if (!columns[0]) return [];
     const isSuperset = /^\s*SUPERSERIE/i.test(columns[0]);
     const exerciseText = columns[0].replace(/^\s*SUPERSERIE\s*/i, '');
@@ -318,11 +329,11 @@ function parseTrainingTable(table: TrainingTable): ExerciseRow[] {
       details: cleanTrainingLines(columns[3]).join(' '),
     };
     if (isSuperset) row.supersetExercises = exerciseLines;
-    return [row];
+    return [{ exercise: row, source }];
   });
 }
 
-function parseTraining(pageTexts: readonly DietPageText[]): TrainingPlan | undefined {
+function parseTraining(pageTexts: readonly DietPageText[]): { training: TrainingPlan; exerciseCropSources: RichParseResult['exerciseCropSources'] } | undefined {
   const pages = pageTexts.map((page) => typeof page === 'string' ? page : page.text);
   const trainingStart = pages.findIndex((text) => TRAINING_HEADER_RE.test(text));
   if (trainingStart < 0) return undefined;
@@ -358,20 +369,33 @@ function parseTraining(pageTexts: readonly DietPageText[]): TrainingPlan | undef
     }
   }
 
+  const exerciseCropSources: RichParseResult['exerciseCropSources'] = {};
   for (const page of pageTexts) {
     if (typeof page === 'string' || !page.trainingTable) continue;
     const pageDay = page.text.match(new RegExp(DAY_HEADER_RE.source, 'im'));
     if (!pageDay) continue;
     const dayNumbers = [...pageDay[1].matchAll(/\d+/g)].map((value) => Number(value[0]));
     const day = days.find((value) => value.days.length === dayNumbers.length && value.days.every((number, index) => number === dayNumbers[index]));
-    if (day) day.exercises = parseTrainingTable(page.trainingTable);
+    if (day) {
+      const parsedRows = parseTrainingTable(page.trainingTable);
+      day.exercises = parsedRows.map(({ exercise }) => exercise);
+      const dayIndex = days.indexOf(day);
+      for (const [exerciseIndex, { source }] of parsedRows.entries()) {
+        if (source.bounds) exerciseCropSources[`${dayIndex}:${exerciseIndex}`] = { page: page.page, bounds: source.bounds };
+      }
+    }
   }
 
-  return { tips, defaultRestSeconds: restMatch ? Number(restMatch[1]) : null, days };
+  return { training: { tips, defaultRestSeconds: restMatch ? Number(restMatch[1]) : null, days }, exerciseCropSources };
 }
 
 /** Parse already-extracted page text. This function has no PDF.js or browser dependency. */
 export function parseDietText(pageTexts: readonly DietPageText[]): ParseResult {
+  return parseDietTextWithExerciseCrops(pageTexts).result;
+}
+
+/** Rich, runtime-only parse output retaining geometry-derived exercise crop sources. */
+export function parseDietTextWithExerciseCrops(pageTexts: readonly DietPageText[]): RichParseResult {
   const relevantPages: string[] = [];
   for (const page of pageTexts) {
     const text = typeof page === 'string' ? page : page.text;
@@ -386,7 +410,9 @@ export function parseDietText(pageTexts: readonly DietPageText[]): ParseResult {
   }
   if (diets.length === 0) throw new Error('No se han encontrado secciones DIETA en el PDF.');
   const training = parseTraining(pageTexts);
-  return training ? { status: 'ok', diets, training } : { status: 'ok', diets };
+  return training
+    ? { result: { status: 'ok', diets, training: training.training }, exerciseCropSources: training.exerciseCropSources }
+    : { result: { status: 'ok', diets }, exerciseCropSources: {} };
 }
 
 export { MEAL_TYPES };

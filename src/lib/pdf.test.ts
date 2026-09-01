@@ -59,11 +59,12 @@ describe('training table geometry', () => {
       item('DÍA 2', 240, 600), item('DESCANSO ACTIVO', 300, 600), item('45 MINUTOS', 200, 580),
     ]);
 
-    expect(table).toEqual([
+    expect(table?.rows.map((row) => row.columns)).toEqual([
       ['EJERCICIOS', 'SERIES', 'REPETICIONES', 'DETALLES'],
       ['Press inclinado con mancuernas', '4', '10\n8', 'Con control'],
       ['Remo a 1 mano', '3', '12', '1 parada de 3'],
     ]);
+    expect(table?.rows[1].bounds).toEqual({ left: 40, right: 470, top: 688, bottom: 660 });
   });
 
   it('does not guess a table without four ordered header anchors', () => {

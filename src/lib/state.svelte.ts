@@ -1,8 +1,10 @@
-import type { ParseResult, WeekConfig, ShoppingItem, SavedPlan, SavedShoppingList } from './types';
+import type { ExercisePreviewKey, ParseResult, WeekConfig, ShoppingItem, SavedPlan, SavedShoppingList } from './types';
 import { createDefaultWeekConfig } from './utils';
 
 export const appState = $state({
   parsedData: null as ParseResult | null,
+  // Object URLs are intentionally browser-session-only and never persisted with a plan.
+  exercisePreviewUrls: {} as Partial<Record<ExercisePreviewKey, string>>,
   pdfPath: null as string | null,
   weekConfig: createDefaultWeekConfig(1) as WeekConfig,
   shoppingList: [] as ShoppingItem[],

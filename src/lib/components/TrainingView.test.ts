@@ -8,6 +8,22 @@ describe('TrainingView', () => {
   afterEach(() => {
     cleanup();
     appState.parsedData = null;
+    appState.exercisePreviewUrls = {};
+  });
+
+  it('renders only the assigned lazy preview image', () => {
+    appState.parsedData = { status: 'ok', diets: [], training: { tips: [], defaultRestSeconds: null, days: [
+      { days: [1], title: 'TORSO', activeRest: false, details: '', exercises: [{ exercise: 'Remo', series: '3', repetitions: '12', details: '' }] },
+      { days: [2], title: 'DESCANSO ACTIVO', activeRest: true, details: '', exercises: [] },
+    ] } };
+    appState.exercisePreviewUrls = { '0:0': 'blob:remo', '1:0': 'blob:never-rendered' };
+
+    render(TrainingView);
+
+    const image = screen.getByRole('img', { name: 'Vista previa del ejercicio Remo del Día 1' });
+    expect(image.getAttribute('src')).toBe('blob:remo');
+    expect(image.getAttribute('loading')).toBe('lazy');
+    expect(screen.queryByRole('img', { name: /Descanso/ })).toBeNull();
   });
 
   it('shows guidance, exercises, supersets, and active-rest instructions', () => {

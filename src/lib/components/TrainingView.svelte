@@ -38,7 +38,7 @@
       {/if}
 
       <div class="grid gap-5 lg:grid-cols-2">
-        {#each training.days as day}
+        {#each training.days as day, dayIndex}
           <article aria-label={`${dayLabel(day.days)}: ${day.title}`} class="min-w-0 overflow-hidden rounded-2xl border border-stone-200 bg-stone-50/60 dark:border-stone-700 dark:bg-stone-800/40">
             <header class="flex flex-wrap items-start justify-between gap-3 border-b border-stone-200 bg-white px-4 py-4 dark:border-stone-700 dark:bg-stone-800 sm:px-5">
               <div>
@@ -61,6 +61,14 @@
                     <div class="flex min-w-0 gap-3">
                       <span aria-hidden="true" class="grid size-8 shrink-0 place-items-center rounded-xl bg-stone-900 text-xs font-black text-white dark:bg-white dark:text-stone-900">{index + 1}</span>
                       <div class="min-w-0 flex-1">
+                        {#if appState.exercisePreviewUrls[`${dayIndex}:${index}`]}
+                          <img
+                            class="mb-3 max-h-56 w-full rounded-xl border border-stone-200 object-contain dark:border-stone-700"
+                            loading="lazy"
+                            src={appState.exercisePreviewUrls[`${dayIndex}:${index}`]}
+                            alt={`Vista previa del ejercicio ${exercise.exercise} del ${dayLabel(day.days)}`}
+                          />
+                        {/if}
                         <div class="flex flex-wrap items-start justify-between gap-2">
                           <h4 class="min-w-0 font-black leading-snug text-stone-900 dark:text-white">{exercise.exercise}</h4>
                           {#if exercise.supersetExercises?.length}

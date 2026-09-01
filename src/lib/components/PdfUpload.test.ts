@@ -7,7 +7,7 @@ import PdfUpload from './PdfUpload.svelte';
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn(),
   onDragDropEvent: vi.fn(),
-  parsePdf: vi.fn(),
+  parseBrowserPdf: vi.fn(),
   createWorkspaceFromDocument: vi.fn(),
 }));
 
@@ -15,7 +15,7 @@ vi.mock('@tauri-apps/api/core', () => ({ invoke: mocks.invoke }));
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ onDragDropEvent: mocks.onDragDropEvent }),
 }));
-vi.mock('$lib/pdf', () => ({ parsePdf: mocks.parsePdf }));
+vi.mock('$lib/pdf', () => ({ parseBrowserPdf: mocks.parseBrowserPdf }));
 vi.mock('$lib/workspace-controller', () => ({ createWorkspaceFromDocument: mocks.createWorkspaceFromDocument }));
 
 describe('PdfUpload', () => {
@@ -30,7 +30,7 @@ describe('PdfUpload', () => {
     appState.pdfPath = null;
     mocks.invoke.mockReset();
     mocks.onDragDropEvent.mockReset();
-    mocks.parsePdf.mockReset();
+    mocks.parseBrowserPdf.mockReset();
     mocks.createWorkspaceFromDocument.mockReset();
     mocks.createWorkspaceFromDocument.mockImplementation(async (result, sourceName) => {
       appState.parsedData = result;
@@ -77,7 +77,7 @@ describe('PdfUpload', () => {
 
   it('parses a selected PDF in the browser without Tauri', async () => {
     delete (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
-    mocks.parsePdf.mockResolvedValue({ status: 'ok', diets: [] });
+    mocks.parseBrowserPdf.mockResolvedValue({ result: { status: 'ok', diets: [] }, previewBlobs: {} });
     const { container } = render(PdfUpload);
     const file = new File(['%PDF-test'], 'ABRIL.pdf', { type: 'application/pdf' });
     const input = container.querySelector('input[type="file"]') as HTMLInputElement;
@@ -86,7 +86,7 @@ describe('PdfUpload', () => {
     input.dispatchEvent(new Event('change', { bubbles: true }));
 
     await waitFor(() => {
-      expect(mocks.parsePdf).toHaveBeenCalledWith(file);
+      expect(mocks.parseBrowserPdf).toHaveBeenCalledWith(file);
       expect(mocks.createWorkspaceFromDocument).toHaveBeenCalledWith({ status: 'ok', diets: [] }, 'ABRIL.pdf');
       expect(appState.pdfPath).toBeNull();
     });
@@ -99,7 +99,7 @@ describe('PdfUpload', () => {
     appState.parsedData = { status: 'ok', diets: [{ name: 'DIETA 1', intro: '', meals: [] }] };
     appState.activePlanName = 'Plan actual';
     vi.spyOn(window, 'confirm').mockReturnValue(true);
-    mocks.parsePdf.mockRejectedValue(new Error('PDF dañado'));
+    mocks.parseBrowserPdf.mockRejectedValue(new Error('PDF dañado'));
     const { container } = render(PdfUpload);
     const file = new File(['%PDF-broken'], 'NUEVO.pdf', { type: 'application/pdf' });
     const input = container.querySelector('input[type="file"]') as HTMLInputElement;
