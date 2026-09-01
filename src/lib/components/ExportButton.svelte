@@ -2,10 +2,8 @@
   import { invoke } from '@tauri-apps/api/core';
   import { appState } from '$lib/state.svelte';
   import { buildExportPayload } from '$lib/utils';
-  import { createPlanPdfBlob } from '$lib/pdf-export';
 
   const isTauri = $derived(typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window);
-  const isPlanDisabled = $derived(!appState.parsedData || appState.loading);
   const isDataDisabled = $derived(!appState.parsedData || appState.shoppingList.length === 0 || appState.loading);
 
   function exportPayload() {
@@ -43,29 +41,15 @@
     }
   }
 
-  function handlePdfExport() {
-    const payload = exportPayload();
-    if (!payload) return;
-    const blob = createPlanPdfBlob(payload, appState.activePlanName || 'Plan semanal');
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `${(appState.activePlanName || 'plan-semanal').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.pdf`;
-    anchor.click();
-    URL.revokeObjectURL(url);
-  }
 </script>
 
-<div class="grid gap-2 {isTauri ? 'grid-cols-3' : 'grid-cols-1'}">
-  <button class="rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-bold text-stone-700 hover:border-orange-500 disabled:opacity-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" onclick={handlePdfExport} disabled={isPlanDisabled}>
-    Exportar PDF
-  </button>
-  {#if isTauri}
+{#if isTauri}
+  <div class="grid grid-cols-2 gap-2">
     <button class="rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-bold text-stone-700 hover:border-orange-500 disabled:opacity-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" onclick={() => handleExport('json')} disabled={isDataDisabled}>
       Exportar JSON
     </button>
     <button class="rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-bold text-stone-700 hover:border-orange-500 disabled:opacity-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" onclick={() => handleExport('xlsx')} disabled={isDataDisabled}>
       Exportar Excel
     </button>
-  {/if}
-</div>
+  </div>
+{/if}
