@@ -60,7 +60,6 @@
                         <span class="mt-2 size-1.5 shrink-0 rounded-full {line.is_alternatives ? 'bg-orange-500' : 'bg-stone-300 dark:bg-stone-600'}"></span>
                         <span>
                           {#if line.is_alternatives}
-                            <span class="mr-1 text-xs font-bold uppercase tracking-wide text-orange-700 dark:text-orange-400">Alternativa elegida:</span>
                             {line.items[selectedAlternative] ? formatItem(line.items[selectedAlternative]) : 'Sin selección'}
                           {:else}
                             {line.items.map(formatItem).join(' + ')}

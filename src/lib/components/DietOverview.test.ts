@@ -41,6 +41,7 @@ describe('DietOverview', () => {
     await fireEvent.click(disclosures[1]);
 
     expect(screen.getByText('tofu 120 g')).toBeTruthy();
+    expect(screen.queryByText('Alternativa elegida:')).toBeNull();
     expect(screen.queryByRole('radio')).toBeNull();
     expect(screen.getByText('Con excepción')).toBeTruthy();
   });
