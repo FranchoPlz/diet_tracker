@@ -23,7 +23,7 @@
 <button
   type="button"
   onclick={toggle}
-  class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none p-2 rounded-md"
+  class="grid size-10 place-items-center rounded-full text-gray-600 hover:bg-stone-100 hover:text-gray-900 focus:outline-none dark:text-gray-300 dark:hover:bg-stone-800 dark:hover:text-white"
   aria-label={appState.darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
   title={appState.darkMode ? 'Modo claro' : 'Modo oscuro'}
 >
