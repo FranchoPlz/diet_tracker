@@ -4,7 +4,7 @@
 
   onMount(() => {
     const saved = localStorage.getItem('darkMode');
-    if (saved === 'true') {
+    if (saved !== 'false') {
       document.documentElement.classList.add('dark');
       appState.darkMode = true;
     } else {
@@ -23,7 +23,7 @@
 <button
   type="button"
   onclick={toggle}
-  class="grid size-10 place-items-center rounded-full text-gray-600 hover:bg-stone-100 hover:text-gray-900 focus:outline-none dark:text-gray-300 dark:hover:bg-stone-800 dark:hover:text-white"
+  class="grid size-10 place-items-center rounded-full text-zinc-300 hover:bg-zinc-800 hover:text-white focus:outline-none"
   aria-label={appState.darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
   title={appState.darkMode ? 'Modo claro' : 'Modo oscuro'}
 >
