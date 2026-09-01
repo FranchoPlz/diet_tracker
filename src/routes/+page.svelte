@@ -78,7 +78,6 @@
         <HomeOverview />
       {:else if appState.activeTab === 'diet'}
         <div class="space-y-5">
-          <PdfUpload />
           {#if !appState.configured || reconfiguring}
             <GlobalDietConfiguration onComplete={() => void saveConfiguration()} />
           {:else if exceptionDayIndex !== null}

@@ -1,11 +1,20 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
+  import ListLibrary from './ListLibrary.svelte';
+  import PdfUpload from './PdfUpload.svelte';
+  import PlanLibrary from './PlanLibrary.svelte';
 </script>
 
-<section class="mx-auto max-w-3xl" aria-labelledby="home-title">
-  <header class="rounded-2xl border border-stone-200 bg-white px-5 py-6 shadow-sm dark:border-stone-700 dark:bg-stone-900 sm:px-6">
+<section class="mx-auto max-w-3xl space-y-3" aria-labelledby="home-title">
+  <header class="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-4 shadow-sm dark:border-stone-700 dark:bg-stone-900 sm:px-5">
+    <div>
     <p class="text-xs font-black uppercase tracking-[0.22em] text-orange-600">Plan activo</p>
-    <h1 id="home-title" class="mt-1 text-2xl font-black tracking-tight text-stone-950 dark:text-white sm:text-3xl">{appState.activePlanName}</h1>
-    <p class="mt-2 text-sm text-stone-500 dark:text-stone-400">Elige una pestaña para consultar tu dieta, entrenamiento o compra.</p>
+      <h1 id="home-title" class="mt-1 text-xl font-black tracking-tight text-stone-950 dark:text-white sm:text-2xl">{appState.activePlanName}</h1>
+    </div>
+    <div class="flex flex-wrap justify-end gap-2">
+      <PlanLibrary />
+      <ListLibrary />
+    </div>
   </header>
+  <PdfUpload />
 </section>

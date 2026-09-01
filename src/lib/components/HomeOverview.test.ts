@@ -1,3 +1,4 @@
+import 'fake-indexeddb/auto';
 import { cleanup, render, screen } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -16,11 +17,12 @@ describe('HomeOverview', () => {
 
   afterEach(cleanup);
 
-  it('shows only the active plan context', () => {
+  it('groups plan libraries and PDF controls on Inicio', () => {
     render(HomeOverview);
 
     expect(screen.getByRole('heading', { name: 'Plan abril' })).toBeTruthy();
-    expect(screen.getByText('Elige una pestaña para consultar tu dieta, entrenamiento o compra.')).toBeTruthy();
-    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Mis planes' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Mis listas' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Cambiar PDF' })).toBeTruthy();
   });
 });
