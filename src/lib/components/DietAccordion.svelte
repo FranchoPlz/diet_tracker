@@ -25,47 +25,49 @@
 {#if appState.parsedData && appState.parsedData.diets.length > 0}
   <div class="space-y-4">
     {#each appState.parsedData.diets as diet, dietIndex}
-      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
+      <div class="app-surface overflow-hidden rounded-2xl border">
         <button
-          class="w-full px-6 py-4 flex justify-between items-center bg-gray-50 dark:bg-gray-750 hover:bg-gray-100 dark:hover:bg-gray-700 text-left font-bold text-lg text-gray-800 dark:text-gray-200"
+          class="flex w-full items-center justify-between px-5 py-4 text-left text-lg font-black hover:opacity-90"
+          style="background: color-mix(in srgb, var(--surface-strong) 70%, transparent); color: var(--text-primary);"
           onclick={() => toggleDiet(dietIndex)}
         >
           <span>{diet.name}</span>
-          <span class="text-xl">{expandedDiets[dietIndex] ? '▾' : '▸'}</span>
+          <span class="text-xl" style="color: var(--warm);">{expandedDiets[dietIndex] ? '▾' : '▸'}</span>
         </button>
 
         {#if expandedDiets[dietIndex]}
-          <div class="p-6 border-t border-gray-200 dark:border-gray-700 space-y-4">
+          <div class="space-y-4 border-t p-4 sm:p-5" style="border-color: var(--border);">
             {#if diet.intro}
-              <div class="mb-4 text-gray-600 dark:text-gray-400 italic whitespace-pre-wrap">
+              <div class="whitespace-pre-wrap rounded-2xl p-4 text-sm italic" style="background: var(--surface-muted); color: var(--text-secondary);">
                 {diet.intro}
               </div>
             {/if}
 
             {#each diet.meals as meal, mealIndex}
-              <div class="border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
+              <div class="overflow-hidden rounded-2xl border" style="border-color: var(--border); background: color-mix(in srgb, var(--surface-strong) 64%, transparent);">
                 <button
-                  class="w-full px-4 py-3 flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 text-left font-semibold text-gray-700 dark:text-gray-300"
+                  class="flex w-full items-center justify-between px-4 py-3 text-left font-bold hover:opacity-90"
+                  style="background: color-mix(in srgb, var(--warm-soft) 48%, transparent); color: var(--text-primary);"
                   onclick={() => toggleMeal(dietIndex, mealIndex)}
                 >
                   <span>{meal.type}</span>
-                  <span>{expandedMeals[`${dietIndex}-${mealIndex}`] ? '▾' : '▸'}</span>
+                  <span style="color: var(--warm);">{expandedMeals[`${dietIndex}-${mealIndex}`] ? '▾' : '▸'}</span>
                 </button>
 
                 {#if expandedMeals[`${dietIndex}-${mealIndex}`]}
-                  <div class="p-4 border-t border-gray-200 dark:border-gray-700 space-y-6">
+                  <div class="space-y-5 border-t p-4" style="border-color: var(--border);">
                     {#each meal.options as option, optionIndex}
                       <div class="space-y-2">
-                        <div class="font-medium text-gray-800 dark:text-gray-200">
+                        <div class="font-bold" style="color: var(--text-primary);">
                           {option.name}
                           {#if option.description}
-                            <span class="text-gray-500 dark:text-gray-400 text-sm font-normal ml-2">({option.description})</span>
+                            <span class="ml-2 text-sm font-normal" style="color: var(--text-muted);">({option.description})</span>
                           {/if}
                         </div>
                         
-                        <ul class="list-disc pl-5 space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                        <ul class="space-y-1.5 pl-1 text-sm" style="color: var(--text-secondary);">
                           {#each option.ingredient_lines as line}
-                            <li>
+                            <li class="rounded-xl px-3 py-2" style="background: color-mix(in srgb, var(--surface-strong) 58%, transparent);">
                               {#if line.is_alternatives}
                                 <div class="flex flex-wrap items-center">
                                   {#each line.items as item, i}
@@ -73,7 +75,7 @@
                                       <span class="font-medium">{formatQuantity(item)}</span> {item.name}
                                     </span>
                                     {#if i < line.items.length - 1}
-                                      <span class="mx-2 text-gray-400">/</span>
+                                      <span class="mx-2" style="color: var(--warm);">/</span>
                                     {/if}
                                   {/each}
                                 </div>
@@ -84,7 +86,7 @@
                                       <span class="font-medium">{formatQuantity(item)}</span> {item.name}
                                     </span>
                                     {#if i < line.items.length - 1}
-                                      <span class="mx-2 text-gray-400">+</span>
+                                      <span class="mx-2" style="color: var(--warm);">+</span>
                                     {/if}
                                   {/each}
                                 </div>
@@ -101,7 +103,7 @@
                       </div>
                       
                       {#if optionIndex < meal.options.length - 1}
-                        <hr class="border-gray-200 dark:border-gray-700 my-4" />
+                        <hr class="my-4" style="border-color: var(--border);" />
                       {/if}
                     {/each}
                   </div>
@@ -114,7 +116,7 @@
     {/each}
   </div>
 {:else if appState.parsedData && appState.parsedData.diets.length === 0}
-  <div class="text-center p-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-    <p class="text-gray-500 dark:text-gray-400">No se encontraron dietas en el documento.</p>
+  <div class="app-surface rounded-2xl border p-8 text-center">
+    <p style="color: var(--text-muted);">No se encontraron dietas en el documento.</p>
   </div>
 {/if}
