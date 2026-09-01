@@ -42,17 +42,20 @@
         </summary>
 
         {#if dietData && dayIndex >= 0}
-          <div class="divide-y border-t border-stone-100 divide-stone-100 dark:border-stone-800 dark:divide-stone-800">
+          <div class="space-y-2 border-t border-stone-100 p-3 dark:border-stone-800">
             {#each dietData.meals as meal, mealIndex}
               {@const optionIndex = appState.weekConfig.dietDefaults[dietName]?.mealOptionIndexes[meal.type] ?? 0}
               {@const option = meal.options[optionIndex]}
-              <section class="p-5">
-                <div class="flex flex-wrap items-baseline justify-between gap-2">
-                  <h4 class="text-xs font-black uppercase tracking-[0.15em] text-stone-500 dark:text-stone-400">{meal.type}</h4>
-                  <p class="text-sm font-black text-stone-900 dark:text-white">{option?.name || `Opción ${optionIndex + 1}`}</p>
-                </div>
+              <details class="group overflow-hidden rounded-xl border border-stone-100 bg-stone-50/60 dark:border-stone-800 dark:bg-stone-950/30">
+                <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 [&::-webkit-details-marker]:hidden">
+                  <span class="min-w-0">
+                    <span class="block text-xs font-black uppercase tracking-[0.15em] text-stone-500 dark:text-stone-400">{meal.type}</span>
+                    <span class="mt-0.5 block truncate text-sm font-black text-stone-900 dark:text-white">{option?.name || `Opción ${optionIndex + 1}`}</span>
+                  </span>
+                  <span aria-hidden="true" class="shrink-0 text-lg font-black text-stone-400 transition-transform group-open:rotate-180">⌄</span>
+                </summary>
                 {#if option}
-                  <ul class="mt-3 space-y-2">
+                  <ul class="space-y-2 border-t border-stone-100 px-4 py-3 dark:border-stone-800">
                     {#each option.ingredient_lines as line, lineIndex}
                       {@const altKey = `${mealIndex}-${optionIndex}-${lineIndex}`}
                       {@const selectedAlternative = line.is_alternatives ? appState.weekConfig.dietDefaults[dietName]?.alternativeChoices[altKey] ?? 0 : 0}
@@ -70,7 +73,7 @@
                     {/each}
                   </ul>
                 {/if}
-              </section>
+              </details>
             {/each}
           </div>
         {:else}

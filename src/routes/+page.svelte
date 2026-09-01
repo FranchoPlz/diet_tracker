@@ -75,11 +75,7 @@
 
     <div class="mt-5" role="tabpanel">
       {#if appState.activeTab === 'home'}
-        <HomeOverview
-          onOpenDiet={() => appState.activeTab = 'diet'}
-          onReconfigure={() => { reconfiguring = true; appState.activeTab = 'diet'; }}
-          onOpenShopping={() => appState.activeTab = 'shopping'}
-        />
+        <HomeOverview />
       {:else if appState.activeTab === 'diet'}
         <div class="space-y-5">
           <PdfUpload />

@@ -36,7 +36,9 @@ describe('DietOverview', () => {
   it('shows effective global choices without editable controls', async () => {
     render(DietOverview, { onEditException: vi.fn() });
 
-    await fireEvent.click(document.querySelector('summary')!);
+    const disclosures = document.querySelectorAll('summary');
+    await fireEvent.click(disclosures[0]);
+    await fireEvent.click(disclosures[1]);
 
     expect(screen.getByText('tofu 120 g')).toBeTruthy();
     expect(screen.queryByRole('radio')).toBeNull();
@@ -51,7 +53,9 @@ describe('DietOverview', () => {
 
     render(DietOverview, { onEditException: vi.fn() });
 
-    await fireEvent.click(document.querySelector('summary')!);
+    const disclosures = document.querySelectorAll('summary');
+    await fireEvent.click(disclosures[0]);
+    await fireEvent.click(disclosures[1]);
 
     expect(screen.getByText('Arroz')).toBeTruthy();
     expect(screen.queryByText('Pasta')).toBeNull();

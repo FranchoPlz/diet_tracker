@@ -22,11 +22,11 @@
 </script>
 
 <nav
-  class="sticky top-0 z-40 border-b border-stone-200 bg-[#f7f4ee]/95 p-2 backdrop-blur dark:border-stone-700 dark:bg-stone-950/95"
+  class="sticky top-0 z-40 border-b border-stone-200 bg-[#f7f4ee]/95 py-2 backdrop-blur dark:border-stone-700 dark:bg-stone-950/95"
   aria-label="Secciones de la aplicación"
 >
   <div
-    class="mx-auto grid w-full max-w-xl grid-cols-4 gap-1 rounded-2xl bg-stone-200/80 p-1 shadow-sm dark:bg-stone-800"
+    class="mx-auto grid w-full max-w-xl grid-cols-4 gap-1 rounded-xl bg-stone-200/80 p-1 shadow-sm dark:bg-stone-800"
     role="tablist"
   >
     {#each tabs as tab}
@@ -37,11 +37,11 @@
         aria-label={tab.label}
         tabindex={active === tab.id ? 0 : -1}
         onclick={() => onChange(tab.id)}
-        class="flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-black transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 {active === tab.id
+        class="flex min-h-10 min-w-0 items-center justify-center gap-1 rounded-lg px-1 py-2 text-xs font-black transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 sm:min-h-11 sm:gap-2 sm:rounded-xl sm:px-3 sm:text-sm {active === tab.id
           ? 'bg-teal-700 text-white shadow-sm'
           : 'text-stone-600 hover:bg-white/70 hover:text-stone-950 dark:text-stone-300 dark:hover:bg-stone-700 dark:hover:text-white'}"
       >
-        <span>{tab.label}</span>
+        <span class="truncate">{tab.label}</span>
         {#if tab.id === 'shopping' && shoppingCount !== undefined}
           <span
             class="min-w-5 rounded-full px-1.5 py-0.5 text-center text-[11px] leading-none {active === 'shopping'
