@@ -65,8 +65,19 @@ describe('DietOverview', () => {
     const onEditException = vi.fn();
     render(DietOverview, { onEditException });
 
+    const disclosures = document.querySelectorAll('summary');
+    await fireEvent.click(disclosures[2]);
     await fireEvent.click(screen.getByRole('button', { name: 'Editar excepción del día 2' }));
 
     expect(onEditException).toHaveBeenCalledWith(1);
+  });
+
+  it('keeps exceptions collapsed until opened', async () => {
+    render(DietOverview, { onEditException: vi.fn() });
+
+    const exceptions = [...document.querySelectorAll('details')].at(-1)!;
+    expect(exceptions.open).toBe(false);
+    await fireEvent.click(exceptions.querySelector('summary')!);
+    expect(exceptions.open).toBe(true);
   });
 });

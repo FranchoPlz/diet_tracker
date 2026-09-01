@@ -82,9 +82,12 @@
     {/each}
   </div>
 
-  <section class="rounded-3xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900 sm:p-6" aria-labelledby="exceptions-heading">
-    <h3 id="exceptions-heading" class="mb-4 text-lg font-black text-stone-950 dark:text-white">Excepciones</h3>
-    <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
+  <details class="group overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
+    <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 sm:px-6 [&::-webkit-details-marker]:hidden">
+      <h3 class="text-lg font-black text-stone-950 dark:text-white">Excepciones</h3>
+      <span aria-hidden="true" class="text-xl font-black text-stone-400 transition-transform group-open:rotate-180">⌄</span>
+    </summary>
+    <div class="grid grid-cols-2 gap-2 border-t border-stone-100 p-4 dark:border-stone-800 sm:grid-cols-4 sm:p-6 xl:grid-cols-7">
       {#each appState.weekConfig.days.slice(0, 7) as day, dayIndex}
         {@const isException = hasException(appState.weekConfig, dayIndex)}
         <button
@@ -99,5 +102,5 @@
         </button>
       {/each}
     </div>
-  </section>
+  </details>
 </section>
