@@ -19,6 +19,11 @@ const PAGE_WIDTH = 595.28;
 const PAGE_HEIGHT = 841.89;
 const MARGIN = 42;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+const ROW_PADDING = 7;
+
+interface PdfPage {
+  content: string;
+}
 
 function normalizeText(value: string): string {
   return value
@@ -58,41 +63,105 @@ function textCommand(text: string, x: number, y: number, size: number, font = 'F
   return `BT /${font} ${size} Tf ${x.toFixed(2)} ${y.toFixed(2)} Td ${pdfString(text)} Tj ET\n`;
 }
 
+function fillRect(x: number, y: number, width: number, height: number, color: [number, number, number]): string {
+  return `${color.join(' ')} rg ${x.toFixed(2)} ${y.toFixed(2)} ${width.toFixed(2)} ${height.toFixed(2)} re f\n`;
+}
+
+function strokeRect(x: number, y: number, width: number, height: number, color: [number, number, number], lineWidth = 0.8): string {
+  return `${color.join(' ')} RG ${lineWidth} w ${x.toFixed(2)} ${y.toFixed(2)} ${width.toFixed(2)} ${height.toFixed(2)} re S\n`;
+}
+
+function strokeLine(x1: number, y1: number, x2: number, y2: number, color: [number, number, number], lineWidth = 0.6): string {
+  return `${color.join(' ')} RG ${lineWidth} w ${x1.toFixed(2)} ${y1.toFixed(2)} m ${x2.toFixed(2)} ${y2.toFixed(2)} l S\n`;
+}
+
 export function createPlanPdfBytes(payload: ExportPayload, title = 'Plan semanal'): Uint8Array {
-  const pages: string[] = [];
+  const pages: PdfPage[] = [];
   let content = '';
   let y = PAGE_HEIGHT - MARGIN;
+  const tableX = MARGIN;
+  const columnWidths = [78, 142, CONTENT_WIDTH - 78 - 142];
+  const tableBorder: [number, number, number] = [0.84, 0.84, 0.86];
+  const tableHeader: [number, number, number] = [0.98, 0.33, 0.12];
+  const dayHeader: [number, number, number] = [0.86, 0.15, 0.15];
+  const rowAlt: [number, number, number] = [0.98, 0.98, 0.98];
 
   function newPage() {
-    if (content) pages.push(content);
+    if (content) pages.push({ content });
     content = '';
     y = PAGE_HEIGHT - MARGIN;
+  }
+
+  function ensureSpace(height: number) {
+    if (y - height < MARGIN + 22) newPage();
   }
 
   function line(text: string, size = 10, indent = 0, font = 'F1') {
     const maxChars = Math.max(28, Math.floor((CONTENT_WIDTH - indent) / (size * 0.46)));
     for (const wrapped of wrapText(text, maxChars)) {
-      if (y < MARGIN + 18) newPage();
+      ensureSpace(size + 5);
       content += textCommand(wrapped, MARGIN + indent, y, size, font);
       y -= size + 5;
     }
   }
 
-  line(title, 20, 0, 'F2');
-  line(`Generado: ${new Date(payload.generated_at).toLocaleDateString('es-ES')}`, 9);
-  y -= 8;
+  function drawPageFooter(pageNumber: number) {
+    return `${strokeLine(MARGIN, 31, PAGE_WIDTH - MARGIN, 31, tableBorder, 0.5)}${textCommand(`Pagina ${pageNumber}`, PAGE_WIDTH - MARGIN - 54, 18, 8)}`;
+  }
+
+  function drawTableHeader() {
+    const height = 23;
+    ensureSpace(height + 8);
+    content += fillRect(tableX, y - height + 5, CONTENT_WIDTH, height, tableHeader);
+    content += textCommand('Comida', tableX + ROW_PADDING, y - 10, 9, 'F2');
+    content += textCommand('Opcion', tableX + columnWidths[0] + ROW_PADDING, y - 10, 9, 'F2');
+    content += textCommand('Ingredientes', tableX + columnWidths[0] + columnWidths[1] + ROW_PADDING, y - 10, 9, 'F2');
+    y -= height;
+  }
+
+  function drawMealRow(meal: ExportMeal, shaded: boolean) {
+    const ingredients = meal.ingredients.length ? meal.ingredients.join(' · ') : 'Sin ingredientes';
+    const cells = [
+      wrapText(meal.type, 12),
+      wrapText(meal.option, 25),
+      wrapText(ingredients, 51),
+    ];
+    const rowHeight = Math.max(...cells.map(lines => lines.length)) * 11 + ROW_PADDING * 2;
+    ensureSpace(rowHeight + 4);
+    const bottom = y - rowHeight;
+    if (shaded) content += fillRect(tableX, bottom, CONTENT_WIDTH, rowHeight, rowAlt);
+    content += strokeRect(tableX, bottom, CONTENT_WIDTH, rowHeight, tableBorder, 0.6);
+    content += strokeLine(tableX + columnWidths[0], bottom, tableX + columnWidths[0], y, tableBorder);
+    content += strokeLine(tableX + columnWidths[0] + columnWidths[1], bottom, tableX + columnWidths[0] + columnWidths[1], y, tableBorder);
+    cells.forEach((lines, index) => {
+      const x = tableX + columnWidths.slice(0, index).reduce((sum, width) => sum + width, 0) + ROW_PADDING;
+      let textY = y - ROW_PADDING - 8;
+      for (const wrapped of lines) {
+        content += textCommand(wrapped, x, textY, 8.5, index === 0 ? 'F2' : 'F1');
+        textY -= 11;
+      }
+    });
+    y = bottom;
+  }
+
+  content += fillRect(0, PAGE_HEIGHT - 108, PAGE_WIDTH, 108, [0.05, 0.05, 0.06]);
+  content += fillRect(0, PAGE_HEIGHT - 108, PAGE_WIDTH, 7, [0.98, 0.33, 0.12]);
+  content += textCommand(title, MARGIN, PAGE_HEIGHT - 58, 22, 'F2');
+  content += textCommand(`Dieta seleccionada · ${new Date(payload.generated_at).toLocaleDateString('es-ES')}`, MARGIN, PAGE_HEIGHT - 82, 10);
+  y = PAGE_HEIGHT - 136;
 
   for (const day of payload.days) {
-    if (y < MARGIN + 92) newPage();
-    line(`Dia ${day.day} - ${day.diet}`, 14, 0, 'F2');
-    for (const meal of day.meals) {
-      line(`${meal.type}: ${meal.option}`, 11, 10, 'F2');
-      for (const ingredient of meal.ingredients) line(`- ${ingredient}`, 9, 22);
-      y -= 3;
-    }
-    y -= 6;
+    ensureSpace(68);
+    content += fillRect(MARGIN, y - 24, CONTENT_WIDTH, 24, dayHeader);
+    content += textCommand(`Dia ${day.day}`, MARGIN + 10, y - 16, 11, 'F2');
+    content += textCommand(day.diet, MARGIN + 74, y - 16, 11, 'F2');
+    y -= 29;
+    drawTableHeader();
+    day.meals.forEach((meal, index) => drawMealRow(meal, index % 2 === 1));
+    y -= 16;
   }
-  if (content) pages.push(content);
+  if (content) pages.push({ content });
+  pages.forEach((page, index) => page.content += drawPageFooter(index + 1));
 
   const objects: string[] = [];
   const catalogId = 1;
@@ -111,7 +180,7 @@ export function createPlanPdfBytes(payload: ExportPayload, title = 'Plan semanal
 
   for (const [index, page] of pages.entries()) {
     objects[pageIds[index]] = `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}] /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> >> /Contents ${contentIds[index]} 0 R >>`;
-    objects[contentIds[index]] = `<< /Length ${toBytes(page).length} >>\nstream\n${page}endstream`;
+    objects[contentIds[index]] = `<< /Length ${toBytes(page.content).length} >>\nstream\n${page.content}endstream`;
   }
 
   let pdf = '%PDF-1.4\n';
