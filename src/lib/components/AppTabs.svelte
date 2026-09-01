@@ -23,13 +23,12 @@
 </script>
 
 <nav
-  class="sticky top-0 z-40 border-b py-2 backdrop-blur"
-  style="border-color: var(--border); background: color-mix(in srgb, var(--app-bg) 88%, transparent);"
+  class="sticky top-0 z-40 py-2 backdrop-blur"
+  style="background: color-mix(in srgb, var(--app-bg) 78%, transparent);"
   aria-label="Secciones de la aplicación"
 >
   <div
-    class="mx-auto grid w-full max-w-xl grid-cols-4 gap-1 rounded-2xl border p-1 shadow-sm"
-    style="border-color: var(--border); background: var(--surface);"
+    class="mx-auto grid w-full max-w-xl grid-cols-4 gap-1 rounded-2xl p-0.5"
     role="tablist"
   >
     {#each tabs as tab}
@@ -43,7 +42,7 @@
         class="flex min-h-10 min-w-0 items-center justify-center gap-1 rounded-lg px-1 py-2 text-xs font-black transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 sm:min-h-11 sm:gap-2 sm:rounded-xl sm:px-3 sm:text-sm {active === tab.id
           ? 'app-accent-button shadow-sm'
           : 'hover:opacity-90'}"
-        style={active === tab.id ? '' : 'color: var(--text-muted); background: color-mix(in srgb, var(--surface-strong) 72%, transparent);'}
+        style={active === tab.id ? '' : 'color: var(--text-muted); background: transparent;'}
       >
         <span class="truncate">{tab.label}</span>
         {#if tab.id === 'shopping' && shoppingCount !== undefined}
