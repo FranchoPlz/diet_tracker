@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { appState } from '$lib/state.svelte';
 import SettingsMenu from './SettingsMenu.svelte';
+import ThemeToggle from './ThemeToggle.svelte';
 
 describe('SettingsMenu', () => {
   beforeEach(() => {
@@ -28,5 +29,27 @@ describe('SettingsMenu', () => {
 
     await screen.findByRole('checkbox', { name: 'Vista compacta', checked: true });
     expect(appState.compactView).toBe(true);
+  });
+});
+
+describe('ThemeToggle', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.documentElement.classList.remove('dark');
+    appState.darkMode = false;
+  });
+
+  afterEach(cleanup);
+
+  it('uses dark mode by default while preserving explicit light preference', async () => {
+    render(ThemeToggle);
+    expect(appState.darkMode).toBe(true);
+
+    cleanup();
+    localStorage.setItem('darkMode', 'false');
+    document.documentElement.classList.add('dark');
+    render(ThemeToggle);
+    expect(appState.darkMode).toBe(false);
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 });

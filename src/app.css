@@ -2,116 +2,166 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+:root {
+  --app-bg: #f8fafc;
+  --app-bg-soft: #ffffff;
+  --surface: rgba(255, 255, 255, 0.94);
+  --surface-muted: #fff7ed;
+  --surface-strong: #ffffff;
+  --text-primary: #09090b;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --accent: #dc2626;
+  --accent-strong: #b91c1c;
+  --accent-soft: #fee2e2;
+  --accent-text: #991b1b;
+  --warm: #f97316;
+  --warm-strong: #ea580c;
+  --warm-soft: #ffedd5;
+  --shadow-soft: 0 20px 60px rgba(15, 23, 42, 0.10);
+}
+
+:root.dark {
+  --app-bg: #050505;
+  --app-bg-soft: #101010;
+  --surface: rgba(24, 24, 27, 0.88);
+  --surface-muted: rgba(67, 20, 7, 0.32);
+  --surface-strong: #18181b;
+  --text-primary: #fafafa;
+  --text-secondary: #d4d4d8;
+  --text-muted: #a1a1aa;
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --accent: #ef4444;
+  --accent-strong: #dc2626;
+  --accent-soft: rgba(127, 29, 29, 0.46);
+  --accent-text: #fecaca;
+  --warm: #fb923c;
+  --warm-strong: #f97316;
+  --warm-soft: rgba(154, 52, 18, 0.35);
+  --shadow-soft: 0 22px 70px rgba(0, 0, 0, 0.42);
+}
+
 html {
   scroll-behavior: smooth;
   overflow-x: clip;
-  background: #09090b;
+  background: var(--app-bg);
 }
 
 body {
   margin: 0;
   min-width: 0;
   overflow-x: clip;
-  background: #09090b;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 22%, transparent) 0, transparent 28rem),
+    radial-gradient(circle at 90% 12%, color-mix(in srgb, var(--warm) 16%, transparent) 0, transparent 24rem),
+    linear-gradient(180deg, var(--app-bg-soft), var(--app-bg) 32rem);
+  color: var(--text-primary);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 html.dark,
 html.dark body {
-  background: #09090b;
+  background-color: var(--app-bg);
 }
 
 button, input, summary {
   transition-duration: 150ms;
 }
 
-/* Keep the existing component structure while applying one dark mobile palette. */
-.dark .bg-white,
-.dark .bg-white\/50,
-.dark .bg-white\/70,
-.dark .bg-white\/95,
-.dark .bg-stone-50,
-.dark .bg-stone-50\/60,
-.dark .bg-stone-50\/70 {
-  background-color: #18181b !important;
+.app-shell {
+  background:
+    radial-gradient(circle at 8% -10%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 20rem),
+    radial-gradient(circle at 100% 8%, color-mix(in srgb, var(--warm) 18%, transparent), transparent 22rem),
+    linear-gradient(180deg, var(--app-bg-soft), var(--app-bg) 28rem);
+  color: var(--text-primary);
 }
 
-.dark .bg-stone-900,
-.dark .bg-stone-950,
-.dark .bg-zinc-950 {
-  background-color: #09090b !important;
+.app-surface {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
 }
 
-.dark .border-stone-200,
-.dark .border-stone-300,
-.dark .border-stone-700,
-.dark .border-stone-800 {
-  border-color: #3f3f46 !important;
+.app-muted-surface {
+  background: var(--surface-muted);
+  border-color: var(--border);
 }
 
-.dark .text-stone-900,
-.dark .text-stone-950,
-.dark .text-stone-800 {
-  color: #fafafa !important;
+.app-accent-button {
+  background: linear-gradient(135deg, var(--accent), var(--warm-strong));
+  color: white;
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
-.dark .text-stone-600,
-.dark .text-stone-500,
-.dark .text-stone-400 {
-  color: #a1a1aa !important;
+.app-accent-button:hover {
+  filter: brightness(1.06);
 }
 
-.dark .bg-teal-700,
-.dark .bg-teal-800,
-.dark .bg-teal-600 {
-  background-color: #dc2626 !important;
+.bg-teal-600,
+.bg-teal-700,
+.bg-teal-800 {
+  background-color: var(--accent) !important;
 }
 
-.dark .text-teal-700,
-.dark .text-teal-800,
-.dark .text-teal-300,
-.dark .text-teal-400 {
-  color: #fb7185 !important;
+.hover\:bg-teal-800:hover {
+  background-color: var(--accent-strong) !important;
 }
 
-.dark .bg-teal-50,
-.dark .bg-teal-100,
-.dark .bg-teal-950,
-.dark .bg-teal-950\/20,
-.dark .bg-teal-950\/30 {
-  background-color: #450a0a !important;
+.text-teal-300,
+.text-teal-400,
+.text-teal-700,
+.text-teal-800 {
+  color: var(--accent-text) !important;
 }
 
-.dark .border-teal-200,
-.dark .border-teal-900,
-.dark .border-teal-950 {
-  border-color: #7f1d1d !important;
+.border-teal-200,
+.border-teal-900,
+.border-teal-950 {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border)) !important;
 }
 
-.dark .text-amber-700,
-.dark .text-amber-900,
-.dark .text-orange-600,
-.dark .text-orange-700,
-.dark .text-orange-400 {
-  color: #fb923c !important;
+.bg-teal-50,
+.bg-teal-100,
+.bg-teal-950,
+.bg-teal-950\/20,
+.bg-teal-950\/30,
+.bg-teal-950\/60 {
+  background-color: var(--accent-soft) !important;
 }
 
-.dark .bg-amber-100,
-.dark .bg-amber-200,
-.dark .bg-orange-50,
-.dark .bg-orange-100,
-.dark .bg-orange-950,
-.dark .bg-orange-950\/20,
-.dark .bg-orange-950\/30 {
-  background-color: #431407 !important;
+.text-amber-700,
+.text-amber-900,
+.text-orange-300,
+.text-orange-400,
+.text-orange-600,
+.text-orange-700,
+.text-orange-800 {
+  color: var(--warm) !important;
 }
 
-.dark .border-amber-200,
-.dark .border-amber-300,
-.dark .border-amber-800,
-.dark .border-orange-200,
-.dark .border-orange-900 {
-  border-color: #9a3412 !important;
+.bg-amber-100,
+.bg-amber-200,
+.bg-orange-50,
+.bg-orange-100,
+.bg-orange-950,
+.bg-orange-950\/20,
+.bg-orange-950\/30,
+.bg-orange-950\/40 {
+  background-color: var(--warm-soft) !important;
+}
+
+.border-amber-200,
+.border-amber-300,
+.border-amber-800,
+.border-orange-200,
+.border-orange-300,
+.border-orange-800,
+.border-orange-900 {
+  border-color: color-mix(in srgb, var(--warm) 45%, var(--border)) !important;
 }
 
 .compact-view .compact-week {
