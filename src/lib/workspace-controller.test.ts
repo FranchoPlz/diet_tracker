@@ -9,6 +9,7 @@ import {
   flushWorkspaceAutosave,
   initializeWorkspace,
   scheduleWorkspaceAutosave,
+  selectActiveTab,
 } from './workspace-controller';
 
 const parsedData = {
@@ -61,6 +62,16 @@ describe('workspace controller', () => {
     expect(appState.configured).toBe(true);
     expect(appState.pdfPath).toBeNull();
     expect(appState.persistenceReady).toBe(true);
+  });
+
+  it('restores the selected tab with the active workspace', async () => {
+    await selectActiveTab('training');
+    appState.activeTab = 'home';
+    appState.parsedData = null;
+
+    await initializeWorkspace();
+
+    expect(appState.activeTab).toBe('training');
   });
 
   it('flushes a scheduled autosave reliably', async () => {

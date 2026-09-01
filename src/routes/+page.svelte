@@ -1,7 +1,7 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
   import { calculateShoppingList } from '$lib/calculation';
-  import { completeConfiguration, scheduleWorkspaceAutosave } from '$lib/workspace-controller';
+  import { completeConfiguration, scheduleWorkspaceAutosave, selectActiveTab } from '$lib/workspace-controller';
   import AppTabs, { type AppTab } from '$lib/components/AppTabs.svelte';
   import CalculateButton from '$lib/components/CalculateButton.svelte';
   import ConfigButtons from '$lib/components/ConfigButtons.svelte';
@@ -19,9 +19,27 @@
 
   let reconfiguring = $state(false);
   let exceptionDayIndex = $state<number | null>(null);
+  let gestureStart = $state<{ x: number; y: number; target: EventTarget | null } | null>(null);
 
   function setTab(tab: AppTab) {
-    appState.activeTab = tab;
+    void selectActiveTab(tab);
+  }
+
+  function startGesture(event: PointerEvent) {
+    gestureStart = { x: event.clientX, y: event.clientY, target: event.target };
+  }
+
+  function endGesture(event: PointerEvent) {
+    if (!gestureStart) return;
+    const start = gestureStart;
+    gestureStart = null;
+    const distanceX = event.clientX - start.x;
+    const distanceY = event.clientY - start.y;
+    if (Math.abs(distanceX) < 72 || Math.abs(distanceX) < Math.abs(distanceY)) return;
+    if (start.target instanceof Element && start.target.closest('button, input, select, textarea, summary, a, label')) return;
+    const tabs: AppTab[] = ['home', 'diet', 'training', 'shopping'];
+    const next = tabs[tabs.indexOf(appState.activeTab) + (distanceX < 0 ? 1 : -1)];
+    if (next) setTab(next);
   }
 
   async function saveConfiguration() {
@@ -32,7 +50,7 @@
     appState.activeListName = `${appState.activePlanName} - compra`;
     await completeConfiguration();
     reconfiguring = false;
-    appState.activeTab = 'home';
+    await selectActiveTab('home');
   }
 
   function openException(dayIndex: number) {
@@ -73,7 +91,7 @@
   {:else}
     <AppTabs active={appState.activeTab} onChange={setTab} shoppingCount={appState.shoppingList.length} />
 
-    <div class="mt-5" role="tabpanel">
+    <div class="mt-4 touch-pan-y" role="tabpanel" tabindex="0" onpointerdown={startGesture} onpointerup={endGesture} onpointercancel={() => gestureStart = null}>
       {#if appState.activeTab === 'home'}
         <HomeOverview />
       {:else if appState.activeTab === 'diet'}

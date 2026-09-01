@@ -1,3 +1,5 @@
+export type AppTab = 'home' | 'diet' | 'training' | 'shopping';
+
 export interface DietPlan {
   name: string;
   intro: string;

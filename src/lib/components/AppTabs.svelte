@@ -1,8 +1,9 @@
 <script module lang="ts">
-  export type AppTab = 'home' | 'diet' | 'training' | 'shopping';
+  export type { AppTab } from '$lib/types';
 </script>
 
 <script lang="ts">
+  import type { AppTab } from '$lib/types';
   let {
     active,
     onChange,

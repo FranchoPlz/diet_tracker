@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { deletePlan, getActivePlanId, listPlans, savePlan, setActivePlanId } from './storage';
+import { deletePlan, getActivePlanId, getActiveTab, listPlans, savePlan, setActivePlanId, setActiveTab } from './storage';
 import type { SavedPlan } from './types';
 import { createDefaultWeekConfig } from './utils';
 
@@ -38,6 +38,11 @@ describe('plan storage', () => {
     expect(await getActivePlanId()).toBe('one');
     await deletePlan('one');
     expect(await getActivePlanId()).toBeNull();
+  });
+
+  it('stores a valid active tab', async () => {
+    await setActiveTab('training');
+    expect(await getActiveTab()).toBe('training');
   });
 
   it('normalizes v1 plans on read without requiring an eager database rewrite', async () => {

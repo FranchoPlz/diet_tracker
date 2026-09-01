@@ -9,15 +9,19 @@
 </script>
 
 <section aria-labelledby="training-title" class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
-  <header class="border-b border-stone-200 bg-gradient-to-br from-orange-50 via-white to-stone-50 px-5 py-6 dark:border-stone-700 dark:from-orange-950/30 dark:via-stone-900 dark:to-stone-900 sm:px-7">
-    <p class="text-xs font-black uppercase tracking-[0.24em] text-orange-600 dark:text-orange-400">Plan de entrenamiento</p>
-    <h2 id="training-title" class="mt-1 text-3xl font-black tracking-tight text-stone-950 dark:text-white">Tu rutina</h2>
+  <header class="border-b border-stone-100 bg-stone-50/70 px-5 py-5 dark:border-stone-800 dark:bg-stone-900 sm:px-6">
+    <h2 id="training-title" class="text-2xl font-black tracking-tight text-stone-950 dark:text-white">Entrenamiento</h2>
   </header>
 
   {#if training && training.days.length > 0}
-    <div class="space-y-6 p-4 sm:p-6">
+    <div class="space-y-3 p-3 sm:p-5">
       {#if training.tips.length > 0 || training.defaultRestSeconds !== null}
-        <aside aria-label="Indicaciones generales" class="grid gap-4 rounded-2xl border border-orange-200 bg-orange-50/70 p-4 dark:border-orange-900 dark:bg-orange-950/20 sm:grid-cols-[auto_1fr] sm:p-5">
+        <details class="group rounded-2xl border border-orange-200 bg-orange-50/70 dark:border-orange-900 dark:bg-orange-950/20">
+          <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 [&::-webkit-details-marker]:hidden">
+            <span class="text-sm font-black text-stone-900 dark:text-white">Indicaciones generales</span>
+            <span aria-hidden="true" class="text-lg font-black text-orange-700 transition-transform group-open:rotate-180 dark:text-orange-300">⌄</span>
+          </summary>
+          <div aria-label="Indicaciones generales" class="grid gap-4 border-t border-orange-200 p-4 dark:border-orange-900 sm:grid-cols-[auto_1fr] sm:p-5">
           {#if training.defaultRestSeconds !== null}
             <div class="flex items-center gap-3 sm:block sm:border-r sm:border-orange-200 sm:pr-5 dark:sm:border-orange-900">
               <span class="text-2xl font-black text-orange-700 dark:text-orange-300">{training.defaultRestSeconds}s</span>
@@ -34,28 +38,27 @@
               </ul>
             </div>
           {/if}
-        </aside>
+          </div>
+        </details>
       {/if}
 
-      <div class="grid gap-5 lg:grid-cols-2">
+      <div class="grid gap-3 lg:grid-cols-2">
         {#each training.days as day, dayIndex}
-          <article aria-label={`${dayLabel(day.days)}: ${day.title}`} class="min-w-0 overflow-hidden rounded-2xl border border-stone-200 bg-stone-50/60 dark:border-stone-700 dark:bg-stone-800/40">
-            <header class="flex flex-wrap items-start justify-between gap-3 border-b border-stone-200 bg-white px-4 py-4 dark:border-stone-700 dark:bg-stone-800 sm:px-5">
+          <details class="group min-w-0 overflow-hidden rounded-2xl border border-stone-200 bg-stone-50/60 dark:border-stone-700 dark:bg-stone-800/40">
+            <summary aria-label={`${dayLabel(day.days)}: ${day.title}`} class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 bg-white px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 dark:bg-stone-800 sm:px-5 [&::-webkit-details-marker]:hidden">
               <div>
                 <p class="text-xs font-black uppercase tracking-[0.18em] text-orange-600 dark:text-orange-400">{dayLabel(day.days)}</p>
-                <h3 class="mt-1 text-xl font-black text-stone-950 dark:text-white">{day.title}</h3>
+                <h3 class="mt-0.5 text-lg font-black text-stone-950 dark:text-white">{day.title}</h3>
               </div>
-              {#if day.activeRest}
-                <span class="rounded-full bg-teal-100 px-3 py-1 text-xs font-black uppercase tracking-wider text-teal-800 dark:bg-teal-950 dark:text-teal-200">Descanso activo</span>
-              {/if}
-            </header>
+              <span aria-hidden="true" class="text-lg font-black text-stone-400 transition-transform group-open:rotate-180">⌄</span>
+            </summary>
 
             {#if day.activeRest}
-              <div class="p-4 sm:p-5">
+              <div class="border-t border-stone-200 p-4 dark:border-stone-700 sm:p-5">
                 <p class="text-sm font-bold leading-relaxed text-stone-700 dark:text-stone-200">{day.details || 'Realiza una actividad suave para mantenerte en movimiento.'}</p>
               </div>
             {:else if day.exercises.length > 0}
-              <ol aria-label={`Ejercicios de ${day.title}`} class="divide-y divide-stone-200 dark:divide-stone-700">
+              <ol aria-label={`Ejercicios de ${day.title}`} class="divide-y border-t border-stone-200 divide-stone-200 dark:border-stone-700 dark:divide-stone-700">
                 {#each day.exercises as exercise, index}
                   <li class="p-4 sm:p-5">
                     <div class="flex min-w-0 gap-3">
@@ -99,7 +102,7 @@
             {:else}
               <p class="p-4 text-sm text-stone-500 dark:text-stone-400 sm:p-5">No hay ejercicios indicados para este día.</p>
             {/if}
-          </article>
+          </details>
         {/each}
       </div>
     </div>

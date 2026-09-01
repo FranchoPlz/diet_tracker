@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { appState } from '$lib/state.svelte';
@@ -26,7 +26,18 @@ describe('TrainingView', () => {
     expect(screen.queryByRole('img', { name: /Descanso/ })).toBeNull();
   });
 
-  it('shows guidance, exercises, supersets, and active-rest instructions', () => {
+  it('keeps routine days collapsed until opened', () => {
+    appState.parsedData = { status: 'ok', diets: [], training: { tips: [], defaultRestSeconds: null, days: [
+      { days: [1], title: 'TORSO', activeRest: false, details: '', exercises: [] },
+    ] } };
+
+    render(TrainingView);
+
+    expect(document.querySelector('details')).toBeTruthy();
+    expect(document.querySelector('details')?.open).toBe(false);
+  });
+
+  it('shows guidance, exercises, supersets, and active-rest instructions', async () => {
     appState.parsedData = {
       status: 'ok',
       diets: [],
@@ -62,9 +73,14 @@ describe('TrainingView', () => {
 
     render(TrainingView);
 
+    const disclosures = document.querySelectorAll('summary');
+    await fireEvent.click(disclosures[0]);
+    await fireEvent.click(disclosures[1]);
+    await fireEvent.click(disclosures[2]);
+
     expect(screen.getByText('60s')).toBeTruthy();
     expect(screen.getByText('Prioriza la técnica antes que el peso.')).toBeTruthy();
-    const torso = screen.getByRole('article', { name: 'Día 1: TORSO' });
+    const torso = screen.getByLabelText('Día 1: TORSO').parentElement!;
     expect(within(torso).getByText('Curl de bíceps + Pres francés')).toBeTruthy();
     expect(screen.getByText('Series')).toBeTruthy();
     expect(screen.getByText('Repeticiones')).toBeTruthy();

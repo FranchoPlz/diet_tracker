@@ -1,5 +1,5 @@
 import { openDB, type DBSchema } from 'idb';
-import type { SavedPlan, SavedShoppingList } from './types';
+import type { AppTab, SavedPlan, SavedShoppingList } from './types';
 
 interface DietDatabase extends DBSchema {
   lists: { key: string; value: SavedShoppingList; indexes: { updatedAt: string } };
@@ -64,4 +64,13 @@ export async function getActivePlanId(): Promise<string | null> {
 
 export async function setActivePlanId(id: string | null): Promise<void> {
   await (await database()).put('metadata', { key: 'activePlanId', value: id });
+}
+
+export async function getActiveTab(): Promise<AppTab | null> {
+  const value = (await (await database()).get('metadata', 'activeTab'))?.value;
+  return value === 'home' || value === 'diet' || value === 'training' || value === 'shopping' ? value : null;
+}
+
+export async function setActiveTab(tab: AppTab): Promise<void> {
+  await (await database()).put('metadata', { key: 'activeTab', value: tab });
 }
