@@ -24,7 +24,6 @@
 </script>
 
 <section class="space-y-4" aria-label="Resumen de dietas">
-  <p class="px-1 text-sm text-stone-500 dark:text-stone-400">Selección global actual. Abre una dieta para consultar sus platos o un día para personalizarlo.</p>
   <div class="grid gap-5 xl:grid-cols-2">
     {#each dietNames as dietName, dietIndex}
       {@const dayIndex = representativeDayIndex(dietName)}
@@ -33,10 +32,8 @@
         <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 [&::-webkit-details-marker]:hidden">
           <span>
             <span class="block text-xl font-black text-stone-950 dark:text-white">{dietName}</span>
-            <span class="mt-0.5 block text-xs font-bold text-stone-500 dark:text-stone-400">Selección global actual</span>
           </span>
           <span class="flex items-center gap-2">
-            <span class="hidden rounded-full px-3 py-1 text-xs font-bold sm:inline {dietIndex === 0 ? 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200' : 'bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-200'}">Seleccionada</span>
             <span aria-hidden="true" class="text-xl font-black text-stone-400 transition-transform group-open:rotate-180">⌄</span>
           </span>
         </summary>
@@ -86,10 +83,7 @@
   </div>
 
   <section class="rounded-3xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900 sm:p-6" aria-labelledby="exceptions-heading">
-    <div class="mb-4">
-      <h3 id="exceptions-heading" class="text-lg font-black text-stone-950 dark:text-white">Excepciones de la semana</h3>
-      <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">Abre un día para adaptar sus platos sin cambiar la selección global.</p>
-    </div>
+    <h3 id="exceptions-heading" class="mb-4 text-lg font-black text-stone-950 dark:text-white">Excepciones</h3>
     <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
       {#each appState.weekConfig.days.slice(0, 7) as day, dayIndex}
         {@const isException = hasException(appState.weekConfig, dayIndex)}

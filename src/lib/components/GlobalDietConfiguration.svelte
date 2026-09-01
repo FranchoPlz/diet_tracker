@@ -14,11 +14,7 @@
 
 <section class="overflow-hidden rounded-3xl border border-stone-200 bg-stone-50 shadow-sm dark:border-stone-700 dark:bg-stone-950">
   <header class="border-b border-stone-200 bg-white px-5 py-6 dark:border-stone-700 dark:bg-stone-900 sm:px-8">
-    <p class="text-xs font-black uppercase tracking-[0.2em] text-orange-600">Configuración general</p>
-    <h2 class="mt-2 text-2xl font-black tracking-tight text-stone-950 dark:text-white sm:text-3xl">Elige una vez, úsalo toda la semana</h2>
-    <p class="mt-2 max-w-3xl text-sm leading-6 text-stone-600 dark:text-stone-300">
-      Selecciona los platos y sus alternativas para cada dieta. Estas elecciones se aplicarán a todos los días que usen esa dieta; después podrás personalizar días concretos como excepciones.
-    </p>
+    <h2 class="text-2xl font-black tracking-tight text-stone-950 dark:text-white sm:text-3xl">Configurar dietas</h2>
   </header>
 
   <div class="grid gap-5 p-4 sm:p-6 xl:grid-cols-2 xl:p-8">
@@ -46,7 +42,6 @@
   </div>
 
   <footer class="flex flex-col gap-3 border-t border-stone-200 bg-white px-5 py-5 dark:border-stone-700 dark:bg-stone-900 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-    <p class="text-sm text-stone-500 dark:text-stone-400">Podrás volver a esta configuración cuando quieras.</p>
     <button type="button" class="rounded-xl bg-orange-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:focus:ring-offset-stone-900" onclick={onComplete}>
       Guardar configuración global
     </button>

@@ -88,8 +88,8 @@
               {/key}
             </div>
           {:else}
-            <div class="flex justify-end"><button class="rounded-xl border border-stone-300 px-4 py-2.5 text-sm font-black text-stone-700 transition hover:bg-stone-100 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800" onclick={() => reconfiguring = true}>Reconfigurar dietas</button></div>
             <DietOverview onEditException={openException} />
+            <div class="flex justify-center"><button class="rounded-xl border border-stone-300 px-4 py-2.5 text-sm font-black text-stone-700 transition hover:bg-stone-100 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800" onclick={() => reconfiguring = true}>Reconfigurar dietas</button></div>
             <details class="rounded-2xl border border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900">
               <summary class="cursor-pointer px-5 py-4 text-sm font-bold text-stone-600 dark:text-stone-300">Consultar todas las opciones originales</summary>
               <div class="border-t border-stone-200 p-5 dark:border-stone-700"><DietAccordion /></div>
