@@ -23,7 +23,7 @@
 </script>
 
 <nav
-  class="sticky top-0 z-40 py-2 backdrop-blur"
+  class="sticky top-0 left-1/2 z-40 w-screen -translate-x-1/2 px-4 py-2 backdrop-blur sm:px-6 lg:px-8"
   style="background: color-mix(in srgb, var(--app-bg) 78%, transparent);"
   aria-label="Secciones de la aplicación"
 >

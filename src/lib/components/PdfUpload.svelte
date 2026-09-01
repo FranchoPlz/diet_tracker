@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { invoke } from '@tauri-apps/api/core';
   import { appState } from '$lib/state.svelte';
-  import { parseBrowserPdf } from '$lib/pdf';
   import { clearExercisePreviews, installExercisePreviewBlobs } from '$lib/exercise-preview-controller';
   import type { ParseResult } from '$lib/types';
   import { createWorkspaceFromDocument } from '$lib/workspace-controller';
@@ -58,6 +57,7 @@
     appState.loading = true;
     appState.error = null;
     try {
+      const { parseBrowserPdf } = await import('$lib/pdf');
       const { result, previewBlobs } = await parseBrowserPdf(file);
       await createWorkspaceFromDocument(result, file.name);
       installExercisePreviewBlobs(previewBlobs);

@@ -21,13 +21,13 @@
     {#each dietNames as dietName, dietIndex}
       {@const dayIndex = representativeDayIndex(dietName)}
       {@const dietData = appState.parsedData?.diets.find(diet => diet.name === dietName)}
-      <article class="min-w-0 rounded-3xl border bg-white p-4 dark:bg-stone-900 sm:p-5 {dietIndex === 0 ? 'border-amber-300 dark:border-amber-800' : 'border-teal-300 dark:border-teal-800'}">
+      <article class="min-w-0 rounded-3xl border bg-white p-4 dark:bg-stone-900 sm:p-5 {dietIndex === 0 ? 'border-orange-300 dark:border-orange-800' : 'border-red-300 dark:border-red-800'}">
         <div class="mb-4 flex items-start justify-between gap-3">
           <div>
-            <p class="text-xs font-bold uppercase tracking-[0.16em] {dietIndex === 0 ? 'text-amber-700 dark:text-amber-400' : 'text-teal-700 dark:text-teal-400'}">Selección global</p>
+            <p class="text-xs font-bold uppercase tracking-[0.16em] {dietIndex === 0 ? 'text-orange-700 dark:text-orange-400' : 'text-red-700 dark:text-red-300'}">Selección global</p>
             <h3 class="mt-1 text-xl font-black text-stone-950 dark:text-white">{dietName}</h3>
           </div>
-          <span class="rounded-full px-3 py-1 text-xs font-bold {dietIndex === 0 ? 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200' : 'bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-200'}">Todos sus días</span>
+          <span class="rounded-full px-3 py-1 text-xs font-bold {dietIndex === 0 ? 'bg-orange-100 text-orange-900 dark:bg-orange-950 dark:text-orange-200' : 'bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-200'}">Todos sus días</span>
         </div>
 
         {#if dietData && dayIndex >= 0}

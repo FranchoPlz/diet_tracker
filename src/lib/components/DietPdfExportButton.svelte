@@ -1,12 +1,12 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
-  import { createPlanPdfBlob } from '$lib/pdf-export';
   import { buildExportPayload } from '$lib/utils';
 
   const isDisabled = $derived(!appState.parsedData || appState.loading);
 
-  function exportDietPdf() {
+  async function exportDietPdf() {
     if (!appState.parsedData) return;
+    const { createPlanPdfBlob } = await import('$lib/pdf-export');
     const payload = buildExportPayload(appState.parsedData, appState.weekConfig, appState.pdfPath, appState.shoppingList);
     const blob = createPlanPdfBlob(payload, appState.activePlanName || 'Dieta seleccionada');
     const url = URL.createObjectURL(blob);

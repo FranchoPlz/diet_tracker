@@ -1,9 +1,11 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { appState } from '$lib/state.svelte';
 import { createDefaultWeekConfig } from '$lib/utils';
 import DietPdfExportButton from './DietPdfExportButton.svelte';
+
+vi.mock('$lib/pdf-export', () => ({ createPlanPdfBlob: () => new Blob(['pdf'], { type: 'application/pdf' }) }));
 
 describe('DietPdfExportButton', () => {
   beforeEach(() => {
@@ -30,7 +32,7 @@ describe('DietPdfExportButton', () => {
     render(DietPdfExportButton);
     await fireEvent.click(screen.getByRole('button', { name: 'Exportar dieta a PDF' }));
 
-    expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+    await waitFor(() => expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob)));
     expect(click).toHaveBeenCalledOnce();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:pdf');
   });

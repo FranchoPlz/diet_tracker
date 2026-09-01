@@ -28,7 +28,7 @@
     {#each dietNames as dietName, dietIndex}
       {@const dayIndex = representativeDayIndex(dietName)}
       {@const dietData = appState.parsedData?.diets.find(diet => diet.name === dietName)}
-      <details class="group min-w-0 overflow-hidden rounded-3xl border bg-white shadow-sm dark:bg-stone-900 {dietIndex === 0 ? 'border-amber-300 dark:border-amber-800' : 'border-teal-300 dark:border-teal-800'}">
+      <details class="group min-w-0 overflow-hidden rounded-3xl border bg-white shadow-sm dark:bg-stone-900 {dietIndex === 0 ? 'border-orange-300 dark:border-orange-800' : 'border-red-300 dark:border-red-800'}">
         <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 [&::-webkit-details-marker]:hidden">
           <span>
             <span class="block text-xl font-black text-stone-950 dark:text-white">{dietName}</span>
