@@ -10,6 +10,7 @@
   import DietOverview from '$lib/components/DietOverview.svelte';
   import ExportButton from '$lib/components/ExportButton.svelte';
   import GlobalDietConfiguration from '$lib/components/GlobalDietConfiguration.svelte';
+  import HomeOverview from '$lib/components/HomeOverview.svelte';
   import PdfUpload from '$lib/components/PdfUpload.svelte';
   import ShareImport from '$lib/components/ShareImport.svelte';
   import ShareList from '$lib/components/ShareList.svelte';
@@ -31,6 +32,7 @@
     appState.activeListName = `${appState.activePlanName} - compra`;
     await completeConfiguration();
     reconfiguring = false;
+    appState.activeTab = 'home';
   }
 
   function openException(dayIndex: number) {
@@ -69,18 +71,16 @@
       <div class="mx-auto mt-8 max-w-2xl space-y-4"><ShoppingList /><ShareList /></div>
     {/if}
   {:else}
-    <header class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p class="text-xs font-black uppercase tracking-[0.24em] text-orange-600">Plan activo</p>
-        <h1 class="mt-1 text-3xl font-black tracking-tight text-stone-950 dark:text-white sm:text-4xl">{appState.activePlanName}</h1>
-        <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">Tu dieta, entrenamiento y compra permanecen guardados en este dispositivo.</p>
-      </div>
-    </header>
-
     <AppTabs active={appState.activeTab} onChange={setTab} shoppingCount={appState.shoppingList.length} />
 
     <div class="mt-5" role="tabpanel">
-      {#if appState.activeTab === 'diet'}
+      {#if appState.activeTab === 'home'}
+        <HomeOverview
+          onOpenDiet={() => appState.activeTab = 'diet'}
+          onReconfigure={() => { reconfiguring = true; appState.activeTab = 'diet'; }}
+          onOpenShopping={() => appState.activeTab = 'shopping'}
+        />
+      {:else if appState.activeTab === 'diet'}
         <div class="space-y-5">
           <PdfUpload />
           {#if !appState.configured || reconfiguring}
@@ -93,12 +93,12 @@
               {/key}
             </div>
           {:else}
-            <DietOverview onReconfigure={() => reconfiguring = true} onEditException={openException} />
+            <div class="flex justify-end"><button class="rounded-xl border border-stone-300 px-4 py-2.5 text-sm font-black text-stone-700 transition hover:bg-stone-100 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800" onclick={() => reconfiguring = true}>Reconfigurar dietas</button></div>
+            <DietOverview onEditException={openException} />
             <details class="rounded-2xl border border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900">
               <summary class="cursor-pointer px-5 py-4 text-sm font-bold text-stone-600 dark:text-stone-300">Consultar todas las opciones originales</summary>
               <div class="border-t border-stone-200 p-5 dark:border-stone-700"><DietAccordion /></div>
             </details>
-            <div class="flex justify-center"><ConfigButtons /></div>
           {/if}
         </div>
       {:else if appState.activeTab === 'training'}

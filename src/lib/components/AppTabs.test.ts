@@ -13,8 +13,8 @@ describe('AppTabs', () => {
     const tablist = screen.getByRole('tablist');
     const tabs = within(tablist).getAllByRole('tab');
 
-    expect(tabs).toHaveLength(3);
-    expect(tabs.map((tab) => tab.getAttribute('aria-label'))).toEqual(['Dieta', 'Ejercicios', 'Compra']);
+    expect(tabs).toHaveLength(4);
+    expect(tabs.map((tab) => tab.getAttribute('aria-label'))).toEqual(['Inicio', 'Dieta', 'Ejercicios', 'Compra']);
     expect(screen.getByRole('tab', { name: 'Ejercicios' }).getAttribute('aria-selected')).toBe('true');
     expect(screen.getByRole('tab', { name: 'Dieta' }).getAttribute('aria-selected')).toBe('false');
     expect(screen.getByText('4')).not.toBeNull();
@@ -26,7 +26,7 @@ describe('AppTabs', () => {
   });
 
   it('omits the shopping badge when no count is provided', () => {
-    render(AppTabs, { active: 'diet', onChange: vi.fn() });
+    render(AppTabs, { active: 'home', onChange: vi.fn() });
 
     expect(screen.queryByText(/^\d+$/)).toBeNull();
   });

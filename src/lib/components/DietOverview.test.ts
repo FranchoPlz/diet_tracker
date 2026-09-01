@@ -33,35 +33,36 @@ describe('DietOverview', () => {
 
   afterEach(cleanup);
 
-  it('shows effective global choices without editable controls', () => {
-    render(DietOverview, { onReconfigure: vi.fn(), onEditException: vi.fn() });
+  it('shows effective global choices without editable controls', async () => {
+    render(DietOverview, { onEditException: vi.fn() });
+
+    await fireEvent.click(document.querySelector('summary')!);
 
     expect(screen.getByText('tofu 120 g')).toBeTruthy();
     expect(screen.queryByRole('radio')).toBeNull();
     expect(screen.getByText('Con excepción')).toBeTruthy();
   });
 
-  it('keeps the global summary independent from day exceptions', () => {
+  it('keeps the global summary independent from day exceptions', async () => {
     appState.parsedData!.diets[0].meals[0].options.push({
       name: 'Pasta', description: null, ingredient_lines: [],
     });
     appState.weekConfig.dayExceptions[0] = { mealOptionIndexes: { COMIDA: 1 } };
 
-    render(DietOverview, { onReconfigure: vi.fn(), onEditException: vi.fn() });
+    render(DietOverview, { onEditException: vi.fn() });
+
+    await fireEvent.click(document.querySelector('summary')!);
 
     expect(screen.getByText('Arroz')).toBeTruthy();
     expect(screen.queryByText('Pasta')).toBeNull();
   });
 
   it('emits reconfiguration and day exception actions', async () => {
-    const onReconfigure = vi.fn();
     const onEditException = vi.fn();
-    render(DietOverview, { onReconfigure, onEditException });
+    render(DietOverview, { onEditException });
 
-    await fireEvent.click(screen.getByRole('button', { name: 'Reconfigurar dietas' }));
     await fireEvent.click(screen.getByRole('button', { name: 'Editar excepción del día 2' }));
 
-    expect(onReconfigure).toHaveBeenCalledOnce();
     expect(onEditException).toHaveBeenCalledWith(1);
   });
 });

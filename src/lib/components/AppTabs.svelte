@@ -1,5 +1,5 @@
 <script module lang="ts">
-  export type AppTab = 'diet' | 'training' | 'shopping';
+  export type AppTab = 'home' | 'diet' | 'training' | 'shopping';
 </script>
 
 <script lang="ts">
@@ -14,6 +14,7 @@
   } = $props();
 
   const tabs: { id: AppTab; label: string }[] = [
+    { id: 'home', label: 'Inicio' },
     { id: 'diet', label: 'Dieta' },
     { id: 'training', label: 'Ejercicios' },
     { id: 'shopping', label: 'Compra' }
@@ -25,7 +26,7 @@
   aria-label="Secciones de la aplicación"
 >
   <div
-    class="mx-auto grid w-full max-w-xl grid-cols-3 gap-1 rounded-2xl bg-stone-200/80 p-1 shadow-sm dark:bg-stone-800"
+    class="mx-auto grid w-full max-w-xl grid-cols-4 gap-1 rounded-2xl bg-stone-200/80 p-1 shadow-sm dark:bg-stone-800"
     role="tablist"
   >
     {#each tabs as tab}

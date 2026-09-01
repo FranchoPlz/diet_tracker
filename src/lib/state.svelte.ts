@@ -13,7 +13,7 @@ export const appState = $state({
   activePlanId: null as string | null,
   activePlanName: 'Mi plan semanal',
   configured: false,
-  activeTab: 'diet' as 'diet' | 'training' | 'shopping',
+  activeTab: 'home' as 'home' | 'diet' | 'training' | 'shopping',
   savedPlans: [] as SavedPlan[],
   planSourceLabel: null as string | null,
   persistenceReady: false,

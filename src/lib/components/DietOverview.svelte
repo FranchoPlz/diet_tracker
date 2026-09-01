@@ -3,8 +3,7 @@
   import type { DaySelection, IngredientItem } from '$lib/types';
   import { formatQuantity, hasException } from '$lib/utils';
 
-  let { onReconfigure, onEditException } = $props<{
-    onReconfigure: () => void;
+  let { onEditException } = $props<{
     onEditException: (dayIndex: number) => void;
   }>();
 
@@ -24,30 +23,26 @@
   }
 </script>
 
-<section class="space-y-5" aria-label="Resumen de dietas">
-  <header class="flex flex-col gap-4 rounded-3xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-700 dark:bg-stone-900 sm:flex-row sm:items-center sm:justify-between sm:p-7">
-    <div>
-      <p class="text-xs font-black uppercase tracking-[0.2em] text-orange-600">Tu selección</p>
-      <h2 class="mt-1 text-2xl font-black tracking-tight text-stone-950 dark:text-white">Resumen global de las dietas</h2>
-      <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">Consulta los platos elegidos y abre cualquier día para crear o revisar una excepción.</p>
-    </div>
-    <button type="button" class="shrink-0 rounded-xl border border-stone-300 px-4 py-2.5 text-sm font-black text-stone-700 transition hover:bg-stone-100 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800" onclick={onReconfigure}>
-      Reconfigurar dietas
-    </button>
-  </header>
-
+<section class="space-y-4" aria-label="Resumen de dietas">
+  <p class="px-1 text-sm text-stone-500 dark:text-stone-400">Selección global actual. Abre una dieta para consultar sus platos o un día para personalizarlo.</p>
   <div class="grid gap-5 xl:grid-cols-2">
     {#each dietNames as dietName, dietIndex}
       {@const dayIndex = representativeDayIndex(dietName)}
       {@const dietData = appState.parsedData?.diets.find(diet => diet.name === dietName)}
-      <article class="min-w-0 overflow-hidden rounded-3xl border bg-white shadow-sm dark:bg-stone-900 {dietIndex === 0 ? 'border-amber-300 dark:border-amber-800' : 'border-teal-300 dark:border-teal-800'}">
-        <div class="flex items-center justify-between border-b border-stone-100 px-5 py-4 dark:border-stone-800">
-          <h3 class="text-xl font-black text-stone-950 dark:text-white">{dietName}</h3>
-          <span class="rounded-full px-3 py-1 text-xs font-bold {dietIndex === 0 ? 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200' : 'bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-200'}">Selección actual</span>
-        </div>
+      <details class="group min-w-0 overflow-hidden rounded-3xl border bg-white shadow-sm dark:bg-stone-900 {dietIndex === 0 ? 'border-amber-300 dark:border-amber-800' : 'border-teal-300 dark:border-teal-800'}">
+        <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 [&::-webkit-details-marker]:hidden">
+          <span>
+            <span class="block text-xl font-black text-stone-950 dark:text-white">{dietName}</span>
+            <span class="mt-0.5 block text-xs font-bold text-stone-500 dark:text-stone-400">Selección global actual</span>
+          </span>
+          <span class="flex items-center gap-2">
+            <span class="hidden rounded-full px-3 py-1 text-xs font-bold sm:inline {dietIndex === 0 ? 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200' : 'bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-200'}">Seleccionada</span>
+            <span aria-hidden="true" class="text-xl font-black text-stone-400 transition-transform group-open:rotate-180">⌄</span>
+          </span>
+        </summary>
 
         {#if dietData && dayIndex >= 0}
-          <div class="divide-y divide-stone-100 dark:divide-stone-800">
+          <div class="divide-y border-t border-stone-100 divide-stone-100 dark:border-stone-800 dark:divide-stone-800">
             {#each dietData.meals as meal, mealIndex}
               {@const optionIndex = appState.weekConfig.dietDefaults[dietName]?.mealOptionIndexes[meal.type] ?? 0}
               {@const option = meal.options[optionIndex]}
@@ -83,7 +78,7 @@
             {dietData ? `No hay ningún día asignado a ${dietName}.` : `No se encontraron datos para ${dietName}.`}
           </p>
         {/if}
-      </article>
+      </details>
     {/each}
   </div>
 
