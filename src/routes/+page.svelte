@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { appState } from '$lib/state.svelte';
   import { calculateShoppingList } from '$lib/calculation';
   import { completeConfiguration, scheduleWorkspaceAutosave, selectActiveTab } from '$lib/workspace-controller';
@@ -27,6 +28,7 @@
   }
 
   function startGesture(event: TouchEvent) {
+    if (!appState.parsedData || event.touches.length !== 1) return;
     const touch = event.touches[0];
     if (touch) gestureStart = { x: touch.clientX, y: touch.clientY, target: event.target };
   }
@@ -40,6 +42,23 @@
     const next = getSwipedTab(appState.activeTab, start, { x: touch.clientX, y: touch.clientY });
     if (next) setTab(next);
   }
+
+  function cancelGesture() {
+    gestureStart = null;
+  }
+
+  onMount(() => {
+    const options = { passive: true, capture: true };
+    window.addEventListener('touchstart', startGesture, options);
+    window.addEventListener('touchend', endGesture, options);
+    window.addEventListener('touchcancel', cancelGesture, options);
+
+    return () => {
+      window.removeEventListener('touchstart', startGesture, options);
+      window.removeEventListener('touchend', endGesture, options);
+      window.removeEventListener('touchcancel', cancelGesture, options);
+    };
+  });
 
   async function saveConfiguration() {
     if (!appState.parsedData) return;
@@ -90,7 +109,7 @@
   {:else}
     <AppTabs active={appState.activeTab} onChange={setTab} shoppingCount={appState.shoppingList.length} />
 
-    <div class="mt-4 touch-pan-y" role="tabpanel" tabindex="0" ontouchstart={startGesture} ontouchend={endGesture} ontouchcancel={() => gestureStart = null}>
+    <div class="mt-4 touch-pan-y" role="tabpanel" tabindex="0">
       {#if appState.activeTab === 'home'}
         <HomeOverview />
       {:else if appState.activeTab === 'diet'}
