@@ -15,6 +15,7 @@
   import ShareImport from '$lib/components/ShareImport.svelte';
   import ShareList from '$lib/components/ShareList.svelte';
   import ShoppingList from '$lib/components/ShoppingList.svelte';
+  import { getSwipedTab } from '$lib/swipe';
   import TrainingView from '$lib/components/TrainingView.svelte';
 
   let reconfiguring = $state(false);
@@ -25,20 +26,18 @@
     void selectActiveTab(tab);
   }
 
-  function startGesture(event: PointerEvent) {
-    gestureStart = { x: event.clientX, y: event.clientY, target: event.target };
+  function startGesture(event: TouchEvent) {
+    const touch = event.touches[0];
+    if (touch) gestureStart = { x: touch.clientX, y: touch.clientY, target: event.target };
   }
 
-  function endGesture(event: PointerEvent) {
+  function endGesture(event: TouchEvent) {
     if (!gestureStart) return;
     const start = gestureStart;
     gestureStart = null;
-    const distanceX = event.clientX - start.x;
-    const distanceY = event.clientY - start.y;
-    if (Math.abs(distanceX) < 72 || Math.abs(distanceX) < Math.abs(distanceY)) return;
-    if (start.target instanceof Element && start.target.closest('button, input, select, textarea, summary, a, label')) return;
-    const tabs: AppTab[] = ['home', 'diet', 'training', 'shopping'];
-    const next = tabs[tabs.indexOf(appState.activeTab) + (distanceX < 0 ? 1 : -1)];
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    const next = getSwipedTab(appState.activeTab, start, { x: touch.clientX, y: touch.clientY });
     if (next) setTab(next);
   }
 
@@ -91,7 +90,7 @@
   {:else}
     <AppTabs active={appState.activeTab} onChange={setTab} shoppingCount={appState.shoppingList.length} />
 
-    <div class="mt-4 touch-pan-y" role="tabpanel" tabindex="0" onpointerdown={startGesture} onpointerup={endGesture} onpointercancel={() => gestureStart = null}>
+    <div class="mt-4 touch-pan-y" role="tabpanel" tabindex="0" ontouchstart={startGesture} ontouchend={endGesture} ontouchcancel={() => gestureStart = null}>
       {#if appState.activeTab === 'home'}
         <HomeOverview />
       {:else if appState.activeTab === 'diet'}
