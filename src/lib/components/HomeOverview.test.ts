@@ -23,6 +23,6 @@ describe('HomeOverview', () => {
     expect(screen.getByRole('heading', { name: 'Plan abril' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Cambiar plan' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Mis listas' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Crear nuevo plan' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Cambiar PDF' })).toBeTruthy();
   });
 });

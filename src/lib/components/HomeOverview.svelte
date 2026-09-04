@@ -12,7 +12,7 @@
     </div>
     <div class="flex flex-wrap justify-end gap-2">
       <PlanLibrary />
+      <PdfUpload compact actionLabel="Cambiar PDF" />
     </div>
   </header>
-  <PdfUpload actionLabel="Crear nuevo plan" />
 </section>

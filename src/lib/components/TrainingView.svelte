@@ -1,7 +1,7 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
   import { downloadTrainingPdf } from '$lib/training-export';
-  import { exerciseWeightKey, seriesCount, setExerciseWeight } from '$lib/week-tracker';
+  import { exerciseWeightKey, seriesCount, setExerciseRepetitions, setExerciseWeight } from '$lib/week-tracker';
   import { scheduleWorkspaceAutosave } from '$lib/workspace-controller';
 
   const training = $derived(appState.parsedData?.training);
@@ -10,13 +10,14 @@
   const day = $derived(trainingDayIndex >= 0 ? training?.days[trainingDayIndex] : undefined);
 
   function exportPdf() {
-    if (training) downloadTrainingPdf(training, appState.weekTracker.trainingWeights, appState.activePlanName, appState.weekTracker.weekNumber);
+    if (training) downloadTrainingPdf(training, appState.weekTracker.trainingWeights, appState.activePlanName, appState.weekTracker.weekNumber, appState.weekTracker.trainingRepetitions);
   }
 
   function resetTraining() {
-    if (!confirm('¿Quieres borrar todos los pesos registrados esta semana?')) return;
+    if (!confirm('¿Quieres borrar los pesos y repeticiones registrados esta semana?')) return;
     if (!confirm('Esta acción no se puede deshacer. ¿Confirmas el reinicio del entrenamiento?')) return;
     appState.weekTracker.trainingWeights = {};
+    appState.weekTracker.trainingRepetitions = {};
     scheduleWorkspaceAutosave(0);
   }
 </script>
@@ -46,33 +47,23 @@
       <ol class="divide-y divide-stone-200 dark:divide-stone-700">
         {#each day.exercises as exercise, exerciseIndex}
           {@const key = exerciseWeightKey(dayIndex, exerciseIndex)}
-          <li class="p-4 sm:p-5">
+          <li class="p-4 sm:p-6">
             <div class="flex items-start gap-3">
               <span class="grid size-8 shrink-0 place-items-center rounded-xl bg-stone-900 text-xs font-black text-white dark:bg-white dark:text-stone-900">{exerciseIndex + 1}</span>
-              <div class="min-w-0 flex-1">
-                <h3 class="font-black leading-snug">{exercise.exercise}</h3>
-                <p class="mt-1 text-sm font-bold text-stone-500">{exercise.series || '—'} series · {exercise.repetitions || '—'} repeticiones</p>
-                {#if exercise.details}<p class="mt-2 text-sm text-stone-600 dark:text-stone-300">{exercise.details}</p>{/if}
-                <fieldset class="mt-4">
-                  <legend class="mb-2 text-xs font-black uppercase tracking-wider text-stone-500">Peso por serie (kg)</legend>
-                  <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {#each Array(seriesCount(exercise.series)) as _, seriesIndex}
-                      <label class="rounded-xl bg-stone-100 p-2 dark:bg-stone-800">
-                        <span class="block text-[0.65rem] font-black uppercase text-stone-500">Serie {seriesIndex + 1}</span>
-                        <input
-                          type="number"
-                          inputmode="decimal"
-                          min="0"
-                          step="0.5"
-                          class="mt-1 min-h-11 w-full rounded-lg border border-stone-300 bg-white px-3 text-base font-black dark:border-stone-600 dark:bg-stone-900"
-                          aria-label={`${exercise.exercise}, peso serie ${seriesIndex + 1}`}
-                          value={appState.weekTracker.trainingWeights[key]?.[seriesIndex] ?? ''}
-                          oninput={(event) => setExerciseWeight(dayIndex, exerciseIndex, seriesIndex, event.currentTarget.value)}
-                        />
-                      </label>
-                    {/each}
+              <div class="min-w-0 flex-1"><h3 class="text-lg font-black leading-snug">{exercise.exercise}</h3>{#if exercise.details}<p class="mt-1 text-sm text-stone-600 dark:text-stone-300">{exercise.details}</p>{/if}</div>
+            </div>
+            <div class="mt-4 overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-700">
+              <div class="grid grid-cols-[3.5rem_minmax(0,1fr)_minmax(0,1fr)] gap-2 bg-stone-100 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-stone-500 dark:bg-stone-800">
+                <span>Serie</span><span>Peso</span><span>Reps hechas</span>
+              </div>
+              <div class="divide-y divide-stone-200 dark:divide-stone-700">
+                {#each Array(seriesCount(exercise.series)) as _, seriesIndex}
+                  <div class="grid grid-cols-[3.5rem_minmax(0,1fr)_minmax(0,1fr)] items-center gap-2 px-3 py-2.5">
+                    <div><span class="block font-black">{seriesIndex + 1}</span><span class="text-[11px] text-stone-500">{exercise.repetitions || '—'} obj.</span></div>
+                    <label><span class="sr-only">Peso serie {seriesIndex + 1}</span><div class="relative"><input type="number" inputmode="decimal" min="0" step="0.5" class="min-h-11 w-full rounded-xl border border-stone-300 bg-white px-3 pr-8 font-black dark:border-stone-600 dark:bg-stone-900" aria-label={`${exercise.exercise}, peso serie ${seriesIndex + 1}`} value={appState.weekTracker.trainingWeights[key]?.[seriesIndex] ?? ''} oninput={(event) => setExerciseWeight(dayIndex, exerciseIndex, seriesIndex, event.currentTarget.value)} /><span class="pointer-events-none absolute right-2 top-3 text-xs font-bold text-stone-400">kg</span></div></label>
+                    <label><span class="sr-only">Repeticiones serie {seriesIndex + 1}</span><input type="number" inputmode="numeric" min="0" step="1" class="min-h-11 w-full rounded-xl border border-stone-300 bg-white px-3 font-black dark:border-stone-600 dark:bg-stone-900" aria-label={`${exercise.exercise}, repeticiones serie ${seriesIndex + 1}`} value={appState.weekTracker.trainingRepetitions?.[key]?.[seriesIndex] ?? ''} placeholder={exercise.repetitions || '0'} oninput={(event) => setExerciseRepetitions(dayIndex, exerciseIndex, seriesIndex, event.currentTarget.value)} /></label>
                   </div>
-                </fieldset>
+                {/each}
               </div>
             </div>
           </li>

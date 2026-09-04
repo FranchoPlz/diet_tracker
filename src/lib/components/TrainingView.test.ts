@@ -15,12 +15,14 @@ describe('TrainingView', () => {
 
   afterEach(cleanup);
 
-  it('shows only the active day and records one weight per series', async () => {
+  it('shows one row per series and records weight and completed repetitions', async () => {
     render(TrainingView);
     expect(screen.getByText('Día 1 · TORSO')).toBeTruthy();
-    expect(screen.getAllByRole('spinbutton')).toHaveLength(3);
+    expect(screen.getAllByRole('spinbutton')).toHaveLength(6);
     await fireEvent.input(screen.getByLabelText('Remo, peso serie 1'), { target: { value: '25' } });
+    await fireEvent.input(screen.getByLabelText('Remo, repeticiones serie 1'), { target: { value: '10' } });
     expect(appState.weekTracker.trainingWeights['0:0']).toEqual(['25']);
+    expect(appState.weekTracker.trainingRepetitions?.['0:0']).toEqual(['10']);
   });
 
   it('shows the active-rest instructions for that day', () => {
@@ -32,10 +34,12 @@ describe('TrainingView', () => {
 
   it('requires two confirmations before clearing weights', async () => {
     appState.weekTracker.trainingWeights = { '0:0': ['25'] };
+    appState.weekTracker.trainingRepetitions = { '0:0': ['10'] };
     const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(true).mockReturnValueOnce(false);
     render(TrainingView);
     await fireEvent.click(screen.getByRole('button', { name: 'Reiniciar' }));
     expect(confirm).toHaveBeenCalledTimes(2);
     expect(appState.weekTracker.trainingWeights['0:0']).toEqual(['25']);
+    expect(appState.weekTracker.trainingRepetitions['0:0']).toEqual(['10']);
   });
 });

@@ -5,7 +5,7 @@
   import type { ParseResult } from '$lib/types';
   import { createWorkspaceFromDocument } from '$lib/workspace-controller';
 
-  let { actionLabel = 'Cambiar PDF' } = $props<{ actionLabel?: string }>();
+  let { actionLabel = 'Cambiar PDF', compact = false } = $props<{ actionLabel?: string; compact?: boolean }>();
 
   let isDragging = $state(false);
   let isParsing = $state(false);
@@ -145,9 +145,12 @@
   }
 </script>
 
-<div class="mb-8 w-full">
+<div class={compact ? '' : 'mb-8 w-full'}>
   {#if isParsing}
-    <div class="relative overflow-hidden rounded-2xl border border-teal-200 bg-white px-5 py-5 shadow-sm dark:border-teal-900 dark:bg-stone-900" role="status" aria-live="polite">
+    {#if compact}
+      <span class="rounded-xl border border-stone-200 px-3 py-2 text-sm font-bold text-stone-500 dark:border-stone-700" role="status">Leyendo PDF…</span>
+    {:else}
+      <div class="relative overflow-hidden rounded-2xl border border-teal-200 bg-white px-5 py-5 shadow-sm dark:border-teal-900 dark:bg-stone-900" role="status" aria-live="polite">
       <div class="absolute inset-x-0 bottom-0 h-1 overflow-hidden bg-teal-100 dark:bg-teal-950">
         <div class="h-full w-1/3 animate-[loading_1.2s_ease-in-out_infinite] rounded-full bg-teal-600"></div>
       </div>
@@ -160,9 +163,13 @@
           <p class="mt-0.5 text-sm text-stone-500 dark:text-stone-400">Estamos reconociendo comidas, opciones y cantidades del PDF.</p>
         </div>
       </div>
-    </div>
+      </div>
+    {/if}
   {:else if appState.parsedData}
-    <div
+    {#if compact}
+      <button class="rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm font-bold text-stone-600 shadow-sm dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" onclick={isTauri ? handleTauriFileSelect : requestBrowserFileSelect}>{actionLabel}</button>
+    {:else}
+      <div
       class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white/70 px-4 py-3 text-sm shadow-sm dark:border-stone-800 dark:bg-stone-900/70"
       ondragenter={handleDragEnter}
       ondragleave={handleDragLeave}
@@ -183,7 +190,8 @@
       {:else}
         <button class="rounded-lg px-3 py-2 font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={requestBrowserFileSelect}>{actionLabel}</button>
       {/if}
-    </div>
+      </div>
+    {/if}
   {:else}
     <div
       class="rounded-3xl border-2 border-dashed p-8 text-center transition {isDragging ? 'border-teal-500 bg-teal-50 dark:bg-teal-950/30' : 'border-stone-300 bg-white/50 hover:border-teal-500 dark:border-stone-700 dark:bg-stone-900/50'}"

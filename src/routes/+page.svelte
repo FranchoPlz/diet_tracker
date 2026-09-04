@@ -68,9 +68,9 @@
     const modifyDiet = confirm('Has completado la semana. ¿Quieres modificar la dieta para la siguiente?');
     const exportTraining = confirm('¿Quieres guardar el PDF del entrenamiento de esta semana antes de reiniciarlo?');
     if (exportTraining && appState.parsedData?.training) {
-      downloadTrainingPdf(appState.parsedData.training, appState.weekTracker.trainingWeights, appState.activePlanName, appState.weekTracker.weekNumber);
+      downloadTrainingPdf(appState.parsedData.training, appState.weekTracker.trainingWeights, appState.activePlanName, appState.weekTracker.weekNumber, appState.weekTracker.trainingRepetitions);
     }
-    const resetTraining = confirm('¿Quieres reiniciar también los pesos del entrenamiento para la nueva semana?');
+    const resetTraining = confirm('¿Quieres reiniciar también los pesos y repeticiones del entrenamiento para la nueva semana?');
     startNextWeek(resetTraining);
     if (modifyDiet) {
       await selectActiveTab('diet');

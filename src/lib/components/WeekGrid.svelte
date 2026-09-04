@@ -40,10 +40,10 @@
           <span class="grid size-7 place-items-center rounded-full {isSelected ? 'bg-orange-600 text-white' : 'bg-white text-stone-400 dark:bg-stone-700'}" aria-hidden="true">→</span>
         </button>
 
-        <div class="grid grid-cols-2 gap-1 rounded-xl bg-white p-1 dark:bg-stone-900">
+        <div class="grid grid-cols-2 gap-1 rounded-xl border border-stone-200 bg-stone-100 p-1 dark:border-stone-600 dark:bg-stone-950">
           {#each ['DIETA 1', 'DIETA 2'] as diet}
             <button
-              class="rounded-lg px-2 py-2 text-xs font-black transition {day.diet === diet ? (diet === 'DIETA 1' ? 'bg-amber-200 text-amber-950' : 'bg-teal-200 text-teal-950') : 'text-stone-400 hover:text-stone-700 dark:hover:text-stone-200'}"
+              class="rounded-lg px-2 py-2 text-xs font-black transition {day.diet === diet ? (diet === 'DIETA 1' ? 'bg-orange-600 text-white shadow-sm' : 'bg-red-700 text-white shadow-sm') : 'bg-white text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700'}"
               onclick={() => changeDiet(dayIndex, diet as DaySelection['diet'])}
               aria-pressed={day.diet === diet}
             >

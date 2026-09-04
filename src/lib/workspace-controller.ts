@@ -23,6 +23,7 @@ export async function createWorkspaceFromDocument(result: ParseResult, sourceNam
     activeDayIndex: 0,
     weekNumber: 1,
     trainingWeights: {},
+    trainingRepetitions: {},
   };
   appState.shoppingList = [];
   appState.checkedShoppingItems = {};

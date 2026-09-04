@@ -19,7 +19,7 @@ function createPlan(name: string): SavedPlan {
   const now = new Date().toISOString();
   return {
     id: crypto.randomUUID(),
-    schemaVersion: 3,
+    schemaVersion: 4,
     configured: appState.configured,
     name,
     createdAt: now,
@@ -40,7 +40,7 @@ export async function persistCurrentPlan(): Promise<SavedPlan> {
   if (!appState.parsedData) throw new Error('No hay una dieta cargada para guardar.');
 
   plan.name = appState.activePlanName.trim() || 'Mi plan semanal';
-  plan.schemaVersion = 3;
+  plan.schemaVersion = 4;
   plan.configured = appState.configured;
   plan.parsedData = cloneData(appState.parsedData);
   plan.weekConfig = portableWeekConfig(appState.weekConfig);
@@ -72,6 +72,7 @@ export async function restorePlan(plan: SavedPlan): Promise<void> {
     activeDayIndex: 0,
     weekNumber: 1,
     trainingWeights: {},
+    trainingRepetitions: {},
   });
   appState.pdfPath = null;
   appState.planSourceLabel = `Plan guardado: ${plan.name}`;

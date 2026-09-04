@@ -17,7 +17,7 @@
   }>();
 
   let day = $derived(appState.weekConfig.days[dayIndex]);
-  let expandedMeals = $state<Record<number, boolean>>({ 0: true });
+  let expandedMeals = $state<Record<number, boolean>>({});
 
   function formatItem(item: IngredientItem): string {
     if (item.is_combination && item.sub_items && item.sub_items.length > 0) {
@@ -36,7 +36,7 @@
   }
 
   function isExpanded(mealIndex: number): boolean {
-    return expandedMeals[mealIndex] ?? mealIndex === 0;
+    return expandedMeals[mealIndex] ?? false;
   }
 
   function setAllExpanded(expanded: boolean) {

@@ -24,6 +24,7 @@ export function startNextWeek(resetTraining = true, now = new Date()): void {
     activeDayIndex: 0,
     weekNumber: appState.weekTracker.weekNumber + 1,
     trainingWeights: resetTraining ? {} : appState.weekTracker.trainingWeights,
+    trainingRepetitions: resetTraining ? {} : appState.weekTracker.trainingRepetitions,
   };
   scheduleWorkspaceAutosave(0);
 }
@@ -42,5 +43,14 @@ export function setExerciseWeight(dayIndex: number, exerciseIndex: number, serie
   const weights = [...(appState.weekTracker.trainingWeights[key] ?? [])];
   weights[seriesIndex] = value;
   appState.weekTracker.trainingWeights[key] = weights;
+  scheduleWorkspaceAutosave();
+}
+
+export function setExerciseRepetitions(dayIndex: number, exerciseIndex: number, seriesIndex: number, value: string): void {
+  const key = exerciseWeightKey(dayIndex, exerciseIndex);
+  const repetitions = [...(appState.weekTracker.trainingRepetitions?.[key] ?? [])];
+  repetitions[seriesIndex] = value;
+  appState.weekTracker.trainingRepetitions ??= {};
+  appState.weekTracker.trainingRepetitions[key] = repetitions;
   scheduleWorkspaceAutosave();
 }

@@ -132,11 +132,12 @@ export interface WeekTracker {
   activeDayIndex: number;
   weekNumber: number;
   trainingWeights: Record<string, string[]>;
+  trainingRepetitions?: Record<string, string[]>;
 }
 
 export interface SavedPlan {
   id: string;
-  schemaVersion: 1 | 2 | 3;
+  schemaVersion: 1 | 2 | 3 | 4;
   configured?: boolean;
   name: string;
   createdAt: string;

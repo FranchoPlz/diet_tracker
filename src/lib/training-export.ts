@@ -2,7 +2,7 @@ import { createPlanPdfBlob } from './pdf-export';
 import type { TrainingPlan } from './types';
 import { exerciseWeightKey, seriesCount } from './week-tracker';
 
-export function createTrainingPdfBlob(training: TrainingPlan, weights: Record<string, string[]>, title: string): Blob {
+export function createTrainingPdfBlob(training: TrainingPlan, weights: Record<string, string[]>, title: string, repetitions: Record<string, string[]> = {}): Blob {
   const days = training.days.flatMap((day, trainingDayIndex) => day.days.map((dayNumber) => ({
     day: dayNumber,
     diet: day.title,
@@ -10,9 +10,12 @@ export function createTrainingPdfBlob(training: TrainingPlan, weights: Record<st
       ? [{ type: 'DESCANSO ACTIVO', option: day.details || 'Actividad suave', ingredients: [] }]
       : day.exercises.map((exercise, exerciseIndex) => {
           const recorded = weights[exerciseWeightKey(dayNumber - 1, exerciseIndex)] ?? [];
-          const weightLines = Array.from({ length: seriesCount(exercise.series) }, (_, seriesIndex) =>
-            `Serie ${seriesIndex + 1}: ${recorded[seriesIndex]?.trim() ? `${recorded[seriesIndex]} kg` : 'sin registrar'}`,
-          );
+          const actualRepetitions = repetitions[exerciseWeightKey(dayNumber - 1, exerciseIndex)] ?? [];
+          const weightLines = Array.from({ length: seriesCount(exercise.series) }, (_, seriesIndex) => {
+            const weight = recorded[seriesIndex]?.trim() ? `${recorded[seriesIndex]} kg` : 'peso sin registrar';
+            const reps = actualRepetitions[seriesIndex]?.trim() || exercise.repetitions || 'sin registrar';
+            return `Serie ${seriesIndex + 1}: ${weight} · ${reps} repeticiones`;
+          });
           return {
             type: exercise.exercise,
             option: `${exercise.series || '-'} series · ${exercise.repetitions || '-'} repeticiones`,
@@ -23,8 +26,8 @@ export function createTrainingPdfBlob(training: TrainingPlan, weights: Record<st
   return createPlanPdfBlob({ generated_at: new Date().toISOString(), days }, title);
 }
 
-export function downloadTrainingPdf(training: TrainingPlan, weights: Record<string, string[]>, planName: string, weekNumber: number): void {
-  const blob = createTrainingPdfBlob(training, weights, `${planName} · Entrenamiento semana ${weekNumber}`);
+export function downloadTrainingPdf(training: TrainingPlan, weights: Record<string, string[]>, planName: string, weekNumber: number, repetitions: Record<string, string[]> = {}): void {
+  const blob = createTrainingPdfBlob(training, weights, `${planName} · Entrenamiento semana ${weekNumber}`, repetitions);
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;

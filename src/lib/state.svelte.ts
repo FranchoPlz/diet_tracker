@@ -10,6 +10,7 @@ export const appState = $state({
     activeDayIndex: 0,
     weekNumber: 1,
     trainingWeights: {},
+    trainingRepetitions: {},
   } as WeekTracker,
   shoppingList: [] as ShoppingItem[],
   checkedShoppingItems: {} as Record<string, boolean>,
