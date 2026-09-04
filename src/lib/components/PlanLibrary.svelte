@@ -25,7 +25,7 @@
 <div class="relative">
   <button class="rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm font-bold text-stone-600 shadow-sm dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" onclick={() => open = !open}>Cambiar plan</button>
   {#if open}
-    <div class="fixed inset-x-4 top-16 z-50 rounded-2xl border border-stone-200 bg-white p-3 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-96">
+    <div class="fixed inset-x-4 top-16 z-[100] rounded-2xl border border-stone-200 bg-white p-3 shadow-2xl dark:border-stone-700 dark:bg-stone-900 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-96">
       {#if appState.parsedData}
         <div class="mb-3 flex gap-2">
           <input bind:value={appState.activePlanName} aria-label="Nombre del plan" class="min-w-0 flex-1 rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm font-bold outline-none focus:border-teal-600 dark:border-stone-700 dark:bg-stone-800" />

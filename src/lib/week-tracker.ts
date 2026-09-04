@@ -38,6 +38,19 @@ export function seriesCount(value: string): number {
   return Math.max(1, Math.min(20, Number(match?.[0]) || 1));
 }
 
+export function repetitionTargets(value: string, count: number): string[] {
+  const ordinal = [...value.matchAll(/\d+[ºª]\s*[-:]?\s*(\d+(?:\s*[-–]\s*\d+)?)/gi)].map(match => match[1].replace(/\s+/g, ''));
+  if (ordinal.length) return Array.from({ length: count }, (_, index) => ordinal[index] ?? ordinal.at(-1) ?? '—');
+
+  const lines = value.split(/\n+/).map(line => line.trim()).filter(Boolean);
+  const sequences = lines.map(line => line.match(/\d+/g) ?? []);
+  if (count > 1 && sequences.some(sequence => sequence.length >= count)) {
+    return Array.from({ length: count }, (_, index) => sequences.map(sequence => sequence[index]).filter(Boolean).join(' / ') || '—');
+  }
+  const fallback = value.trim() || '—';
+  return Array.from({ length: count }, () => fallback);
+}
+
 export function setExerciseWeight(dayIndex: number, exerciseIndex: number, seriesIndex: number, value: string): void {
   const key = exerciseWeightKey(dayIndex, exerciseIndex);
   const weights = [...(appState.weekTracker.trainingWeights[key] ?? [])];

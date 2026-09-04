@@ -1,6 +1,6 @@
 import { createPlanPdfBlob } from './pdf-export';
 import type { TrainingPlan } from './types';
-import { exerciseWeightKey, seriesCount } from './week-tracker';
+import { exerciseWeightKey, repetitionTargets, seriesCount } from './week-tracker';
 
 export function createTrainingPdfBlob(training: TrainingPlan, weights: Record<string, string[]>, title: string, repetitions: Record<string, string[]> = {}): Blob {
   const days = training.days.flatMap((day, trainingDayIndex) => day.days.map((dayNumber) => ({
@@ -11,9 +11,10 @@ export function createTrainingPdfBlob(training: TrainingPlan, weights: Record<st
       : day.exercises.map((exercise, exerciseIndex) => {
           const recorded = weights[exerciseWeightKey(dayNumber - 1, exerciseIndex)] ?? [];
           const actualRepetitions = repetitions[exerciseWeightKey(dayNumber - 1, exerciseIndex)] ?? [];
+          const targets = repetitionTargets(exercise.repetitions, seriesCount(exercise.series));
           const weightLines = Array.from({ length: seriesCount(exercise.series) }, (_, seriesIndex) => {
             const weight = recorded[seriesIndex]?.trim() ? `${recorded[seriesIndex]} kg` : 'peso sin registrar';
-            const reps = actualRepetitions[seriesIndex]?.trim() || exercise.repetitions || 'sin registrar';
+            const reps = actualRepetitions[seriesIndex]?.trim() || targets[seriesIndex] || 'sin registrar';
             return `Serie ${seriesIndex + 1}: ${weight} · ${reps} repeticiones`;
           });
           return {

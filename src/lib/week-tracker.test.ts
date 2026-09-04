@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { appState } from './state.svelte';
-import { seriesCount, setActiveDay, setExerciseRepetitions, startNextWeek, syncActiveDay } from './week-tracker';
+import { repetitionTargets, seriesCount, setActiveDay, setExerciseRepetitions, startNextWeek, syncActiveDay } from './week-tracker';
 
 describe('week tracker', () => {
   beforeEach(() => {
@@ -39,5 +39,11 @@ describe('week tracker', () => {
   it('records completed repetitions for each series', () => {
     setExerciseRepetitions(0, 1, 2, '9');
     expect(appState.weekTracker.trainingRepetitions?.['0:1']).toEqual([undefined, undefined, '9']);
+  });
+
+  it('maps ordinal and superseries repetition targets to each series', () => {
+    expect(repetitionTargets('1º - 10\n2º - 10\n3º - 8\n4º - 8', 4)).toEqual(['10', '10', '8', '8']);
+    expect(repetitionTargets('12 - 12 - 10 - 8\n10 - 10 - 10 - 10', 4)).toEqual(['12 / 10', '12 / 10', '10 / 10', '8 / 10']);
+    expect(repetitionTargets('12', 3)).toEqual(['12', '12', '12']);
   });
 });

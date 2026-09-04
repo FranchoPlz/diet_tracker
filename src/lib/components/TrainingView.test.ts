@@ -8,7 +8,7 @@ describe('TrainingView', () => {
   beforeEach(() => {
     appState.weekTracker = { startedAt: new Date().toISOString(), activeDayIndex: 0, weekNumber: 1, trainingWeights: {} };
     appState.parsedData = { status: 'ok', diets: [], training: { tips: [], defaultRestSeconds: 60, days: [
-      { days: [1], title: 'TORSO', activeRest: false, details: '', exercises: [{ exercise: 'Remo', series: '3', repetitions: '12', details: '' }] },
+      { days: [1], title: 'TORSO', activeRest: false, details: '', exercises: [{ exercise: 'Remo', series: '3', repetitions: '1º - 12\n2º - 10\n3º - 8', details: '' }] },
       { days: [2], title: 'DESCANSO ACTIVO', activeRest: true, details: 'Caminar 30 minutos.', exercises: [] },
     ] } };
   });
@@ -19,6 +19,9 @@ describe('TrainingView', () => {
     render(TrainingView);
     expect(screen.getByText('Día 1 · TORSO')).toBeTruthy();
     expect(screen.getAllByRole('spinbutton')).toHaveLength(6);
+    expect(screen.getByText('12 obj.')).toBeTruthy();
+    expect(screen.getByText('10 obj.')).toBeTruthy();
+    expect(screen.getByText('8 obj.')).toBeTruthy();
     await fireEvent.input(screen.getByLabelText('Remo, peso serie 1'), { target: { value: '25' } });
     await fireEvent.input(screen.getByLabelText('Remo, repeticiones serie 1'), { target: { value: '10' } });
     expect(appState.weekTracker.trainingWeights['0:0']).toEqual(['25']);

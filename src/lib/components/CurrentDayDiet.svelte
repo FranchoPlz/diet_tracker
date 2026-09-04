@@ -19,8 +19,7 @@
 <section class="app-surface overflow-hidden rounded-3xl border" aria-label={`Dieta del día ${dayIndex + 1}`}>
   <header class="flex items-center gap-3 border-b border-stone-200 px-4 py-4 dark:border-stone-700 sm:px-6">
     <div class="min-w-0 flex-1">
-      <p class="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Hoy toca · {day?.diet}</p>
-      <h2 class="mt-1 text-2xl font-black">Día {dayIndex + 1}</h2>
+      <h2 class="text-xl font-black uppercase tracking-tight text-orange-600">Hoy toca {day?.diet}</h2>
     </div>
     <button class="min-h-11 rounded-xl border border-stone-300 px-3 text-sm font-black dark:border-stone-600" onclick={() => onEdit(dayIndex)}>Modificar día</button>
   </header>
@@ -35,7 +34,7 @@
             <span aria-hidden="true" class="text-xl text-stone-400 transition-transform {expandedMeals[mealIndex] ? 'rotate-180' : ''}">⌄</span>
           </button>
           {#if option && expandedMeals[mealIndex]}
-            <ul class="mt-3 space-y-2">
+            <ul id="current-meal-{mealIndex}" class="space-y-2 border-t border-stone-200 px-4 py-3 dark:border-stone-700">
               {#each option.ingredient_lines as line, lineIndex}
                 {@const selected = getEffectiveAlternativeChoice(appState.weekConfig, dayIndex, `${mealIndex}-${optionIndex}-${lineIndex}`)}
                 <li class="flex gap-2 text-sm text-stone-600 dark:text-stone-300"><span class="text-orange-600">•</span><span>{line.is_alternatives ? (line.items[selected] ? formatItem(line.items[selected]) : 'Sin selección') : line.items.map(formatItem).join(' + ')}</span></li>
