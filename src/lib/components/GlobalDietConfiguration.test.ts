@@ -25,6 +25,10 @@ describe('GlobalDietConfiguration', () => {
 
     expect(screen.getByRole('heading', { name: 'DIETA 1' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'DIETA 2' })).toBeTruthy();
+    const dietOnePanel = screen.getByRole('heading', { name: 'DIETA 1' }).closest('details');
+    const dietTwoPanel = screen.getByRole('heading', { name: 'DIETA 2' }).closest('details');
+    expect(dietOnePanel?.open).toBe(false);
+    expect(dietTwoPanel?.open).toBe(false);
     await fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios de dieta' }));
     expect(onComplete).toHaveBeenCalledOnce();
   });

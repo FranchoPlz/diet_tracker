@@ -33,23 +33,25 @@
     {#each dietNames as dietName, dietIndex}
       {@const dayIndex = representativeDayIndex(dietName)}
       {@const dietData = appState.parsedData?.diets.find(diet => diet.name === dietName)}
-      <article class="min-w-0 rounded-2xl border bg-white p-3 dark:bg-stone-900 {dietIndex === 0 ? 'border-orange-300 dark:border-orange-800' : 'border-red-300 dark:border-red-800'}">
-        <div class="mb-2 flex items-start justify-between gap-3">
+      <details class="group min-w-0 overflow-hidden rounded-2xl border bg-white dark:bg-stone-900 {dietIndex === 0 ? 'border-orange-300 dark:border-orange-800' : 'border-red-300 dark:border-red-800'}">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
           <div>
             <p class="text-xs font-bold uppercase tracking-[0.16em] {dietIndex === 0 ? 'text-orange-700 dark:text-orange-400' : 'text-red-700 dark:text-red-300'}">Selección global</p>
             <h3 class="text-lg font-black text-stone-950 dark:text-white">{dietName}</h3>
           </div>
-          <span class="rounded-full px-3 py-1 text-xs font-bold {dietIndex === 0 ? 'bg-orange-100 text-orange-900 dark:bg-orange-950 dark:text-orange-200' : 'bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-200'}">Todos sus días</span>
-        </div>
+          <span class="rounded-full px-3 py-1 text-xs font-bold {dietIndex === 0 ? 'bg-orange-100 text-orange-900 dark:bg-orange-950 dark:text-orange-200' : 'bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-200'}"><span class="group-open:hidden">Abrir</span><span class="hidden group-open:inline">Cerrar</span></span>
+        </summary>
 
-        {#if dietData && dayIndex >= 0}
-          <MealSelector {dayIndex} {dietData} asException={false} ignoreDayException={true} />
-        {:else if !dietData}
-          <p class="rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700 dark:bg-red-950/40 dark:text-red-300">No se encontraron datos para {dietName}.</p>
-        {:else}
-          <p class="rounded-2xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">Asigna al menos un día a {dietName} para poder configurar sus opciones globales.</p>
-        {/if}
-      </article>
+        <div class="border-t border-stone-200 p-3 dark:border-stone-700">
+          {#if dietData && dayIndex >= 0}
+            <MealSelector {dayIndex} {dietData} asException={false} ignoreDayException={true} />
+          {:else if !dietData}
+            <p class="rounded-xl bg-red-50 p-4 text-sm font-bold text-red-700 dark:bg-red-950/40 dark:text-red-300">No se encontraron datos para {dietName}.</p>
+          {:else}
+            <p class="rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">Asigna al menos un día a {dietName} para poder configurar sus opciones globales.</p>
+          {/if}
+        </div>
+      </details>
     {/each}
     </div>
   </div>

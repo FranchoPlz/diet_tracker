@@ -89,23 +89,25 @@
       {#if isExpanded(mealIndex)}
         <div id="meal-{dayIndex}-{mealIndex}" class="compact-meal-body border-t border-stone-100 p-4 dark:border-stone-800">
           {#if meal.options.length > 1}
-            <div class="compact-option-grid grid grid-cols-1 gap-2 mb-5 bg-stone-50 dark:bg-stone-950/50 p-2 rounded-xl sm:grid-cols-2">
+            <fieldset class="compact-option-grid mb-5 grid grid-cols-1 gap-2 rounded-xl bg-stone-100 p-2 dark:bg-stone-950/60 sm:grid-cols-2">
+              <legend class="sr-only">Opciones para {meal.type}</legend>
               {#each meal.options as opt, optIdx}
-                <label class="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg {selectedOptionIndex === optIdx ? 'bg-white dark:bg-stone-700 shadow-sm ring-1 ring-teal-300' : 'hover:bg-stone-200/50 dark:hover:bg-stone-700/50'}">
+                <label class="relative flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition focus-within:ring-2 focus-within:ring-red-500 {selectedOptionIndex === optIdx ? 'border-red-500 bg-red-50 shadow-sm dark:border-red-500 dark:bg-red-950/40' : 'border-transparent bg-white hover:border-stone-300 dark:bg-stone-800 dark:hover:border-stone-600'}">
                   <input
                     type="radio"
                     name="meal-{dayIndex}-{meal.type}"
-                    class="w-4 h-4 text-teal-700 border-gray-300 focus:ring-teal-600"
+                    class="peer sr-only"
                     checked={selectedOptionIndex === optIdx}
                     onchange={() => {
                       setMealOptionIndex(appState.weekConfig, dayIndex, meal.type, optIdx, asException);
                       invalidateShoppingList();
                     }}
                   />
-                  <span class="text-sm font-bold text-stone-700 dark:text-stone-300">{opt.name || `Opción ${optIdx + 1}`}</span>
+                  <span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full border-2 bg-white transition dark:bg-stone-900 {selectedOptionIndex === optIdx ? 'border-red-600' : 'border-stone-300 dark:border-stone-500'}"><span class="size-2.5 rounded-full bg-red-600 transition {selectedOptionIndex === optIdx ? 'opacity-100' : 'opacity-0'}"></span></span>
+                  <span class="text-sm font-bold {selectedOptionIndex === optIdx ? 'text-red-800 dark:text-red-200' : 'text-stone-700 dark:text-stone-200'}">{opt.name || `Opción ${optIdx + 1}`}</span>
                 </label>
               {/each}
-            </div>
+            </fieldset>
           {/if}
 
           {#if option}
@@ -121,25 +123,27 @@
                   {#if line.is_alternatives}
                     {@const selectedAltIndex = selectedAlternative(altKey)}
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Elegir una opción:</span>
-                    <div class="flex flex-col gap-2 pl-2">
+                    <fieldset class="flex flex-col gap-2">
+                      <legend class="sr-only">Alternativas de ingredientes</legend>
                       {#each line.items as item, itemIndex}
-                        <label class="flex items-start gap-3 cursor-pointer group">
+                        <label class="relative flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition focus-within:ring-2 focus-within:ring-red-500 {selectedAltIndex === itemIndex ? 'border-red-500 bg-red-50 dark:border-red-500 dark:bg-red-950/40' : 'border-stone-200 bg-white hover:border-stone-300 dark:border-stone-700 dark:bg-stone-800 dark:hover:border-stone-600'}">
                           <input
                             type="radio"
                             name="alt-{dayIndex}-{altKey}"
-                            class="mt-1 w-4 h-4 text-teal-700 border-gray-300 focus:ring-teal-600"
+                            class="peer sr-only"
                             checked={selectedAltIndex === itemIndex}
                             onchange={() => {
                               setAlternativeChoice(appState.weekConfig, dayIndex, altKey, itemIndex, asException);
                               invalidateShoppingList();
                             }}
                           />
-                          <span class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed group-hover:text-gray-900 dark:group-hover:text-white">
+                          <span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full border-2 bg-white transition dark:bg-stone-900 {selectedAltIndex === itemIndex ? 'border-red-600' : 'border-stone-300 dark:border-stone-500'}"><span class="size-2.5 rounded-full bg-red-600 transition {selectedAltIndex === itemIndex ? 'opacity-100' : 'opacity-0'}"></span></span>
+                          <span class="text-sm font-semibold leading-relaxed {selectedAltIndex === itemIndex ? 'text-red-800 dark:text-red-200' : 'text-stone-700 dark:text-stone-200'}">
                             {formatItem(item)}
                           </span>
                         </label>
                       {/each}
-                    </div>
+                    </fieldset>
                   {:else}
                     <div class="flex items-start gap-3 pl-2">
                       <div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600 shrink-0"></div>
