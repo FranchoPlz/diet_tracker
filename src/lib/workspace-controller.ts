@@ -8,7 +8,8 @@ let autosaveTimer: ReturnType<typeof setTimeout> | undefined;
 let pendingSave: Promise<SavedPlan | undefined> | undefined;
 
 function sourceLabel(sourceName: string): string {
-  return sourceName.split(/[\\/]/).pop()?.replace(/\.pdf$/i, '') || 'Mi plan semanal';
+  const source = sourceName.split(/[\\/]/).pop()?.replace(/\.pdf$/i, '') || 'Plan semanal';
+  return `${source} · ${new Date().toISOString().slice(0, 10)}`;
 }
 
 export async function createWorkspaceFromDocument(result: ParseResult, sourceName: string): Promise<SavedPlan> {

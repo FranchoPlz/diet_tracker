@@ -5,10 +5,14 @@
   import WeekGrid from './WeekGrid.svelte';
   import DayDetail from './DayDetail.svelte';
 
-  let { onComplete } = $props<{ onComplete: () => void }>();
+  let { onComplete, initialDayIndex = null } = $props<{ onComplete: () => void; initialDayIndex?: number | null }>();
 
   const dietNames: DaySelection['diet'][] = ['DIETA 1', 'DIETA 2'];
   let selectedDayIndex = $state<number | null>(null);
+
+  $effect.pre(() => {
+    selectedDayIndex = initialDayIndex;
+  });
 
   function representativeDayIndex(dietName: DaySelection['diet']): number {
     return appState.weekConfig.days.findIndex(day => day.diet === dietName);
@@ -52,7 +56,7 @@
 
   <footer class="flex flex-col gap-3 border-t border-stone-200 bg-white px-5 py-5 dark:border-stone-700 dark:bg-stone-900 sm:flex-row sm:items-center sm:justify-between sm:px-8">
     <button type="button" class="rounded-xl bg-orange-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:focus:ring-offset-stone-900" onclick={onComplete}>
-      Guardar configuración global
+      Guardar cambios de dieta
     </button>
   </footer>
 </section>

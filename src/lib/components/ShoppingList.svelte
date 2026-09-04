@@ -1,6 +1,6 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
-  import { persistCurrentList, removeShoppingList } from '$lib/list-controller';
+  import { scheduleWorkspaceAutosave } from '$lib/workspace-controller';
   import { SHOPPING_CATEGORIES, normalizeShoppingItem } from '$lib/shopping';
   import { formatQuantity } from '$lib/utils';
   import type { ShoppingCategory } from '$lib/types';
@@ -12,6 +12,7 @@
   $effect(() => {
     if (appState.shoppingList.some(item => !item.id)) {
       appState.shoppingList = appState.shoppingList.map(item => normalizeShoppingItem(item));
+      scheduleWorkspaceAutosave();
     }
   });
 
@@ -31,21 +32,19 @@
     const index = appState.shoppingList.findIndex(item => normalizeShoppingItem(item).id === id);
     if (index === -1) return;
     appState.shoppingList[index] = { ...appState.shoppingList[index], id, [field]: value };
+    scheduleWorkspaceAutosave();
   }
 
   function addItem() {
     const item = normalizeShoppingItem({ name: 'Nuevo producto', quantity: 1, unit: 'unidad', count: 1, custom: true });
     appState.shoppingList = [...appState.shoppingList, item];
     editingId = item.id;
+    scheduleWorkspaceAutosave();
   }
 
   function removeItem(id: string) {
     appState.shoppingList = appState.shoppingList.filter(item => normalizeShoppingItem(item).id !== id);
-  }
-
-  async function removeCurrentList() {
-    if (!appState.activeListId || !confirm(`¿Eliminar "${appState.activeListName}"? Esta acción no se puede deshacer.`)) return;
-    await removeShoppingList(appState.activeListId);
+    scheduleWorkspaceAutosave();
   }
 </script>
 
@@ -53,7 +52,7 @@
   <section class="compact-shopping min-w-0 max-w-full overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
     <div class="compact-shopping-header border-b border-stone-200 p-5 dark:border-stone-700">
       <p class="text-xs font-bold uppercase tracking-[0.2em] text-teal-700 dark:text-teal-300">En el supermercado</p>
-      <input bind:value={appState.activeListName} aria-label="Nombre de la lista" class="mt-1 min-w-0 max-w-full bg-transparent text-2xl font-black text-stone-900 outline-none dark:text-white" />
+      <h2 class="mt-1 text-2xl font-black text-stone-900 dark:text-white">Lista de {appState.activePlanName}</h2>
       <div class="mt-1 flex flex-wrap items-center justify-between gap-2">
         <p class="text-sm text-stone-500 dark:text-stone-400">{checkedCount} de {appState.shoppingList.length} en el carro</p>
         <label class="flex items-center gap-2 text-xs font-bold text-stone-500">
@@ -76,7 +75,7 @@
               {#each items as item (item.id)}
                 {@const key = `${item.name}|${item.unit ?? ''}`}
                 <div class="compact-shopping-item flex min-w-0 items-start gap-2 px-4 py-3.5 sm:gap-3 sm:px-5">
-                  <input type="checkbox" bind:checked={appState.checkedShoppingItems[key]} class="mt-1 size-5 shrink-0 accent-teal-700" aria-label="Marcar {item.name}" />
+                  <input type="checkbox" bind:checked={appState.checkedShoppingItems[key]} onchange={() => scheduleWorkspaceAutosave()} class="mt-1 size-5 shrink-0 accent-teal-700" aria-label="Marcar {item.name}" />
                   <div class="min-w-0 flex-1">
                     {#if editingId === item.id}
                       <input value={item.name} oninput={(event) => updateItem(item.id, 'name', event.currentTarget.value)} class="w-full rounded-lg border border-stone-200 px-2 py-1 font-bold dark:border-stone-700 dark:bg-stone-800" aria-label="Producto" />
@@ -106,11 +105,5 @@
       {/each}
     </div>
 
-    <div class="flex flex-col gap-2 border-t border-stone-200 p-4 dark:border-stone-700 sm:flex-row">
-      <button class="w-full rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-stone-700 dark:bg-white dark:text-stone-900" onclick={() => void persistCurrentList()}>Guardar en este dispositivo</button>
-      {#if appState.activeListId}
-        <button class="w-full rounded-xl border border-red-200 px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40" onclick={() => void removeCurrentList()}>Eliminar esta lista</button>
-      {/if}
-    </div>
   </section>
 {/if}

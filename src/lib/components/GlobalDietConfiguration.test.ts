@@ -25,7 +25,7 @@ describe('GlobalDietConfiguration', () => {
 
     expect(screen.getByRole('heading', { name: 'DIETA 1' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'DIETA 2' })).toBeTruthy();
-    await fireEvent.click(screen.getByRole('button', { name: 'Guardar configuración global' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios de dieta' }));
     expect(onComplete).toHaveBeenCalledOnce();
   });
 });

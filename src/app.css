@@ -79,34 +79,6 @@ button, input, summary {
   color: var(--text-primary);
 }
 
-.dg-brand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 5.25rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface-strong) 90%, transparent);
-}
-
-.dg-brand img {
-  display: block;
-  width: min(17rem, 68vw);
-  height: auto;
-}
-
-.dg-logo-light {
-  display: none !important;
-}
-
-:root.dark .dg-logo-dark {
-  display: none;
-}
-
-:root.dark .dg-logo-light {
-  display: block !important;
-}
-
 .app-surface {
   background: var(--surface);
   border-color: var(--border);

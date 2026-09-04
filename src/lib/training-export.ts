@@ -28,7 +28,8 @@ export function downloadTrainingPdf(training: TrainingPlan, weights: Record<stri
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = `${planName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-entrenamiento-semana-${weekNumber}.pdf`;
+  const exportedAt = new Date().toISOString().slice(0, 10);
+  anchor.download = `${planName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-entrenamiento-semana-${weekNumber}-${exportedAt}.pdf`;
   anchor.click();
   URL.revokeObjectURL(url);
 }

@@ -23,7 +23,7 @@
 </script>
 
 <div class="relative">
-  <button class="rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm font-bold text-stone-600 shadow-sm dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" onclick={() => open = !open}>Mis planes</button>
+  <button class="rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm font-bold text-stone-600 shadow-sm dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" onclick={() => open = !open}>Cambiar plan</button>
   {#if open}
     <div class="fixed inset-x-4 top-16 z-50 rounded-2xl border border-stone-200 bg-white p-3 shadow-xl dark:border-stone-700 dark:bg-stone-900 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-96">
       {#if appState.parsedData}

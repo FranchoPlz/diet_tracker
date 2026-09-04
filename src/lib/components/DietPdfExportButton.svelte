@@ -12,7 +12,8 @@
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `${(appState.activePlanName || 'dieta-seleccionada').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.pdf`;
+    const exportedAt = new Date().toISOString().slice(0, 10);
+    anchor.download = `${(appState.activePlanName || 'dieta-seleccionada').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-dieta-${exportedAt}.pdf`;
     anchor.click();
     URL.revokeObjectURL(url);
   }

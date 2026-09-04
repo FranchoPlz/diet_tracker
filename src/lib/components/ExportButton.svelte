@@ -20,7 +20,7 @@
       const { save } = await import('@tauri-apps/plugin-dialog');
       const label = format === 'json' ? 'JSON' : 'Excel';
       const outputPath = await save({
-        defaultPath: `plan-semanal.${format}`,
+        defaultPath: `plan-semanal-${new Date().toISOString().slice(0, 10)}.${format}`,
         filters: [{ name: label, extensions: [format] }],
       });
       if (!outputPath) return;

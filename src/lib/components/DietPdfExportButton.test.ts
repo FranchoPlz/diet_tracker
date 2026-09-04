@@ -23,9 +23,15 @@ describe('DietPdfExportButton', () => {
 
   it('downloads the selected diet as a PDF file', async () => {
     const click = vi.fn();
+    let download = '';
     vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
       const element = document.createElementNS('http://www.w3.org/1999/xhtml', tagName) as HTMLElement;
-      if (tagName === 'a') element.click = click;
+      if (tagName === 'a') {
+        element.click = () => {
+          download = (element as HTMLAnchorElement).download;
+          click();
+        };
+      }
       return element as ReturnType<typeof document.createElement>;
     });
 
@@ -34,6 +40,7 @@ describe('DietPdfExportButton', () => {
 
     await waitFor(() => expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob)));
     expect(click).toHaveBeenCalledOnce();
+    expect(download).toMatch(/^plan-abril-dieta-\d{4}-\d{2}-\d{2}\.pdf$/);
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:pdf');
   });
 });

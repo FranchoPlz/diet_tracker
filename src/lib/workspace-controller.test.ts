@@ -29,7 +29,7 @@ beforeAll(async () => {
 describe('workspace controller', () => {
   it('persists a document immediately and restores the active plan and linked list after restart', async () => {
     const created = await createWorkspaceFromDocument(parsedData, '/private/plans/Septiembre.pdf');
-    expect(created.name).toBe('Septiembre');
+    expect(created.name).toMatch(/^Septiembre · \d{4}-\d{2}-\d{2}$/);
     expect(created.configured).toBe(false);
     expect(await getActivePlanId()).toBe(created.id);
     expect(JSON.stringify(await listPlans())).not.toContain('/private/plans');

@@ -5,6 +5,8 @@
   import type { ParseResult } from '$lib/types';
   import { createWorkspaceFromDocument } from '$lib/workspace-controller';
 
+  let { actionLabel = 'Cambiar PDF' } = $props<{ actionLabel?: string }>();
+
   let isDragging = $state(false);
   let isParsing = $state(false);
   let fileInput = $state<HTMLInputElement>();
@@ -177,9 +179,9 @@
         </span>
       </div>
       {#if isTauri}
-        <button class="rounded-lg px-3 py-2 font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={handleTauriFileSelect}>Cambiar PDF</button>
+        <button class="rounded-lg px-3 py-2 font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={handleTauriFileSelect}>{actionLabel}</button>
       {:else}
-        <button class="rounded-lg px-3 py-2 font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={requestBrowserFileSelect}>Cambiar PDF</button>
+        <button class="rounded-lg px-3 py-2 font-bold text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:hover:bg-stone-800 dark:hover:text-white" onclick={requestBrowserFileSelect}>{actionLabel}</button>
       {/if}
     </div>
   {:else}

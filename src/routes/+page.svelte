@@ -1,32 +1,25 @@
 <script lang="ts">
-  import { base } from '$app/paths';
   import { onMount } from 'svelte';
   import { appState } from '$lib/state.svelte';
   import { calculateShoppingList } from '$lib/calculation';
-  import { completeConfiguration, scheduleWorkspaceAutosave, selectActiveTab } from '$lib/workspace-controller';
+  import { completeConfiguration, selectActiveTab } from '$lib/workspace-controller';
   import AppTabs, { type AppTab } from '$lib/components/AppTabs.svelte';
-  import CalculateButton from '$lib/components/CalculateButton.svelte';
-  import DayDetail from '$lib/components/DayDetail.svelte';
   import DayNavigator from '$lib/components/DayNavigator.svelte';
   import CurrentDayDiet from '$lib/components/CurrentDayDiet.svelte';
-  import DietAccordion from '$lib/components/DietAccordion.svelte';
   import DietPdfExportButton from '$lib/components/DietPdfExportButton.svelte';
-  import ExportButton from '$lib/components/ExportButton.svelte';
   import GlobalDietConfiguration from '$lib/components/GlobalDietConfiguration.svelte';
   import HomeOverview from '$lib/components/HomeOverview.svelte';
   import PdfUpload from '$lib/components/PdfUpload.svelte';
   import ShareImport from '$lib/components/ShareImport.svelte';
-  import ShareList from '$lib/components/ShareList.svelte';
   import ShoppingList from '$lib/components/ShoppingList.svelte';
   import { getSwipedTab } from '$lib/swipe';
   import TrainingView from '$lib/components/TrainingView.svelte';
   import { downloadTrainingPdf } from '$lib/training-export';
   import { setActiveDay, startNextWeek, syncActiveDay } from '$lib/week-tracker';
 
-  let reconfiguring = $state(false);
-  let exceptionDayIndex = $state<number | null>(null);
   let gestureStart = $state<{ x: number; y: number; target: EventTarget | null } | null>(null);
   let syncedPlanId = $state<string | null>(null);
+  let dietEditDayIndex = $state<number | null>(null);
 
   $effect(() => {
     if (!appState.persistenceReady || !appState.parsedData || appState.activePlanId === syncedPlanId) return;
@@ -80,7 +73,6 @@
     const resetTraining = confirm('¿Quieres reiniciar también los pesos del entrenamiento para la nueva semana?');
     startNextWeek(resetTraining);
     if (modifyDiet) {
-      reconfiguring = true;
       await selectActiveTab('diet');
     }
   }
@@ -105,34 +97,19 @@
     appState.activeListId = null;
     appState.activeListName = `${appState.activePlanName} - compra`;
     await completeConfiguration();
-    reconfiguring = false;
-    await selectActiveTab('home');
+    dietEditDayIndex = null;
   }
 
   function openException(dayIndex: number) {
-    exceptionDayIndex = dayIndex;
+    setActiveDay(dayIndex);
+    dietEditDayIndex = dayIndex;
     void selectActiveTab('diet');
-  }
-
-  function closeException() {
-    if (appState.parsedData) {
-      appState.shoppingList = calculateShoppingList(appState.parsedData, appState.weekConfig);
-      appState.checkedShoppingItems = {};
-      appState.activeListId = null;
-      appState.activeListName = `${appState.activePlanName} - compra`;
-      scheduleWorkspaceAutosave(0);
-    }
-    exceptionDayIndex = null;
   }
 </script>
 
 <svelte:head><title>Mi semana · DG Nutrición</title></svelte:head>
 
 <main class="w-full min-w-0 pb-20">
-  <div class="dg-brand" aria-label="DG Diego Gularte Nutrición">
-    <img class="dg-logo-dark" src="{base}/dg-logo-dark.png" alt="DG Diego Gularte Nutrición" />
-    <img class="dg-logo-light" src="{base}/dg-logo-light.png" alt="" />
-  </div>
   <ShareImport />
 
   {#if !appState.persistenceReady}
@@ -147,53 +124,25 @@
         <p class="mt-4 max-w-2xl text-base leading-relaxed text-stone-600 dark:text-stone-400">Carga tu dieta para configurar tus comidas, consultar el entrenamiento y preparar la compra.</p>
       </header>
       <PdfUpload />
-      {#if appState.activeListId}
-        <div class="mx-auto mt-8 max-w-2xl space-y-4"><ShoppingList /><ShareList /></div>
-      {/if}
     </div>
   {:else}
     <AppTabs active={appState.activeTab} onChange={setTab} shoppingCount={appState.shoppingList.length} />
 
     <div class="mx-auto mt-4 max-w-[1480px] touch-pan-y space-y-4 px-3 sm:px-6 lg:px-8" role="tabpanel" tabindex="0">
-      <DayNavigator onSelect={selectDay} onNext={nextDay} />
       {#if appState.activeTab === 'home'}
-        <div class="space-y-4"><CurrentDayDiet onEdit={openException} /><HomeOverview /></div>
+        <div class="space-y-4"><HomeOverview /><DayNavigator onSelect={selectDay} onNext={nextDay} /><CurrentDayDiet onEdit={openException} /></div>
       {:else if appState.activeTab === 'diet'}
         <div class="space-y-5">
-          {#if !appState.configured || reconfiguring}
-            <GlobalDietConfiguration onComplete={() => void saveConfiguration()} />
-          {:else if exceptionDayIndex !== null}
-            <div class="space-y-3">
-              <button class="rounded-xl border border-stone-300 px-4 py-2 text-sm font-bold dark:border-stone-700" onclick={closeException}>← Volver al resumen</button>
-              {#key exceptionDayIndex}
-                <DayDetail dayIndex={exceptionDayIndex} initialExceptionMode={true} onClose={closeException} />
-              {/key}
-            </div>
-          {:else}
-            <CurrentDayDiet onEdit={openException} />
-            <div class="grid gap-2 sm:flex sm:justify-center">
-              <DietPdfExportButton />
-              <button class="rounded-xl border border-stone-300 px-4 py-2.5 text-sm font-black text-stone-700 transition hover:bg-stone-100 dark:border-stone-600 dark:text-stone-200 dark:hover:bg-stone-800" onclick={() => reconfiguring = true}>Reconfigurar dietas</button>
-            </div>
-            <details class="rounded-2xl border border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900">
-              <summary class="cursor-pointer px-5 py-4 text-sm font-bold text-stone-600 dark:text-stone-300">Consultar todas las opciones originales</summary>
-              <div class="border-t border-stone-200 p-5 dark:border-stone-700"><DietAccordion /></div>
-            </details>
-          {/if}
+          {#key dietEditDayIndex}
+            <GlobalDietConfiguration initialDayIndex={dietEditDayIndex} onComplete={() => void saveConfiguration()} />
+          {/key}
+          <div class="flex justify-center"><DietPdfExportButton /></div>
         </div>
       {:else if appState.activeTab === 'training'}
-        <TrainingView />
+        <div class="space-y-4"><DayNavigator onSelect={selectDay} onNext={nextDay} /><TrainingView /></div>
       {:else}
-        <div class="mx-auto max-w-3xl space-y-4">
-          <section class="rounded-3xl border border-teal-200 bg-gradient-to-br from-teal-50 to-white p-5 shadow-sm dark:border-teal-900 dark:from-teal-950/60 dark:to-stone-900">
-            <p class="text-xs font-bold uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300">Lista de compra</p>
-            <h2 class="mt-1 text-2xl font-black text-stone-900 dark:text-white">Productos de tu selección</h2>
-            <p class="mb-4 mt-1 text-sm text-stone-500 dark:text-stone-400">Recalcula cuando cambies opciones o excepciones.</p>
-            <CalculateButton />
-          </section>
+        <div class="mx-auto max-w-3xl">
           <ShoppingList />
-          <ShareList />
-          {#if appState.shoppingList.length > 0}<ExportButton />{/if}
         </div>
       {/if}
     </div>
