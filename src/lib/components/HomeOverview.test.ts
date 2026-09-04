@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { cleanup, render, screen } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { appState } from '$lib/state.svelte';
@@ -17,12 +17,16 @@ describe('HomeOverview', () => {
 
   afterEach(cleanup);
 
-  it('groups plan libraries and PDF controls on Inicio', () => {
+  it('groups plan controls and allows closing the plan selector', async () => {
     render(HomeOverview);
 
     expect(screen.getByRole('heading', { name: 'Plan abril' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Cambiar plan' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Mis listas' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Cambiar PDF' })).toBeTruthy();
+    await fireEvent.click(screen.getByRole('button', { name: 'Cambiar plan' }));
+    expect(screen.getByRole('button', { name: 'Cerrar selector de planes' })).toBeTruthy();
+    await fireEvent.click(screen.getByRole('button', { name: 'Cerrar selector de planes' }));
+    expect(screen.queryByRole('button', { name: 'Cerrar selector de planes' })).toBeNull();
   });
 });

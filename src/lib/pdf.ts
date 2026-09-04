@@ -123,7 +123,7 @@ export async function extractPdfPageTexts(file: File): Promise<DietPageText[]> {
   try {
     const pdfjs = await import('pdfjs-dist');
     pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
-    const loadingTask = pdfjs.getDocument({ data });
+    const loadingTask = pdfjs.getDocument({ data, isEvalSupported: false });
     try {
       const document = await loadingTask.promise;
       const pages: DietPageText[] = [];

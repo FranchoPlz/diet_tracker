@@ -22,4 +22,8 @@ describe('shopping list sharing', () => {
     expect(new URL(url).search).toBe('');
     expect(readSharedListFromHash(new URL(url).hash)?.name).toBe('Compra (copia)');
   });
+
+  it('rejects oversized shared payloads before decompression', () => {
+    expect(() => readSharedListFromHash(`#share=${'a'.repeat(100_001)}`)).toThrow('demasiado grande');
+  });
 });

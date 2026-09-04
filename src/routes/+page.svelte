@@ -10,7 +10,6 @@
   import GlobalDietConfiguration from '$lib/components/GlobalDietConfiguration.svelte';
   import HomeOverview from '$lib/components/HomeOverview.svelte';
   import PdfUpload from '$lib/components/PdfUpload.svelte';
-  import ShareImport from '$lib/components/ShareImport.svelte';
   import ShoppingList from '$lib/components/ShoppingList.svelte';
   import { getSwipedTab } from '$lib/swipe';
   import TrainingView from '$lib/components/TrainingView.svelte';
@@ -110,8 +109,6 @@
 <svelte:head><title>Mi semana · DG Nutrición</title></svelte:head>
 
 <main class="w-full min-w-0 pb-20">
-  <ShareImport />
-
   {#if !appState.persistenceReady}
     <div class="mx-auto grid min-h-64 max-w-[1480px] place-items-center px-4 sm:px-6 lg:px-8" role="status">
       <p class="font-bold text-stone-500">Recuperando tu plan…</p>

@@ -23,6 +23,8 @@ describe('CurrentDayDiet', () => {
 
   it('shows every meal collapsed and expands each one independently', async () => {
     render(CurrentDayDiet, { onEdit: vi.fn() });
+    expect(screen.queryByText('Día 1')).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Hoy toca DIETA 1' })).toBeTruthy();
     const toggle = screen.getByRole('button', { name: /COMIDA Arroz/ });
 
     expect(toggle.getAttribute('aria-expanded')).toBe('false');

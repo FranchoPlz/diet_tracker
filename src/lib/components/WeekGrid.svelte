@@ -9,8 +9,7 @@
     selectedDayIndex: number | null;
   }>();
 
-  const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-  let expanded = $state(true);
+  const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
   function changeDiet(dayIndex: number, diet: DaySelection['diet']) {
     setDayDiet(appState.weekConfig, dayIndex, diet);
@@ -18,33 +17,29 @@
     appState.checkedShoppingItems = {};
   }
 
-  function toggleExpanded() {
-    expanded = !expanded;
-    if (!expanded) onCollapse?.();
-  }
 </script>
 
-<section class="compact-week min-w-0 max-w-full overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
-  <div class="compact-week-header flex items-center justify-between gap-3 px-4 py-3">
+<details class="compact-week group min-w-0 max-w-full overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900" open ontoggle={(event) => { if (!event.currentTarget.open) onCollapse?.(); }}>
+  <summary class="compact-week-header flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
     <div>
       <h2 class="text-lg font-black tracking-tight text-stone-900 dark:text-white">Organiza tu semana</h2>
       <p class="text-xs text-stone-500 dark:text-stone-400">Asigna una dieta y pulsa el día para personalizarlo.</p>
     </div>
-    <button class="min-h-10 rounded-xl border border-stone-200 px-3 text-xs font-black text-stone-600 dark:border-stone-700 dark:text-stone-200" onclick={toggleExpanded} aria-expanded={expanded}>{expanded ? 'Ocultar días' : 'Mostrar días'}</button>
-  </div>
+    <span class="text-xs font-black uppercase tracking-wider text-stone-400 group-open:hidden">Mostrar</span>
+    <span class="hidden text-xs font-black uppercase tracking-wider text-stone-400 group-open:inline">Ocultar</span>
+  </summary>
 
-  {#if expanded}
-  <div class="compact-week-grid grid grid-cols-2 gap-2 border-t border-stone-200 p-2 dark:border-stone-700 sm:grid-cols-4 xl:grid-cols-7">
+  <div class="divide-y divide-stone-200 border-t border-stone-200 dark:divide-stone-700 dark:border-stone-700">
     {#each appState.weekConfig.days.slice(0, 7) as day, dayIndex}
       {@const isSelected = selectedDayIndex === dayIndex}
       {@const isException = hasException(appState.weekConfig, dayIndex)}
-      <article class="compact-day-card min-w-0 overflow-hidden rounded-xl border p-2 transition {isSelected ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/30' : 'border-stone-200 bg-stone-50 dark:border-stone-700 dark:bg-stone-800/60'}">
-        <button class="compact-day-heading mb-1.5 w-full rounded-lg px-1 py-1 text-left hover:bg-white/70 dark:hover:bg-stone-700" onclick={() => onDayClick(dayIndex)}>
-          <span class="text-sm font-black text-stone-900 dark:text-white">{dayNames[dayIndex]}</span>
-          {#if isException}<span class="ml-1 text-[10px] font-black uppercase text-orange-600">Personalizado</span>{/if}
+      <article class="grid min-w-0 grid-cols-[minmax(5.5rem,1fr)_minmax(10rem,1.5fr)] items-center gap-2 px-3 py-2 transition {isSelected ? 'bg-orange-50 dark:bg-orange-950/30' : 'bg-white dark:bg-stone-900'}">
+        <button class="min-w-0 rounded-lg px-2 py-2 text-left hover:bg-stone-100 dark:hover:bg-stone-800" onclick={() => onDayClick(dayIndex)}>
+          <span class="block truncate text-sm font-black text-stone-900 dark:text-white">{dayNames[dayIndex]}</span>
+          {#if isException}<span class="block text-[10px] font-black uppercase text-orange-600">Personalizado</span>{/if}
         </button>
 
-        <div class="grid grid-cols-2 gap-1 rounded-xl border border-stone-200 bg-stone-100 p-1 dark:border-stone-600 dark:bg-stone-950">
+        <div class="grid grid-cols-2 gap-1 rounded-lg border border-stone-200 bg-stone-100 p-1 dark:border-stone-600 dark:bg-stone-950">
           {#each ['DIETA 1', 'DIETA 2'] as diet}
             <button
               class="rounded-lg px-1 py-1.5 text-[11px] font-black transition {day.diet === diet ? (diet === 'DIETA 1' ? 'bg-orange-600 text-white shadow-sm' : 'bg-red-700 text-white shadow-sm') : 'bg-white text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700'}"
@@ -58,5 +53,4 @@
       </article>
     {/each}
   </div>
-  {/if}
-</section>
+</details>

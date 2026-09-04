@@ -9,6 +9,8 @@ interface ListEnvelope {
   list: SavedShoppingList;
 }
 
+const MAX_SHARED_LIST_LENGTH = 100_000;
+
 function base64Url(bytes: Uint8Array): string {
   let binary = '';
   bytes.forEach(byte => binary += String.fromCharCode(byte));
@@ -30,6 +32,7 @@ export function encodeSharedList(list: SavedShoppingList): string {
 }
 
 export function decodeSharedList(encoded: string): SavedShoppingList {
+  if (encoded.length > MAX_SHARED_LIST_LENGTH) throw new Error('La lista compartida es demasiado grande.');
   const envelope = JSON.parse(strFromU8(unzlibSync(fromBase64Url(encoded)))) as Partial<ListEnvelope>;
   if (envelope.kind !== 'diet-shopping-list' || envelope.schemaVersion !== 1 || !isSavedShoppingList(envelope.list)) {
     throw new Error('La lista compartida no tiene un formato válido.');
