@@ -64,7 +64,6 @@ describe('training table geometry', () => {
       ['Press inclinado con mancuernas', '4', '10\n8', 'Con control'],
       ['Remo a 1 mano', '3', '12', '1 parada de 3'],
     ]);
-    expect(table?.rows[1].bounds).toEqual({ left: 40, right: 470, top: 688, bottom: 660 });
   });
 
   it('does not guess a table without four ordered header anchors', () => {

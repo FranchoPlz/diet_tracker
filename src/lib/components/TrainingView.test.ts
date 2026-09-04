@@ -1,100 +1,41 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/svelte';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { appState } from '$lib/state.svelte';
 import TrainingView from './TrainingView.svelte';
 
 describe('TrainingView', () => {
-  afterEach(() => {
-    cleanup();
-    appState.parsedData = null;
-    appState.exercisePreviewUrls = {};
-  });
-
-  it('renders only the assigned lazy preview image', () => {
-    appState.parsedData = { status: 'ok', diets: [], training: { tips: [], defaultRestSeconds: null, days: [
+  beforeEach(() => {
+    appState.weekTracker = { startedAt: new Date().toISOString(), activeDayIndex: 0, weekNumber: 1, trainingWeights: {} };
+    appState.parsedData = { status: 'ok', diets: [], training: { tips: [], defaultRestSeconds: 60, days: [
       { days: [1], title: 'TORSO', activeRest: false, details: '', exercises: [{ exercise: 'Remo', series: '3', repetitions: '12', details: '' }] },
-      { days: [2], title: 'DESCANSO ACTIVO', activeRest: true, details: '', exercises: [] },
+      { days: [2], title: 'DESCANSO ACTIVO', activeRest: true, details: 'Caminar 30 minutos.', exercises: [] },
     ] } };
-    appState.exercisePreviewUrls = { '0:0': 'blob:remo', '1:0': 'blob:never-rendered' };
-
-    render(TrainingView);
-
-    const image = screen.getByRole('img', { name: 'Vista previa del ejercicio Remo del Día 1' });
-    expect(image.getAttribute('src')).toBe('blob:remo');
-    expect(image.getAttribute('loading')).toBe('lazy');
-    expect(screen.queryByRole('img', { name: /Descanso/ })).toBeNull();
   });
 
-  it('keeps routine days collapsed until opened', () => {
-    appState.parsedData = { status: 'ok', diets: [], training: { tips: [], defaultRestSeconds: null, days: [
-      { days: [1], title: 'TORSO', activeRest: false, details: '', exercises: [] },
-    ] } };
+  afterEach(cleanup);
 
+  it('shows only the active day and records one weight per series', async () => {
     render(TrainingView);
-
-    expect(document.querySelector('details')).toBeTruthy();
-    expect(document.querySelector('details')?.open).toBe(false);
+    expect(screen.getByText('Día 1 · TORSO')).toBeTruthy();
+    expect(screen.getAllByRole('spinbutton')).toHaveLength(3);
+    await fireEvent.input(screen.getByLabelText('Remo, peso serie 1'), { target: { value: '25' } });
+    expect(appState.weekTracker.trainingWeights['0:0']).toEqual(['25']);
   });
 
-  it('shows guidance, exercises, supersets, and active-rest instructions', async () => {
-    appState.parsedData = {
-      status: 'ok',
-      diets: [],
-      training: {
-        tips: ['Prioriza la técnica antes que el peso.'],
-        defaultRestSeconds: 60,
-        days: [
-          {
-            days: [1],
-            title: 'TORSO',
-            activeRest: false,
-            details: '',
-            exercises: [
-              {
-                exercise: 'Curl de bíceps + Pres francés',
-                series: '4',
-                repetitions: '12 - 10 - 8',
-                details: 'Sin descanso entre ejercicios.',
-                supersetExercises: ['Curl de bíceps', 'Pres francés'],
-              },
-            ],
-          },
-          {
-            days: [2, 3],
-            title: 'DESCANSO ACTIVO',
-            activeRest: true,
-            details: '45 minutos de caminata a buen ritmo.',
-            exercises: [],
-          },
-        ],
-      },
-    };
-
+  it('shows the active-rest instructions for that day', () => {
+    appState.weekTracker.activeDayIndex = 1;
     render(TrainingView);
-
-    const disclosures = document.querySelectorAll('summary');
-    await fireEvent.click(disclosures[0]);
-    await fireEvent.click(disclosures[1]);
-    await fireEvent.click(disclosures[2]);
-
-    expect(screen.getByText('60s')).toBeTruthy();
-    expect(screen.getByText('Prioriza la técnica antes que el peso.')).toBeTruthy();
-    const torso = screen.getByLabelText('Día 1: TORSO').parentElement!;
-    expect(within(torso).getByText('Curl de bíceps + Pres francés')).toBeTruthy();
-    expect(screen.getByText('Series')).toBeTruthy();
-    expect(screen.getByText('Repeticiones')).toBeTruthy();
-    expect(screen.getByText('Superserie')).toBeTruthy();
-    expect(screen.getByText('Combina: Curl de bíceps + Pres francés')).toBeTruthy();
-    expect(screen.getByText('45 minutos de caminata a buen ritmo.')).toBeTruthy();
+    expect(screen.getByText('Caminar 30 minutos.')).toBeTruthy();
+    expect(screen.queryByText('Remo')).toBeNull();
   });
 
-  it('asks for a compatible PDF when training data is unavailable', () => {
-    appState.parsedData = { status: 'ok', diets: [] };
-
+  it('requires two confirmations before clearing weights', async () => {
+    appState.weekTracker.trainingWeights = { '0:0': ['25'] };
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(true).mockReturnValueOnce(false);
     render(TrainingView);
-
-    expect(screen.getByText('Este plan no incluye una rutina de entrenamiento.')).toBeTruthy();
-    expect(screen.getByText(/Carga un PDF compatible o una versión más reciente/)).toBeTruthy();
+    await fireEvent.click(screen.getByRole('button', { name: 'Reiniciar' }));
+    expect(confirm).toHaveBeenCalledTimes(2);
+    expect(appState.weekTracker.trainingWeights['0:0']).toEqual(['25']);
   });
 });

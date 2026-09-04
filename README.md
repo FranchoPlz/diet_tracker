@@ -1,4 +1,4 @@
-# Diet Planner
+# DG Nutrición
 
 Aplicación web instalable y de escritorio para convertir un PDF de dieta en un plan semanal y una lista de la compra editable. Todo el procesamiento y el almacenamiento se realizan en el dispositivo, sin cuentas ni servidor.
 
@@ -98,4 +98,4 @@ tests/fixtures/        # Datos de referencia para validación
 
 ## CI/CD
 
-Cada push verificado a `develop` publica la PWA en GitHub Pages. Los tags `v*` construyen el instalador de Windows y crean un borrador de release de GitHub; la versión `v0.3.0` identifica conjuntamente la aplicación web móvil y la de escritorio.
+Cada push verificado a `develop` publica la PWA en GitHub Pages. Los tags `v*` construyen el instalador de Windows y crean un borrador de release de GitHub; la versión `v0.4.0` identifica conjuntamente la aplicación web móvil y la de escritorio.

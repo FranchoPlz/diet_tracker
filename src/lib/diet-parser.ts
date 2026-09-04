@@ -1,17 +1,12 @@
-import type { DietPlan, ExerciseCropSource, ExercisePreviewKey, ExerciseRow, IngredientItem, IngredientLine, Meal, MealOption, ParseResult, TrainingDay, TrainingPlan } from './types';
+import type { DietPlan, ExerciseRow, IngredientItem, IngredientLine, Meal, MealOption, ParseResult, TrainingDay, TrainingPlan } from './types';
 
 export interface TrainingTableRow {
   columns: [string, string, string, string];
-  bounds?: ExerciseCropSource['bounds'];
 }
 export interface TrainingTable {
   rows: TrainingTableRow[];
 }
 export type DietPageText = string | { page: number; text: string; trainingTable?: TrainingTable };
-export interface RichParseResult {
-  result: ParseResult;
-  exerciseCropSources: Partial<Record<ExercisePreviewKey, ExerciseCropSource>>;
-}
 
 const MEAL_TYPES = ['ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA'] as const;
 const MEAL_HEADER_RE = /^\s*(ALMUERZO|COMIDA|MERIENDA|CENA)\s*$/;
@@ -333,7 +328,7 @@ function parseTrainingTable(table: TrainingTable): Array<{ exercise: ExerciseRow
   });
 }
 
-function parseTraining(pageTexts: readonly DietPageText[]): { training: TrainingPlan; exerciseCropSources: RichParseResult['exerciseCropSources'] } | undefined {
+function parseTraining(pageTexts: readonly DietPageText[]): TrainingPlan | undefined {
   const pages = pageTexts.map((page) => typeof page === 'string' ? page : page.text);
   const trainingStart = pages.findIndex((text) => TRAINING_HEADER_RE.test(text));
   if (trainingStart < 0) return undefined;
@@ -369,7 +364,6 @@ function parseTraining(pageTexts: readonly DietPageText[]): { training: Training
     }
   }
 
-  const exerciseCropSources: RichParseResult['exerciseCropSources'] = {};
   for (const page of pageTexts) {
     if (typeof page === 'string' || !page.trainingTable) continue;
     const pageDay = page.text.match(new RegExp(DAY_HEADER_RE.source, 'im'));
@@ -379,23 +373,14 @@ function parseTraining(pageTexts: readonly DietPageText[]): { training: Training
     if (day) {
       const parsedRows = parseTrainingTable(page.trainingTable);
       day.exercises = parsedRows.map(({ exercise }) => exercise);
-      const dayIndex = days.indexOf(day);
-      for (const [exerciseIndex, { source }] of parsedRows.entries()) {
-        if (source.bounds) exerciseCropSources[`${dayIndex}:${exerciseIndex}`] = { page: page.page, bounds: source.bounds };
-      }
     }
   }
 
-  return { training: { tips, defaultRestSeconds: restMatch ? Number(restMatch[1]) : null, days }, exerciseCropSources };
+  return { tips, defaultRestSeconds: restMatch ? Number(restMatch[1]) : null, days };
 }
 
 /** Parse already-extracted page text. This function has no PDF.js or browser dependency. */
 export function parseDietText(pageTexts: readonly DietPageText[]): ParseResult {
-  return parseDietTextWithExerciseCrops(pageTexts).result;
-}
-
-/** Rich, runtime-only parse output retaining geometry-derived exercise crop sources. */
-export function parseDietTextWithExerciseCrops(pageTexts: readonly DietPageText[]): RichParseResult {
   const relevantPages: string[] = [];
   for (const page of pageTexts) {
     const text = typeof page === 'string' ? page : page.text;
@@ -410,9 +395,7 @@ export function parseDietTextWithExerciseCrops(pageTexts: readonly DietPageText[
   }
   if (diets.length === 0) throw new Error('No se han encontrado secciones DIETA en el PDF.');
   const training = parseTraining(pageTexts);
-  return training
-    ? { result: { status: 'ok', diets, training: training.training }, exerciseCropSources: training.exerciseCropSources }
-    : { result: { status: 'ok', diets }, exerciseCropSources: {} };
+  return training ? { status: 'ok', diets, training } : { status: 'ok', diets };
 }
 
 export { MEAL_TYPES };

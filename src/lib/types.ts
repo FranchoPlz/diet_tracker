@@ -62,15 +62,6 @@ export interface ExerciseRow {
   supersetExercises?: string[];
 }
 
-/** Browser-session key for an optional preview assigned to a training exercise. */
-export type ExercisePreviewKey = `${number}:${number}`;
-
-/** PDF-space rectangle used only while processing a browser-uploaded PDF. */
-export interface ExerciseCropSource {
-  page: number;
-  bounds: { left: number; bottom: number; right: number; top: number };
-}
-
 /**
  * Global defaults for a single diet (DIETA 1 or DIETA 2).
  * These apply to ALL days that use this diet unless a per-day exception exists.
@@ -136,15 +127,23 @@ export interface SavedShoppingList {
   items: Required<Pick<ShoppingItem, 'id' | 'name' | 'quantity' | 'unit' | 'count' | 'category' | 'checked' | 'custom'>>[];
 }
 
+export interface WeekTracker {
+  startedAt: string;
+  activeDayIndex: number;
+  weekNumber: number;
+  trainingWeights: Record<string, string[]>;
+}
+
 export interface SavedPlan {
   id: string;
-  schemaVersion: 1 | 2;
+  schemaVersion: 1 | 2 | 3;
   configured?: boolean;
   name: string;
   createdAt: string;
   updatedAt: string;
   parsedData: ParseResult;
   weekConfig: WeekConfig;
+  weekTracker?: WeekTracker;
   shoppingListId?: string;
 }
 

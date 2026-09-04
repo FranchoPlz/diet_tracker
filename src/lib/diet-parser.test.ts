@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { joinWrappedLines, parseDietText, parseDietTextWithExerciseCrops, parseIngredient } from './diet-parser';
+import { joinWrappedLines, parseDietText, parseIngredient } from './diet-parser';
 import abrilFixtureText from '../../tests/fixtures/abril_raw_pages.txt?raw';
 
 describe('parseDietText', () => {
@@ -80,7 +80,7 @@ describe('parseDietText', () => {
         text: 'DÍA 1 – TORSO\nEJERCICIOS SERIES REPETICIONES DETALLES\nRemo a 1 mano 3 12 1 parada de 3',
         trainingTable: { rows: [
           { columns: ['EJERCICIOS', 'SERIES', 'REPETICIONES', 'DETALLES'] },
-          { columns: ['Remo a 1 mano', '3', '12', '1 parada de 3'], bounds: { left: 40, bottom: 600, right: 650, top: 640 } },
+          { columns: ['Remo a 1 mano', '3', '12', '1 parada de 3'] },
         ] },
       },
       {
@@ -88,7 +88,7 @@ describe('parseDietText', () => {
         text: 'DÍA 2 – PIERNA\nEJERCICIOS SERIES REPETICIONES DETALLES\nSentadilla 4 10',
         trainingTable: { rows: [
           { columns: ['EJERCICIOS', 'SERIES', 'REPETICIONES', 'DETALLES'] },
-          { columns: ['Sentadilla búlgara', '4', '10\n8', '1 parada de 3 segundos'], bounds: { left: 40, bottom: 600, right: 650, top: 640 } },
+          { columns: ['Sentadilla búlgara', '4', '10\n8', '1 parada de 3 segundos'] },
         ] },
       },
     ]);
@@ -98,19 +98,6 @@ describe('parseDietText', () => {
       [{ exercise: 'Sentadilla búlgara', series: '4', repetitions: '10\n8', details: '1 parada de 3 segundos' }],
     ]);
     expect(result.training?.days.flatMap((day) => day.exercises).map((row) => row.exercise)).not.toContain('mano');
-  });
-
-  it('maps preview crop sources by final day and exercise indexes without matching exercise text', () => {
-    const parsed = parseDietTextWithExerciseCrops([
-      'DIETA 1\nALMUERZO\n-1 Huevo.', 'ENTRENAMIENTO',
-      { page: 3, text: 'DÍA 1 – TORSO', trainingTable: { rows: [
-        { columns: ['EJERCICIOS', 'SERIES', 'REPETICIONES', 'DETALLES'] },
-        { columns: ['Nombre original', '3', '12', ''], bounds: { left: 1, bottom: 2, right: 3, top: 4 } },
-      ] } },
-    ]);
-
-    expect(parsed.result.training?.days[0].exercises[0].exercise).toBe('Nombre original');
-    expect(parsed.exerciseCropSources).toEqual({ '0:0': { page: 3, bounds: { left: 1, bottom: 2, right: 3, top: 4 } } });
   });
 
   it('rejects text without diet sections in Spanish', () => {

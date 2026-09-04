@@ -77,7 +77,7 @@ describe('PdfUpload', () => {
 
   it('parses a selected PDF in the browser without Tauri', async () => {
     delete (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
-    mocks.parseBrowserPdf.mockResolvedValue({ result: { status: 'ok', diets: [] }, previewBlobs: {} });
+    mocks.parseBrowserPdf.mockResolvedValue({ status: 'ok', diets: [] });
     const { container } = render(PdfUpload);
     const file = new File(['%PDF-test'], 'ABRIL.pdf', { type: 'application/pdf' });
     const input = container.querySelector('input[type="file"]') as HTMLInputElement;

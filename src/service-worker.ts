@@ -3,7 +3,7 @@
 import { base, build, files, prerendered, version } from '$service-worker';
 
 const worker = self as unknown as ServiceWorkerGlobalScope;
-const cacheName = `diet-planner-${version}`;
+const cacheName = `dg-nutricion-${version}`;
 const appShell = `${base}/`;
 const assets = [...new Set([...build, ...files, ...prerendered])];
 
@@ -15,7 +15,7 @@ worker.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
-        keys.filter(key => key.startsWith('diet-planner-') && key !== cacheName)
+        keys.filter(key => (key.startsWith('diet-planner-') || key.startsWith('dg-nutricion-')) && key !== cacheName)
           .map(key => caches.delete(key)),
       ))
       .then(() => worker.clients.claim()),

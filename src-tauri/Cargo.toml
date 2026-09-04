@@ -1,7 +1,7 @@
 [package]
 name = "diet"
-version = "0.3.0"
-description = "Diet Planner"
+version = "0.4.0"
+description = "DG Nutrición"
 authors = ["you"]
 edition = "2021"
 

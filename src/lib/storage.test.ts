@@ -66,6 +66,10 @@ describe('plan storage', () => {
     db.close();
 
     const migrated = (await listPlans()).find(plan => plan.id === 'legacy');
-    expect(migrated).toMatchObject({ schemaVersion: 2, configured: true });
+    expect(migrated).toMatchObject({
+      schemaVersion: 3,
+      configured: true,
+      weekTracker: { activeDayIndex: 0, weekNumber: 1, trainingWeights: {} },
+    });
   });
 });

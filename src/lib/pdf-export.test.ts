@@ -5,7 +5,7 @@ import { createPlanPdfBytes } from './pdf-export';
 import { buildExportPayload } from './utils';
 import { createDefaultWeekConfig } from './utils';
 
-async function extractText(bytes: Uint8Array): Promise<string> {
+async function extractPages(bytes: Uint8Array): Promise<string[]> {
   if (!('DOMMatrix' in globalThis)) {
     Object.defineProperty(globalThis, 'DOMMatrix', {
       configurable: true,
@@ -30,7 +30,11 @@ async function extractText(bytes: Uint8Array): Promise<string> {
     pages.push(content.items.map(item => 'str' in item ? item.str : '').join(' '));
   }
   await document.destroy();
-  return pages.join('\n');
+  return pages;
+}
+
+async function extractText(bytes: Uint8Array): Promise<string> {
+  return (await extractPages(bytes)).join('\n');
 }
 
 describe('PDF plan export', () => {
@@ -89,5 +93,29 @@ describe('PDF plan export', () => {
     expect(extracted).toContain('Barra de Pan');
     expect(extracted).toContain('NUGGETS HEALTHY');
     expect(extracted).toContain('Garbanzos');
+  });
+
+  it('moves a complete day to the next page instead of splitting its table', async () => {
+    const meal = (name: string, rows: number) => ({
+      type: name,
+      option: `Opción ${name}`,
+      ingredients: Array.from({ length: rows }, (_, index) => `${name} ingrediente ${index + 1}`),
+    });
+    const bytes = createPlanPdfBytes({
+      generated_at: '2026-09-01T00:00:00.000Z',
+      days: [
+        { day: 1, diet: 'DIETA 1', meals: [meal('COMIDA', 12)] },
+        { day: 2, diet: 'DIETA 2', meals: [meal('ALMUERZO', 5), meal('CENA', 5)] },
+      ],
+    });
+    const pages = await extractPages(bytes);
+
+    expect(pages).toHaveLength(2);
+    expect(pages[0]).toContain('Dia 1');
+    expect(pages[0]).not.toContain('Dia 2');
+    expect(pages[1]).toContain('Dia 2');
+    expect(pages[1]).toContain('ALMUERZO ingrediente 1');
+    expect(pages[1]).toContain('CENA ingrediente 5');
+    expect(pages[1]).not.toContain('continuacion');
   });
 });

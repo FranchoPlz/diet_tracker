@@ -17,6 +17,12 @@ export async function createWorkspaceFromDocument(result: ParseResult, sourceNam
   appState.parsedData = structuredClone(result);
   appState.pdfPath = null;
   appState.weekConfig = createDefaultWeekConfig();
+  appState.weekTracker = {
+    startedAt: new Date().toISOString(),
+    activeDayIndex: 0,
+    weekNumber: 1,
+    trainingWeights: {},
+  };
   appState.shoppingList = [];
   appState.checkedShoppingItems = {};
   appState.activeListId = null;

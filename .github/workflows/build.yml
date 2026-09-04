@@ -55,7 +55,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'Diet Planner ${{ github.ref_name }}'
-          releaseBody: 'Instalador de Windows para Diet Planner.'
+          releaseName: 'DG Nutrición ${{ github.ref_name }}'
+          releaseBody: 'Instalador de Windows para DG Nutrición.'
           releaseDraft: true
           prerelease: false

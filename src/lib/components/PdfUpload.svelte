@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { invoke } from '@tauri-apps/api/core';
   import { appState } from '$lib/state.svelte';
-  import { clearExercisePreviews, installExercisePreviewBlobs } from '$lib/exercise-preview-controller';
   import type { ParseResult } from '$lib/types';
   import { createWorkspaceFromDocument } from '$lib/workspace-controller';
 
@@ -42,7 +41,6 @@
       const jsonStr = await invoke<string>('parse_pdf', { path });
       const result: ParseResult = JSON.parse(jsonStr);
       await createWorkspaceFromDocument(result, fileName(path));
-      clearExercisePreviews();
     } catch (e) {
       console.error('Error parsing PDF:', e);
       appState.error = String(e);
@@ -58,9 +56,8 @@
     appState.error = null;
     try {
       const { parseBrowserPdf } = await import('$lib/pdf');
-      const { result, previewBlobs } = await parseBrowserPdf(file);
+      const result = await parseBrowserPdf(file);
       await createWorkspaceFromDocument(result, file.name);
-      installExercisePreviewBlobs(previewBlobs);
     } catch (e) {
       console.error('Error parsing PDF:', e);
       appState.error = e instanceof Error ? e.message : String(e);

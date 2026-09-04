@@ -1,7 +1,6 @@
 import { calculateShoppingList } from './calculation';
 import { applyList, persistCurrentList } from './list-controller';
 import { appState } from './state.svelte';
-import { clearExercisePreviews } from './exercise-preview-controller';
 import { listPlans, listShoppingLists, savePlan, saveShoppingList, setActivePlanId } from './storage';
 import type { SavedPlan, SavedShoppingList, WeekConfig } from './types';
 
@@ -20,13 +19,14 @@ function createPlan(name: string): SavedPlan {
   const now = new Date().toISOString();
   return {
     id: crypto.randomUUID(),
-    schemaVersion: 2,
+    schemaVersion: 3,
     configured: appState.configured,
     name,
     createdAt: now,
     updatedAt: now,
     parsedData: cloneData(appState.parsedData),
     weekConfig: portableWeekConfig(appState.weekConfig),
+    weekTracker: cloneData(appState.weekTracker),
   };
 }
 
@@ -40,10 +40,11 @@ export async function persistCurrentPlan(): Promise<SavedPlan> {
   if (!appState.parsedData) throw new Error('No hay una dieta cargada para guardar.');
 
   plan.name = appState.activePlanName.trim() || 'Mi plan semanal';
-  plan.schemaVersion = 2;
+  plan.schemaVersion = 3;
   plan.configured = appState.configured;
   plan.parsedData = cloneData(appState.parsedData);
   plan.weekConfig = portableWeekConfig(appState.weekConfig);
+  plan.weekTracker = cloneData(appState.weekTracker);
   if (appState.shoppingList.length > 0 || appState.activeListId) {
     plan.shoppingListId = (await persistCurrentList()).id;
   } else {
@@ -61,12 +62,17 @@ export async function persistCurrentPlan(): Promise<SavedPlan> {
 }
 
 export async function restorePlan(plan: SavedPlan): Promise<void> {
-  clearExercisePreviews();
   appState.activePlanId = plan.id;
   appState.activePlanName = plan.name;
   appState.configured = plan.configured ?? true;
   appState.parsedData = cloneData(plan.parsedData);
   appState.weekConfig = portableWeekConfig(plan.weekConfig);
+  appState.weekTracker = cloneData(plan.weekTracker ?? {
+    startedAt: new Date().toISOString(),
+    activeDayIndex: 0,
+    weekNumber: 1,
+    trainingWeights: {},
+  });
   appState.pdfPath = null;
   appState.planSourceLabel = `Plan guardado: ${plan.name}`;
   appState.error = null;

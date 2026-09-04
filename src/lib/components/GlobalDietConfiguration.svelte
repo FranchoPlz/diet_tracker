@@ -2,10 +2,13 @@
   import { appState } from '$lib/state.svelte';
   import type { DaySelection } from '$lib/types';
   import MealSelector from './MealSelector.svelte';
+  import WeekGrid from './WeekGrid.svelte';
+  import DayDetail from './DayDetail.svelte';
 
   let { onComplete } = $props<{ onComplete: () => void }>();
 
   const dietNames: DaySelection['diet'][] = ['DIETA 1', 'DIETA 2'];
+  let selectedDayIndex = $state<number | null>(null);
 
   function representativeDayIndex(dietName: DaySelection['diet']): number {
     return appState.weekConfig.days.findIndex(day => day.diet === dietName);
@@ -17,7 +20,12 @@
     <h2 class="text-2xl font-black tracking-tight text-stone-950 dark:text-white sm:text-3xl">Configurar dietas</h2>
   </header>
 
-  <div class="grid gap-5 p-4 sm:p-6 xl:grid-cols-2 xl:p-8">
+  <div class="space-y-5 p-3 sm:p-6 xl:p-8">
+    <WeekGrid onDayClick={(dayIndex) => selectedDayIndex = dayIndex} {selectedDayIndex} />
+    {#if selectedDayIndex !== null}
+      <DayDetail dayIndex={selectedDayIndex} onClose={() => selectedDayIndex = null} />
+    {/if}
+    <div class="grid gap-5 xl:grid-cols-2">
     {#each dietNames as dietName, dietIndex}
       {@const dayIndex = representativeDayIndex(dietName)}
       {@const dietData = appState.parsedData?.diets.find(diet => diet.name === dietName)}
@@ -39,6 +47,7 @@
         {/if}
       </article>
     {/each}
+    </div>
   </div>
 
   <footer class="flex flex-col gap-3 border-t border-stone-200 bg-white px-5 py-5 dark:border-stone-700 dark:bg-stone-900 sm:flex-row sm:items-center sm:justify-between sm:px-8">

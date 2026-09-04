@@ -20,6 +20,9 @@ const PAGE_HEIGHT = 841.89;
 const MARGIN = 42;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 const ROW_PADDING = 6;
+const FOOTER_TOP = MARGIN + 24;
+const PAGE_START_Y = PAGE_HEIGHT - MARGIN;
+const FIRST_PAGE_START_Y = PAGE_HEIGHT - 134;
 
 interface PdfPage {
   content: string;
@@ -74,6 +77,21 @@ function wrapText(text: string, maxChars: number): string[] {
   return lines.length ? lines : [''];
 }
 
+function ingredientHeight(ingredient: string): number {
+  return wrapText(ingredient, 90).length * 10 + ROW_PADDING * 2;
+}
+
+function mealHeight(meal: ExportMeal): number {
+  const ingredients = meal.ingredients.length ? meal.ingredients : ['Sin ingredientes'];
+  return 24 + Math.max(0, wrapText(meal.option, 62).length - 1) * 13
+    + ingredients.reduce((height, ingredient) => height + ingredientHeight(ingredient), 0)
+    + 10;
+}
+
+function dayHeight(day: ExportDay): number {
+  return 34 + day.meals.reduce((height, meal) => height + mealHeight(meal), 0) + 8;
+}
+
 function colorCommand(color: PdfColor, operator: 'rg' | 'RG'): string {
   return `${color.join(' ')} ${operator}`;
 }
@@ -97,25 +115,16 @@ function strokeLine(x1: number, y1: number, x2: number, y2: number, color: PdfCo
 export function createPlanPdfBytes(payload: ExportPayload, title = 'Plan semanal'): Uint8Array {
   const pages: PdfPage[] = [];
   let content = '';
-  let y = PAGE_HEIGHT - MARGIN;
+  let y = PAGE_START_Y;
 
   function newPage(): void {
     if (content) pages.push({ content });
     content = '';
-    y = PAGE_HEIGHT - MARGIN;
+    y = PAGE_START_Y;
   }
 
   function ensureSpace(height: number): void {
-    if (y - height < MARGIN + 24) newPage();
-  }
-
-  function drawWrapped(text: string, x: number, size: number, maxChars: number, font = 'F1', color = COLORS.ink): number {
-    let used = 0;
-    for (const line of wrapText(text, maxChars)) {
-      content += textCommand(line, x, y - used, size, font, color);
-      used += size + 4;
-    }
-    return used;
+    if (y - height < FOOTER_TOP) newPage();
   }
 
   function drawFooter(pageNumber: number): string {
@@ -126,8 +135,8 @@ export function createPlanPdfBytes(payload: ExportPayload, title = 'Plan semanal
     content += fillRect(0, PAGE_HEIGHT - 108, PAGE_WIDTH, 108, COLORS.header);
     content += fillRect(0, PAGE_HEIGHT - 108, PAGE_WIDTH, 7, COLORS.orange);
     content += textCommand(title, MARGIN, PAGE_HEIGHT - 58, 22, 'F2', COLORS.white);
-    content += textCommand(`Dieta seleccionada · ${new Date(payload.generated_at).toLocaleDateString('es-ES')}`, MARGIN, PAGE_HEIGHT - 82, 10, 'F1', [0.88, 0.88, 0.90]);
-    y = PAGE_HEIGHT - 134;
+    content += textCommand(`Resumen semanal · ${new Date(payload.generated_at).toLocaleDateString('es-ES')}`, MARGIN, PAGE_HEIGHT - 82, 10, 'F1', [0.88, 0.88, 0.90]);
+    y = FIRST_PAGE_START_Y;
   }
 
   function drawDayHeader(day: ExportDay, continued = false): void {
@@ -139,7 +148,12 @@ export function createPlanPdfBytes(payload: ExportPayload, title = 'Plan semanal
   }
 
   function drawMealHeader(day: ExportDay, meal: ExportMeal): void {
-    if (y - 42 < MARGIN + 24) {
+    const requiredHeight = mealHeight(meal);
+    const freshPageCapacity = PAGE_START_Y - FOOTER_TOP - 34;
+    if (requiredHeight <= freshPageCapacity && y - requiredHeight < FOOTER_TOP) {
+      newPage();
+      drawDayHeader(day, true);
+    } else if (y - 42 < FOOTER_TOP) {
       newPage();
       drawDayHeader(day, true);
     }
@@ -159,7 +173,7 @@ export function createPlanPdfBytes(payload: ExportPayload, title = 'Plan semanal
   function drawIngredientRow(day: ExportDay, meal: ExportMeal, ingredient: string, index: number): void {
     const lines = wrapText(ingredient, 90);
     const rowHeight = lines.length * 10 + ROW_PADDING * 2;
-    if (y - rowHeight < MARGIN + 24) {
+    if (y - rowHeight < FOOTER_TOP) {
       newPage();
       drawDayHeader(day, true);
       drawMealHeader(day, meal);
@@ -178,6 +192,9 @@ export function createPlanPdfBytes(payload: ExportPayload, title = 'Plan semanal
   drawDocumentHeader();
 
   for (const day of payload.days) {
+    const requiredHeight = dayHeight(day);
+    const freshPageCapacity = PAGE_START_Y - FOOTER_TOP;
+    if (requiredHeight <= freshPageCapacity && y - requiredHeight < FOOTER_TOP) newPage();
     drawDayHeader(day);
     for (const meal of day.meals) {
       drawMealHeader(day, meal);

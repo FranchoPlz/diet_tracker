@@ -20,8 +20,18 @@ const database = () => openDB<DietDatabase>('diet-planner', 2, {
 });
 
 function migratePlan(plan: SavedPlan): SavedPlan {
-  if (plan.schemaVersion !== 1 && plan.configured !== undefined) return plan;
-  return { ...plan, schemaVersion: 2, configured: plan.configured ?? true };
+  if (plan.schemaVersion === 3 && plan.weekTracker) return plan;
+  return {
+    ...plan,
+    schemaVersion: 3,
+    configured: plan.configured ?? true,
+    weekTracker: plan.weekTracker ?? {
+      startedAt: new Date().toISOString(),
+      activeDayIndex: 0,
+      weekNumber: 1,
+      trainingWeights: {},
+    },
+  };
 }
 
 export async function listShoppingLists(): Promise<SavedShoppingList[]> {

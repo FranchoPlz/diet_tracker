@@ -3,29 +3,29 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --app-bg: #f8fafc;
+  --app-bg: #f4f4f5;
   --app-bg-soft: #ffffff;
   --surface: rgba(255, 255, 255, 0.94);
-  --surface-muted: #fff7ed;
+  --surface-muted: #fff1f0;
   --surface-strong: #ffffff;
-  --text-primary: #09090b;
+  --text-primary: #08080d;
   --text-secondary: #52525b;
   --text-muted: #71717a;
   --border: #e4e4e7;
   --border-strong: #d4d4d8;
-  --accent: #dc2626;
-  --accent-strong: #b91c1c;
-  --accent-soft: #fee2e2;
-  --accent-text: #991b1b;
-  --warm: #f97316;
-  --warm-strong: #ea580c;
-  --warm-soft: #ffedd5;
+  --accent: #e33128;
+  --accent-strong: #bd241d;
+  --accent-soft: #fee5e3;
+  --accent-text: #a91f19;
+  --warm: #ef544b;
+  --warm-strong: #d92d24;
+  --warm-soft: #ffebe9;
   --shadow-soft: 0 20px 60px rgba(15, 23, 42, 0.10);
 }
 
 :root.dark {
-  --app-bg: #050505;
-  --app-bg-soft: #101010;
+  --app-bg: #050509;
+  --app-bg-soft: #0d0d12;
   --surface: rgba(24, 24, 27, 0.88);
   --surface-muted: rgba(67, 20, 7, 0.32);
   --surface-strong: #18181b;
@@ -34,13 +34,13 @@
   --text-muted: #a1a1aa;
   --border: rgba(255, 255, 255, 0.10);
   --border-strong: rgba(255, 255, 255, 0.16);
-  --accent: #ef4444;
-  --accent-strong: #dc2626;
-  --accent-soft: rgba(127, 29, 29, 0.46);
-  --accent-text: #fecaca;
-  --warm: #fb923c;
-  --warm-strong: #f97316;
-  --warm-soft: rgba(154, 52, 18, 0.35);
+  --accent: #e83a31;
+  --accent-strong: #c92a22;
+  --accent-soft: rgba(137, 28, 23, 0.46);
+  --accent-text: #ffc8c4;
+  --warm: #f05a51;
+  --warm-strong: #e33128;
+  --warm-soft: rgba(137, 28, 23, 0.32);
   --shadow-soft: 0 22px 70px rgba(0, 0, 0, 0.42);
 }
 
@@ -77,6 +77,34 @@ button, input, summary {
     radial-gradient(circle at 100% 8%, color-mix(in srgb, var(--warm) 18%, transparent), transparent 22rem),
     linear-gradient(180deg, var(--app-bg-soft), var(--app-bg) 28rem);
   color: var(--text-primary);
+}
+
+.dg-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 5.25rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-strong) 90%, transparent);
+}
+
+.dg-brand img {
+  display: block;
+  width: min(17rem, 68vw);
+  height: auto;
+}
+
+.dg-logo-light {
+  display: none !important;
+}
+
+:root.dark .dg-logo-dark {
+  display: none;
+}
+
+:root.dark .dg-logo-light {
+  display: block !important;
 }
 
 .app-surface {
