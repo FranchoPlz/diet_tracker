@@ -2,6 +2,8 @@
   import { appState } from '$lib/state.svelte';
   import PdfUpload from './PdfUpload.svelte';
   import PlanLibrary from './PlanLibrary.svelte';
+
+  let { onResetWeek } = $props<{ onResetWeek: () => void }>();
 </script>
 
 <section class="mx-auto max-w-3xl space-y-3" aria-labelledby="home-title">
@@ -15,4 +17,5 @@
       <PdfUpload compact actionLabel="Cambiar PDF" />
     </div>
   </header>
+  <button class="w-full rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-black text-red-700 transition hover:border-red-400 hover:bg-red-100 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200 dark:hover:bg-red-950/50" onclick={onResetWeek}>Reiniciar semana manualmente</button>
 </section>

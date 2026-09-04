@@ -127,7 +127,7 @@
 
     <div class="mx-auto mt-4 max-w-[1480px] touch-pan-y space-y-4 px-3 sm:px-6 lg:px-8" role="tabpanel" tabindex="0">
       {#if appState.activeTab === 'home'}
-        <div class="space-y-4"><HomeOverview /><DayNavigator onSelect={selectDay} onNext={nextDay} /><CurrentDayDiet onEdit={openException} /></div>
+        <div class="space-y-4"><HomeOverview onResetWeek={() => void closeWeek()} /><DayNavigator onSelect={selectDay} onNext={nextDay} /><CurrentDayDiet onEdit={openException} /></div>
       {:else if appState.activeTab === 'diet'}
         <div class="space-y-5">
           {#key dietEditDayIndex}

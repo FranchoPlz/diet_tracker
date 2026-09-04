@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { appState } from '$lib/state.svelte';
 import { createDefaultWeekConfig } from '$lib/utils';
@@ -18,7 +18,8 @@ describe('HomeOverview', () => {
   afterEach(cleanup);
 
   it('groups plan controls and allows closing the plan selector', async () => {
-    render(HomeOverview);
+    const onResetWeek = vi.fn();
+    render(HomeOverview, { onResetWeek });
 
     expect(screen.getByRole('heading', { name: 'Plan abril' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Cambiar plan' })).toBeTruthy();
@@ -28,5 +29,7 @@ describe('HomeOverview', () => {
     expect(screen.getByRole('button', { name: 'Cerrar selector de planes' })).toBeTruthy();
     await fireEvent.click(screen.getByRole('button', { name: 'Cerrar selector de planes' }));
     expect(screen.queryByRole('button', { name: 'Cerrar selector de planes' })).toBeNull();
+    await fireEvent.click(screen.getByRole('button', { name: 'Reiniciar semana manualmente' }));
+    expect(onResetWeek).toHaveBeenCalledOnce();
   });
 });
