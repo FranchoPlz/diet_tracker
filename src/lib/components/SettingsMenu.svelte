@@ -54,4 +54,15 @@
       </label>
     {/each}
   </div>
+
+  <footer class="border-t border-stone-200 bg-stone-50 px-5 py-5 dark:border-stone-700 dark:bg-stone-950/50 sm:px-7">
+    <p class="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Ayuda y soporte</p>
+    <p class="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-300">Si encuentras un error o tienes algún problema, escríbenos a:</p>
+    <a
+      href="mailto:trabajo@diariodenutricion.com?subject=Problema%20con%20DG%20Nutrici%C3%B3n"
+      class="mt-3 inline-flex min-h-11 max-w-full items-center rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-black text-white transition hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200"
+    >
+      <span class="truncate">trabajo@diariodenutricion.com</span>
+    </a>
+  </footer>
 </section>

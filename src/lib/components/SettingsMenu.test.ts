@@ -26,6 +26,13 @@ describe('SettingsMenu', () => {
     ]);
   });
 
+  it('shows the support email as a mail link', () => {
+    render(SettingsMenu);
+
+    const contact = screen.getByRole('link', { name: 'trabajo@diariodenutricion.com' });
+    expect(contact.getAttribute('href')).toBe('mailto:trabajo@diariodenutricion.com?subject=Problema%20con%20DG%20Nutrici%C3%B3n');
+  });
+
   it('persists all changed preferences', async () => {
     render(SettingsMenu);
 

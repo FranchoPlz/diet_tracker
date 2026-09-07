@@ -14,14 +14,18 @@ export function createTrainingPdfBlob(training: TrainingPlan, weights: Record<st
           const targets = repetitionTargets(exercise.repetitions, seriesCount(exercise.series));
           const weightLines = Array.from({ length: seriesCount(exercise.series) }, (_, seriesIndex) => {
             const weight = recorded[seriesIndex]?.trim() ? `${recorded[seriesIndex]} kg` : 'peso sin registrar';
-            const reps = actualRepetitions[seriesIndex]?.trim() || targets[seriesIndex] || 'sin registrar';
-            return `Serie ${seriesIndex + 1}: ${weight} · ${reps} repeticiones`;
+            const target = targets[seriesIndex] || 'sin registrar';
+            const completed = actualRepetitions[seriesIndex]?.trim();
+            const reps = completed
+              ? `Reps hechas: ${completed} (objetivo: ${target})`
+              : `Objetivo: ${target} repeticiones`;
+            return `Serie ${seriesIndex + 1} | Peso: ${weight} | ${reps}`;
           });
           return {
             type: `EJERCICIO ${exerciseIndex + 1}`,
             option: exercise.exercise,
             ingredients: [
-              `${exercise.series || '-'} series · ${exercise.repetitions || '-'} repeticiones`,
+              `Series: ${seriesCount(exercise.series)}`,
               ...(exercise.details ? [exercise.details] : []),
               ...weightLines,
             ],
