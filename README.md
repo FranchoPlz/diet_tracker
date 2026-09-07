@@ -98,4 +98,4 @@ tests/fixtures/        # Datos de referencia para validación
 
 ## CI/CD
 
-Cada push verificado a `develop` publica la PWA en GitHub Pages. Los tags `v*` construyen el instalador de Windows y crean un borrador de release de GitHub; la versión `v0.4.0` identifica conjuntamente la aplicación web móvil y la de escritorio.
+Cada push verificado a `develop` publica la PWA en GitHub Pages. Los tags `v*` construyen el instalador de Windows y crean un borrador de release de GitHub; la versión `v0.4.2` identifica conjuntamente la aplicación web móvil y la de escritorio.

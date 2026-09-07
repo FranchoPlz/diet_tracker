@@ -9,6 +9,7 @@
 
   const dietNames: DaySelection['diet'][] = ['DIETA 1', 'DIETA 2'];
   const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  let expandedDiets = $state([false, false]);
 
   function representativeDayIndex(dietName: DaySelection['diet']): number {
     return appState.weekConfig.days.findIndex(day => day.diet === dietName);
@@ -21,6 +22,14 @@
     const quantity = formatQuantity(item.quantity, item.unit);
     return quantity === 'sin cantidad' ? item.name : `${item.name} ${quantity}`;
   }
+
+  function toggleDiet(dietIndex: number, open: boolean): void {
+    if (typeof window !== 'undefined' && window.matchMedia?.('(min-width: 80rem)').matches) {
+      expandedDiets = expandedDiets.map(() => open);
+    } else {
+      expandedDiets[dietIndex] = open;
+    }
+  }
 </script>
 
 <section class="space-y-4" aria-label="Resumen de dietas">
@@ -28,7 +37,7 @@
     {#each dietNames as dietName, dietIndex}
       {@const dayIndex = representativeDayIndex(dietName)}
       {@const dietData = appState.parsedData?.diets.find(diet => diet.name === dietName)}
-      <details class="group min-w-0 overflow-hidden rounded-3xl border bg-white shadow-sm dark:bg-stone-900 {dietIndex === 0 ? 'border-orange-300 dark:border-orange-800' : 'border-red-300 dark:border-red-800'}">
+      <details open={expandedDiets[dietIndex]} ontoggle={(event) => toggleDiet(dietIndex, event.currentTarget.open)} class="group min-w-0 overflow-hidden rounded-3xl border bg-white shadow-sm dark:bg-stone-900 {dietIndex === 0 ? 'border-orange-300 dark:border-orange-800' : 'border-red-300 dark:border-red-800'}">
         <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 [&::-webkit-details-marker]:hidden">
           <span>
             <span class="block text-xl font-black text-stone-950 dark:text-white">{dietName}</span>

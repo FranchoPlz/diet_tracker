@@ -7,7 +7,7 @@ export function createTrainingPdfBlob(training: TrainingPlan, weights: Record<st
     day: dayNumber,
     diet: day.title,
     meals: day.activeRest
-      ? [{ type: 'DESCANSO ACTIVO', option: day.details || 'Actividad suave', ingredients: [] }]
+      ? [{ type: 'ACTIVIDAD', option: 'Descanso activo', ingredients: [day.details || 'Actividad suave'] }]
       : day.exercises.map((exercise, exerciseIndex) => {
           const recorded = weights[exerciseWeightKey(dayNumber - 1, exerciseIndex)] ?? [];
           const actualRepetitions = repetitions[exerciseWeightKey(dayNumber - 1, exerciseIndex)] ?? [];
@@ -18,9 +18,13 @@ export function createTrainingPdfBlob(training: TrainingPlan, weights: Record<st
             return `Serie ${seriesIndex + 1}: ${weight} · ${reps} repeticiones`;
           });
           return {
-            type: exercise.exercise,
-            option: `${exercise.series || '-'} series · ${exercise.repetitions || '-'} repeticiones`,
-            ingredients: [...(exercise.details ? [exercise.details] : []), ...weightLines],
+            type: `EJERCICIO ${exerciseIndex + 1}`,
+            option: exercise.exercise,
+            ingredients: [
+              `${exercise.series || '-'} series · ${exercise.repetitions || '-'} repeticiones`,
+              ...(exercise.details ? [exercise.details] : []),
+              ...weightLines,
+            ],
           };
         }),
   })));

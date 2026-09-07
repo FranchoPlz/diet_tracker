@@ -34,7 +34,8 @@ describe('calculateShoppingList', () => {
     expect(canonicalIngredientName('Nueces')).toBe('nuez');
     expect(canonicalIngredientName('Hummus')).toBe('hummus');
     expect(canonicalIngredientName('Cuscús')).toBe('cuscús');
-    expect(canonicalIngredientName('Huevos cocidos')).toBe('huevos cocidos');
+    expect(canonicalIngredientName('Huevos cocidos')).toBe('huevo cocido');
+    expect(canonicalIngredientName('Yogures de proteínas de Mercadona')).toBe('yogur de proteínas de mercadona');
   });
 
   it('combines singular and plural ingredients into one item', () => {
@@ -56,6 +57,28 @@ describe('calculateShoppingList', () => {
 
     expect(calculateShoppingList(parsedData, oneDayConfig())).toContainEqual({
       name: 'huevo', quantity: 3, unit: 'unidad', count: 2,
+    });
+  });
+
+  it('combines singular and plural compound ingredient names', () => {
+    const parsedData: ParseResult = {
+      status: 'ok',
+      diets: [dietWithComidaOptions([[
+        {
+          items: [{ name: 'Yogures de proteínas de Mercadona', quantity: 2, unit: 'unidad', note: null }],
+          is_alternatives: false,
+          is_combination: false,
+        },
+        {
+          items: [{ name: 'Yogur de proteínas de Mercadona', quantity: 1, unit: 'unidad', note: null }],
+          is_alternatives: false,
+          is_combination: false,
+        },
+      ]])],
+    };
+
+    expect(calculateShoppingList(parsedData, oneDayConfig())).toContainEqual({
+      name: 'yogur de proteínas de mercadona', quantity: 3, unit: 'unidad', count: 2,
     });
   });
 

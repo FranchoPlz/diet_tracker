@@ -28,6 +28,15 @@ describe('TrainingView', () => {
     expect(appState.weekTracker.trainingRepetitions?.['0:0']).toEqual(['10']);
   });
 
+  it('allows each exercise to be collapsed', async () => {
+    render(TrainingView);
+    const exercise = screen.getByText('Remo').closest('details');
+
+    expect(exercise?.open).toBe(true);
+    await fireEvent.click(exercise!.querySelector('summary')!);
+    expect(exercise?.open).toBe(false);
+  });
+
   it('shows the active-rest instructions for that day', () => {
     appState.weekTracker.activeDayIndex = 1;
     render(TrainingView);

@@ -11,6 +11,7 @@
   import HomeOverview from '$lib/components/HomeOverview.svelte';
   import PdfUpload from '$lib/components/PdfUpload.svelte';
   import ShoppingList from '$lib/components/ShoppingList.svelte';
+  import SettingsMenu from '$lib/components/SettingsMenu.svelte';
   import { getSwipedTab } from '$lib/swipe';
   import TrainingView from '$lib/components/TrainingView.svelte';
   import { downloadTrainingPdf } from '$lib/training-export';
@@ -23,7 +24,7 @@
   $effect(() => {
     if (!appState.persistenceReady || !appState.parsedData || appState.activePlanId === syncedPlanId) return;
     syncedPlanId = appState.activePlanId;
-    if (syncActiveDay()) void closeWeek();
+    syncCurrentDay();
   });
 
   function setTab(tab: AppTab) {
@@ -52,19 +53,33 @@
 
   onMount(() => {
     const options = { passive: true, capture: true };
+    const syncWhenVisible = () => {
+      if (document.visibilityState === 'visible') syncCurrentDay();
+    };
     window.addEventListener('touchstart', startGesture, options);
     window.addEventListener('touchend', endGesture, options);
     window.addEventListener('touchcancel', cancelGesture, options);
+    window.addEventListener('focus', syncCurrentDay);
+    document.addEventListener('visibilitychange', syncWhenVisible);
+    const daySyncTimer = window.setInterval(syncCurrentDay, 60_000);
 
     return () => {
       window.removeEventListener('touchstart', startGesture, options);
       window.removeEventListener('touchend', endGesture, options);
       window.removeEventListener('touchcancel', cancelGesture, options);
+      window.removeEventListener('focus', syncCurrentDay);
+      document.removeEventListener('visibilitychange', syncWhenVisible);
+      window.clearInterval(daySyncTimer);
     };
   });
 
+  function syncCurrentDay() {
+    if (appState.parsedData && syncActiveDay()) void closeWeek();
+  }
+
   async function closeWeek() {
-    const modifyDiet = confirm('Has completado la semana. ¿Quieres modificar la dieta para la siguiente?');
+    const modifyDiet = appState.askToModifyDiet
+      && confirm('Has completado la semana. ¿Quieres modificar la dieta para la siguiente?');
     const exportTraining = confirm('¿Quieres guardar el PDF del entrenamiento de esta semana antes de reiniciarlo?');
     if (exportTraining && appState.parsedData?.training) {
       downloadTrainingPdf(appState.parsedData.training, appState.weekTracker.trainingWeights, appState.activePlanName, appState.weekTracker.weekNumber, appState.weekTracker.trainingRepetitions);
@@ -137,10 +152,12 @@
         </div>
       {:else if appState.activeTab === 'training'}
         <div class="space-y-4"><DayNavigator onSelect={selectDay} onNext={nextDay} /><TrainingView /></div>
-      {:else}
+      {:else if appState.activeTab === 'shopping'}
         <div class="mx-auto max-w-3xl">
           <ShoppingList />
         </div>
+      {:else}
+        <SettingsMenu />
       {/if}
     </div>
   {/if}

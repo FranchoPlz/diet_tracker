@@ -41,8 +41,8 @@ describe('plan storage', () => {
   });
 
   it('stores a valid active tab', async () => {
-    await setActiveTab('training');
-    expect(await getActiveTab()).toBe('training');
+    await setActiveTab('settings');
+    expect(await getActiveTab()).toBe('settings');
   });
 
   it('normalizes v1 plans on read without requiring an eager database rewrite', async () => {

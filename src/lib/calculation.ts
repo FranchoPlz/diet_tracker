@@ -13,14 +13,19 @@ const IRREGULAR_SINGULARS: Record<string, string> = {
   yogures: 'yogur',
 };
 
+function singularizeWord(word: string): string {
+  if (INVARIABLE_ENDINGS.some(ending => word.endsWith(ending))) return word;
+  if (IRREGULAR_SINGULARS[word]) return IRREGULAR_SINGULARS[word];
+  if (word.length > 5 && word.endsWith('ces')) return `${word.slice(0, -3)}z`;
+  if (word.length > 4 && /[aeiouáéíóú]s$/i.test(word)) return word.slice(0, -1);
+  if (word.length > 5 && /[^aeiouáéíóú]es$/i.test(word)) return word.slice(0, -2);
+  return word;
+}
+
 export function canonicalIngredientName(value: string): string {
-  const name = value.toLowerCase().trim().replace(/\s+/g, ' ');
-  if (name.includes(' ') || INVARIABLE_ENDINGS.some(ending => name.endsWith(ending))) return name;
-  if (IRREGULAR_SINGULARS[name]) return IRREGULAR_SINGULARS[name];
-  if (name.length > 5 && name.endsWith('ces')) return `${name.slice(0, -3)}z`;
-  if (name.length > 4 && /[aeiouáéíóú]s$/i.test(name)) return name.slice(0, -1);
-  if (name.length > 5 && /[^aeiouáéíóú]es$/i.test(name)) return name.slice(0, -2);
-  return name;
+  const words = value.toLowerCase().trim().replace(/\s+/g, ' ').split(' ');
+  const qualifierIndex = words.findIndex(word => ['a', 'al', 'con', 'de', 'del', 'sin'].includes(word));
+  return words.map((word, index) => qualifierIndex < 0 || index < qualifierIndex ? singularizeWord(word) : word).join(' ');
 }
 
 export function calculateShoppingList(

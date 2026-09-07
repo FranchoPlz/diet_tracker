@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { appState } from '$lib/state.svelte';
@@ -31,5 +31,18 @@ describe('GlobalDietConfiguration', () => {
     expect(dietTwoPanel?.open).toBe(false);
     await fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios de dieta' }));
     expect(onComplete).toHaveBeenCalledOnce();
+  });
+
+  it('expands both diet panels together on desktop', async () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }));
+    render(GlobalDietConfiguration, { onComplete: vi.fn() });
+
+    const dietOnePanel = screen.getByRole('heading', { name: 'DIETA 1' }).closest('details')!;
+    const dietTwoPanel = screen.getByRole('heading', { name: 'DIETA 2' }).closest('details')!;
+    await fireEvent.click(dietOnePanel.querySelector('summary')!);
+
+    expect(dietOnePanel.open).toBe(true);
+    await waitFor(() => expect(dietTwoPanel.open).toBe(true));
+    vi.unstubAllGlobals();
   });
 });

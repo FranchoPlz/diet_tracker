@@ -1,41 +1,57 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { appState } from '$lib/state.svelte';
+  import { setAskToModifyDiet, setAutoDay, setCompactView, setDarkMode } from '$lib/preferences';
 
-  onMount(() => {
-    appState.compactView = localStorage.getItem('compactView') === 'true';
-  });
-
-  function setCompactView(enabled: boolean) {
-    appState.compactView = enabled;
-    localStorage.setItem('compactView', String(enabled));
-  }
+  const settings = [
+    {
+      label: 'Vista compacta',
+      description: 'Muestra más días, comidas y productos reduciendo espacios y tamaños.',
+      checked: () => appState.compactView,
+      update: setCompactView,
+    },
+    {
+      label: 'Día automático',
+      description: 'Selecciona automáticamente el día actual de lunes a domingo.',
+      checked: () => appState.autoDay,
+      update: setAutoDay,
+    },
+    {
+      label: 'Preguntar por la dieta',
+      description: 'Pregunta si quieres modificar la dieta al comenzar otra semana.',
+      checked: () => appState.askToModifyDiet,
+      update: setAskToModifyDiet,
+    },
+    {
+      label: 'Modo oscuro',
+      description: 'Usa la apariencia oscura de la aplicación.',
+      checked: () => appState.darkMode,
+      update: setDarkMode,
+    },
+  ];
 </script>
 
-<details class="relative">
-  <summary
-    class="grid size-10 cursor-pointer list-none place-items-center rounded-full text-lg hover:opacity-90 [&::-webkit-details-marker]:hidden"
-    style="color: var(--text-secondary); background: color-mix(in srgb, var(--surface-strong) 70%, transparent);"
-    aria-label="Ajustes"
-    title="Ajustes"
-  >
-    ⚙
-  </summary>
+<section class="mx-auto max-w-3xl overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
+  <header class="border-b border-stone-200 px-5 py-5 dark:border-stone-700 sm:px-7">
+    <p class="text-xs font-black uppercase tracking-[0.2em] text-orange-600">Preferencias</p>
+    <h1 class="mt-1 text-2xl font-black tracking-tight text-stone-950 dark:text-white">Ajustes</h1>
+    <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">Personaliza cómo funciona y se muestra tu plan.</p>
+  </header>
 
-  <div class="app-surface fixed inset-x-4 bottom-18 z-50 rounded-3xl border p-4 sm:absolute sm:inset-x-auto sm:bottom-12 sm:right-0 sm:w-72">
-    <p class="text-xs font-black uppercase tracking-[0.18em]" style="color: var(--text-muted);">Ajustes</p>
-    <label class="mt-3 flex cursor-pointer items-start justify-between gap-4 rounded-2xl p-2 hover:opacity-90" style="background: color-mix(in srgb, var(--surface-strong) 58%, transparent);">
-      <span>
-        <span class="block text-sm font-bold" style="color: var(--text-primary);">Vista compacta</span>
-        <span class="mt-0.5 block text-xs leading-relaxed" style="color: var(--text-muted);">Muestra más días, comidas y productos reduciendo espacios y tamaños.</span>
-      </span>
-      <input
-        type="checkbox"
-        aria-label="Vista compacta"
-        class="mt-1 size-5 shrink-0 accent-teal-700"
-        checked={appState.compactView}
-        onchange={(event) => setCompactView(event.currentTarget.checked)}
-      />
-    </label>
+  <div class="divide-y divide-stone-200 dark:divide-stone-700">
+    {#each settings as setting}
+      <label class="flex cursor-pointer items-start justify-between gap-5 px-5 py-5 hover:bg-stone-50 dark:hover:bg-stone-800/70 sm:px-7">
+        <span class="min-w-0">
+          <span class="block text-base font-black text-stone-900 dark:text-white">{setting.label}</span>
+          <span class="mt-1 block text-sm leading-relaxed text-stone-500 dark:text-stone-400">{setting.description}</span>
+        </span>
+        <input
+          type="checkbox"
+          aria-label={setting.label}
+          class="mt-1 size-6 shrink-0 accent-orange-600"
+          checked={setting.checked()}
+          onchange={(event) => setting.update(event.currentTarget.checked)}
+        />
+      </label>
+    {/each}
   </div>
-</details>
+</section>

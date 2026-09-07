@@ -6,14 +6,22 @@ import { repetitionTargets, seriesCount, setActiveDay, setExerciseRepetitions, s
 describe('week tracker', () => {
   beforeEach(() => {
     appState.activePlanId = null;
+    appState.autoDay = true;
     appState.weekTracker = { startedAt: '2026-09-01T12:00:00.000Z', activeDayIndex: 0, weekNumber: 1, trainingWeights: {}, trainingRepetitions: {} };
   });
 
-  it('follows elapsed calendar days and reports when the week is complete', () => {
+  it('follows the local weekday and reports when the calendar week changes', () => {
     expect(syncActiveDay(new Date('2026-09-04T12:00:00.000Z'))).toBe(false);
-    expect(appState.weekTracker.activeDayIndex).toBe(3);
+    expect(appState.weekTracker.activeDayIndex).toBe(4);
     expect(syncActiveDay(new Date('2026-09-08T12:00:00.000Z'))).toBe(true);
-    expect(appState.weekTracker.activeDayIndex).toBe(6);
+    expect(appState.weekTracker.activeDayIndex).toBe(1);
+  });
+
+  it('leaves a manually selected day unchanged when automatic tracking is disabled', () => {
+    appState.autoDay = false;
+    appState.weekTracker.activeDayIndex = 5;
+    expect(syncActiveDay(new Date('2026-09-08T12:00:00.000Z'))).toBe(false);
+    expect(appState.weekTracker.activeDayIndex).toBe(5);
   });
 
   it('moves manually and rebases automatic tracking from the chosen day', () => {
@@ -26,7 +34,7 @@ describe('week tracker', () => {
     appState.weekTracker.trainingWeights = { '0:0': ['25'] };
     startNextWeek(false, new Date('2026-09-08T12:00:00.000Z'));
     expect(appState.weekTracker).toEqual({
-      startedAt: '2026-09-08T12:00:00.000Z', activeDayIndex: 0, weekNumber: 2, trainingWeights: { '0:0': ['25'] }, trainingRepetitions: {},
+      startedAt: '2026-09-08T12:00:00.000Z', activeDayIndex: 1, weekNumber: 2, trainingWeights: { '0:0': ['25'] }, trainingRepetitions: {},
     });
   });
 

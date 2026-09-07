@@ -8,6 +8,8 @@ describe('tab swipe navigation', () => {
     expect(getSwipedTab('home', { x: 120, y: 100, target: null }, { x: 240, y: 100 })).toBeNull();
     expect(getSwipedTab('diet', { x: 120, y: 100, target: null }, { x: 160, y: 100 })).toBeNull();
     expect(getSwipedTab('diet', { x: 120, y: 100, target: null }, { x: 180, y: 220 })).toBeNull();
+    expect(getSwipedTab('shopping', { x: 240, y: 100, target: null }, { x: 120, y: 100 })).toBe('settings');
+    expect(getSwipedTab('settings', { x: 240, y: 100, target: null }, { x: 120, y: 100 })).toBeNull();
   });
 
   it('does not navigate when a swipe starts on an interactive control', () => {

@@ -8,7 +8,11 @@ const appShell = `${base}/`;
 const assets = [...new Set([...build, ...files, ...prerendered])];
 
 worker.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(cacheName).then(cache => cache.addAll(assets)));
+  event.waitUntil(
+    caches.open(cacheName)
+      .then(cache => cache.addAll(assets))
+      .then(() => worker.skipWaiting()),
+  );
 });
 
 worker.addEventListener('activate', (event) => {

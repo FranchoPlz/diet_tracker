@@ -1,55 +1,58 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { initializePreferences } from '$lib/preferences';
 import { appState } from '$lib/state.svelte';
 import SettingsMenu from './SettingsMenu.svelte';
-import ThemeToggle from './ThemeToggle.svelte';
 
 describe('SettingsMenu', () => {
   beforeEach(() => {
     localStorage.clear();
-    appState.compactView = false;
-  });
-
-  afterEach(cleanup);
-
-  it('enables and persists compact view', async () => {
-    render(SettingsMenu);
-
-    const toggle = screen.getByRole('checkbox', { name: 'Vista compacta' });
-    await fireEvent.click(toggle);
-
-    expect(appState.compactView).toBe(true);
-    expect(localStorage.getItem('compactView')).toBe('true');
-  });
-
-  it('restores the saved preference', async () => {
-    localStorage.setItem('compactView', 'true');
-    render(SettingsMenu);
-
-    await screen.findByRole('checkbox', { name: 'Vista compacta', checked: true });
-    expect(appState.compactView).toBe(true);
-  });
-});
-
-describe('ThemeToggle', () => {
-  beforeEach(() => {
-    localStorage.clear();
     document.documentElement.classList.remove('dark');
+    appState.compactView = false;
+    appState.askToModifyDiet = true;
+    appState.autoDay = true;
     appState.darkMode = false;
   });
 
   afterEach(cleanup);
 
-  it('uses dark mode by default while preserving explicit light preference', async () => {
-    render(ThemeToggle);
-    expect(appState.darkMode).toBe(true);
+  it('renders every preference in the settings page', () => {
+    render(SettingsMenu);
 
-    cleanup();
+    expect(screen.getByRole('heading', { name: 'Ajustes' })).toBeTruthy();
+    expect(screen.getAllByRole('checkbox').map(input => input.getAttribute('aria-label'))).toEqual([
+      'Vista compacta', 'Día automático', 'Preguntar por la dieta', 'Modo oscuro',
+    ]);
+  });
+
+  it('persists all changed preferences', async () => {
+    render(SettingsMenu);
+
+    await fireEvent.click(screen.getByRole('checkbox', { name: 'Vista compacta' }));
+    await fireEvent.click(screen.getByRole('checkbox', { name: 'Día automático' }));
+    await fireEvent.click(screen.getByRole('checkbox', { name: 'Preguntar por la dieta' }));
+    await fireEvent.click(screen.getByRole('checkbox', { name: 'Modo oscuro' }));
+
+    expect(localStorage.getItem('compactView')).toBe('true');
+    expect(localStorage.getItem('autoDay')).toBe('false');
+    expect(localStorage.getItem('askToModifyDiet')).toBe('false');
+    expect(localStorage.getItem('darkMode')).toBe('true');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
+
+  it('initializes persisted preferences before opening settings', () => {
+    localStorage.setItem('compactView', 'true');
+    localStorage.setItem('autoDay', 'false');
+    localStorage.setItem('askToModifyDiet', 'false');
     localStorage.setItem('darkMode', 'false');
-    document.documentElement.classList.add('dark');
-    render(ThemeToggle);
-    expect(appState.darkMode).toBe(false);
-    expect(document.documentElement.classList.contains('dark')).toBe(false);
+
+    initializePreferences();
+    render(SettingsMenu);
+
+    expect((screen.getByRole('checkbox', { name: 'Vista compacta' }) as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByRole('checkbox', { name: 'Día automático' }) as HTMLInputElement).checked).toBe(false);
+    expect((screen.getByRole('checkbox', { name: 'Preguntar por la dieta' }) as HTMLInputElement).checked).toBe(false);
+    expect((screen.getByRole('checkbox', { name: 'Modo oscuro' }) as HTMLInputElement).checked).toBe(false);
   });
 });

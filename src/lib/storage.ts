@@ -81,7 +81,7 @@ export async function setActivePlanId(id: string | null): Promise<void> {
 
 export async function getActiveTab(): Promise<AppTab | null> {
   const value = (await (await database()).get('metadata', 'activeTab'))?.value;
-  return value === 'home' || value === 'diet' || value === 'training' || value === 'shopping' ? value : null;
+  return value === 'home' || value === 'diet' || value === 'training' || value === 'shopping' || value === 'settings' ? value : null;
 }
 
 export async function setActiveTab(tab: AppTab): Promise<void> {

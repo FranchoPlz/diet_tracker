@@ -48,12 +48,14 @@
         {#each day.exercises as exercise, exerciseIndex}
           {@const key = exerciseWeightKey(dayIndex, exerciseIndex)}
           {@const targets = repetitionTargets(exercise.repetitions, seriesCount(exercise.series))}
-          <li class="p-4 sm:p-6">
-            <div class="flex items-start gap-3">
+          <li>
+            <details class="group" open>
+            <summary class="flex cursor-pointer list-none items-start gap-3 p-4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 sm:p-6 [&::-webkit-details-marker]:hidden">
               <span class="grid size-8 shrink-0 place-items-center rounded-xl bg-stone-900 text-xs font-black text-white dark:bg-white dark:text-stone-900">{exerciseIndex + 1}</span>
               <div class="min-w-0 flex-1"><h3 class="text-lg font-black leading-snug">{exercise.exercise}</h3>{#if exercise.details}<p class="mt-1 text-sm text-stone-600 dark:text-stone-300">{exercise.details}</p>{/if}</div>
-            </div>
-            <div class="mt-4 overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-700">
+              <span aria-hidden="true" class="shrink-0 text-xl font-black text-stone-400 transition-transform group-open:rotate-180">⌄</span>
+            </summary>
+            <div class="mx-4 mb-4 overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-700 sm:mx-6 sm:mb-6">
               <div class="grid grid-cols-[3.5rem_minmax(0,1fr)_minmax(0,1fr)] gap-2 bg-stone-100 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-stone-500 dark:bg-stone-800">
                 <span>Serie</span><span>Peso</span><span>Reps hechas</span>
               </div>
@@ -67,6 +69,7 @@
                 {/each}
               </div>
             </div>
+            </details>
           </li>
         {/each}
       </ol>

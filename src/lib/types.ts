@@ -1,4 +1,4 @@
-export type AppTab = 'home' | 'diet' | 'training' | 'shopping';
+export type AppTab = 'home' | 'diet' | 'training' | 'shopping' | 'settings';
 
 export interface DietPlan {
   name: string;

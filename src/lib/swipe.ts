@@ -1,6 +1,6 @@
 import type { AppTab } from './types';
 
-const TABS: AppTab[] = ['home', 'diet', 'training', 'shopping'];
+const TABS: AppTab[] = ['home', 'diet', 'training', 'shopping', 'settings'];
 const MIN_DISTANCE = 56;
 
 export function swipeTargetIsInteractive(target: EventTarget | null): boolean {

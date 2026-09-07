@@ -3,12 +3,23 @@ import { scheduleWorkspaceAutosave } from './workspace-controller';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+function weekdayIndex(date: Date): number {
+  return (date.getDay() + 6) % 7;
+}
+
+function localCalendarDay(date: Date): number {
+  return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS;
+}
+
 export function syncActiveDay(now = new Date()): boolean {
-  const startedAt = new Date(appState.weekTracker.startedAt).getTime();
-  if (!Number.isFinite(startedAt)) return false;
-  const elapsedDays = Math.max(0, Math.floor((now.getTime() - startedAt) / DAY_MS));
-  appState.weekTracker.activeDayIndex = Math.min(6, elapsedDays);
-  return elapsedDays >= 7;
+  if (!appState.autoDay) return false;
+  const startedAt = new Date(appState.weekTracker.startedAt);
+  if (!Number.isFinite(startedAt.getTime())) return false;
+  const todayIndex = weekdayIndex(now);
+  const trackedWeekStart = localCalendarDay(startedAt) - weekdayIndex(startedAt);
+  const currentWeekStart = localCalendarDay(now) - todayIndex;
+  appState.weekTracker.activeDayIndex = todayIndex;
+  return currentWeekStart > trackedWeekStart;
 }
 
 export function setActiveDay(dayIndex: number, now = new Date()): void {
@@ -21,7 +32,7 @@ export function setActiveDay(dayIndex: number, now = new Date()): void {
 export function startNextWeek(resetTraining = true, now = new Date()): void {
   appState.weekTracker = {
     startedAt: now.toISOString(),
-    activeDayIndex: 0,
+    activeDayIndex: appState.autoDay ? weekdayIndex(now) : 0,
     weekNumber: appState.weekTracker.weekNumber + 1,
     trainingWeights: resetTraining ? {} : appState.weekTracker.trainingWeights,
     trainingRepetitions: resetTraining ? {} : appState.weekTracker.trainingRepetitions,

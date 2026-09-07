@@ -1,4 +1,4 @@
-import type { ParseResult, WeekConfig, ShoppingItem, SavedPlan, SavedShoppingList, WeekTracker } from './types';
+import type { AppTab, ParseResult, WeekConfig, ShoppingItem, SavedPlan, SavedShoppingList, WeekTracker } from './types';
 import { createDefaultWeekConfig } from './utils';
 
 export const appState = $state({
@@ -20,12 +20,14 @@ export const appState = $state({
   activePlanId: null as string | null,
   activePlanName: 'Mi plan semanal',
   configured: false,
-  activeTab: 'home' as 'home' | 'diet' | 'training' | 'shopping',
+  activeTab: 'home' as AppTab,
   savedPlans: [] as SavedPlan[],
   planSourceLabel: null as string | null,
   persistenceReady: false,
   darkMode: false,
   compactView: false,
+  askToModifyDiet: true,
+  autoDay: true,
   loading: false,
   error: null as string | null,
 });

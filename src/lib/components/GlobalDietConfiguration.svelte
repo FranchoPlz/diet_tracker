@@ -9,6 +9,7 @@
 
   const dietNames: DaySelection['diet'][] = ['DIETA 1', 'DIETA 2'];
   let selectedDayIndex = $state<number | null>(null);
+  let expandedDiets = $state([false, false]);
 
   $effect.pre(() => {
     selectedDayIndex = initialDayIndex;
@@ -16,6 +17,14 @@
 
   function representativeDayIndex(dietName: DaySelection['diet']): number {
     return appState.weekConfig.days.findIndex(day => day.diet === dietName);
+  }
+
+  function toggleDiet(dietIndex: number, open: boolean): void {
+    if (typeof window !== 'undefined' && window.matchMedia?.('(min-width: 80rem)').matches) {
+      expandedDiets = expandedDiets.map(() => open);
+    } else {
+      expandedDiets[dietIndex] = open;
+    }
   }
 </script>
 
@@ -33,7 +42,7 @@
     {#each dietNames as dietName, dietIndex}
       {@const dayIndex = representativeDayIndex(dietName)}
       {@const dietData = appState.parsedData?.diets.find(diet => diet.name === dietName)}
-      <details class="group min-w-0 overflow-hidden rounded-2xl border bg-white dark:bg-stone-900 {dietIndex === 0 ? 'border-orange-300 dark:border-orange-800' : 'border-red-300 dark:border-red-800'}">
+      <details open={expandedDiets[dietIndex]} ontoggle={(event) => toggleDiet(dietIndex, event.currentTarget.open)} class="group min-w-0 overflow-hidden rounded-2xl border bg-white dark:bg-stone-900 {dietIndex === 0 ? 'border-orange-300 dark:border-orange-800' : 'border-red-300 dark:border-red-800'}">
         <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
           <div>
             <p class="text-xs font-bold uppercase tracking-[0.16em] {dietIndex === 0 ? 'text-orange-700 dark:text-orange-400' : 'text-red-700 dark:text-red-300'}">Selección global</p>

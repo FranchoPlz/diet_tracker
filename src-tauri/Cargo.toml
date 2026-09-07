@@ -1,6 +1,6 @@
 [package]
 name = "diet"
-version = "0.4.0"
+version = "0.4.2"
 description = "DG Nutrición"
 authors = ["you"]
 edition = "2021"

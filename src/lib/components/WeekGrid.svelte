@@ -2,6 +2,7 @@
   import { appState } from '$lib/state.svelte';
   import type { DaySelection } from '$lib/types';
   import { hasException, setDayDiet } from '$lib/utils';
+  import { scheduleWorkspaceAutosave } from '$lib/workspace-controller';
 
   let { onDayClick, onCollapse, selectedDayIndex } = $props<{
     onDayClick: (dayIndex: number) => void;
@@ -15,6 +16,7 @@
     setDayDiet(appState.weekConfig, dayIndex, diet);
     appState.shoppingList = [];
     appState.checkedShoppingItems = {};
+    scheduleWorkspaceAutosave(0);
   }
 
 </script>
