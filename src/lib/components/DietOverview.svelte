@@ -61,22 +61,24 @@
                   <span aria-hidden="true" class="shrink-0 text-lg font-black text-stone-400 transition-transform group-open:rotate-180">⌄</span>
                 </summary>
                 {#if option}
-                  <ul class="space-y-2 border-t border-stone-100 px-4 py-3 dark:border-stone-800">
-                    {#each option.ingredient_lines as line, lineIndex}
-                      {@const altKey = `${mealIndex}-${optionIndex}-${lineIndex}`}
-                      {@const selectedAlternative = line.is_alternatives ? appState.weekConfig.dietDefaults[dietName]?.alternativeChoices[altKey] ?? 0 : 0}
-                      <li class="flex items-start gap-2 text-sm leading-5 text-stone-600 dark:text-stone-300">
-                        <span class="mt-2 size-1.5 shrink-0 rounded-full {line.is_alternatives ? 'bg-orange-500' : 'bg-stone-300 dark:bg-stone-600'}"></span>
-                        <span>
-                          {#if line.is_alternatives}
-                            {line.items[selectedAlternative] ? formatItem(line.items[selectedAlternative]) : 'Sin selección'}
-                          {:else}
-                            {line.items.map(formatItem).join(' + ')}
-                          {/if}
-                        </span>
-                      </li>
-                    {/each}
-                  </ul>
+                  <div class="space-y-3 border-t border-stone-100 px-4 py-3 dark:border-stone-800">
+                    {#if option.description}
+                      <aside class="rounded-xl border border-orange-200 bg-orange-50 px-3 py-2.5 text-sm leading-relaxed text-stone-700 dark:border-orange-900 dark:bg-orange-950/30 dark:text-stone-200">
+                        <span class="mb-1 block text-xs font-black uppercase tracking-wider text-orange-700 dark:text-orange-400">Cómo prepararlo</span>
+                        <span class="whitespace-pre-line">{option.description}</span>
+                      </aside>
+                    {/if}
+                    <ul class="space-y-2">
+                      {#each option.ingredient_lines as line, lineIndex}
+                        {@const altKey = `${mealIndex}-${optionIndex}-${lineIndex}`}
+                        {@const selectedAlternative = line.is_alternatives ? appState.weekConfig.dietDefaults[dietName]?.alternativeChoices[altKey] ?? 0 : 0}
+                        <li class="flex items-start gap-2 text-sm leading-5 text-stone-600 dark:text-stone-300">
+                          <span class="mt-2 size-1.5 shrink-0 rounded-full {line.is_alternatives ? 'bg-orange-500' : 'bg-stone-300 dark:bg-stone-600'}"></span>
+                          <span>{line.is_alternatives ? (line.items[selectedAlternative] ? formatItem(line.items[selectedAlternative]) : 'Sin selección') : line.items.map(formatItem).join(' + ')}</span>
+                        </li>
+                      {/each}
+                    </ul>
+                  </div>
                 {/if}
               </details>
             {/each}

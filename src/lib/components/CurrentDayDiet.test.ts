@@ -14,7 +14,7 @@ describe('CurrentDayDiet', () => {
       diets: [{
         name: 'DIETA 1',
         intro: '',
-        meals: [{ type: 'COMIDA', options: [{ name: 'Arroz', description: null, ingredient_lines: [] }] }],
+        meals: [{ type: 'COMIDA', options: [{ name: 'Arroz', description: 'Cocinar a fuego lento.', ingredient_lines: [] }] }],
       }],
     };
   });
@@ -28,7 +28,10 @@ describe('CurrentDayDiet', () => {
     const toggle = screen.getByRole('button', { name: /COMIDA Arroz/ });
 
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByText('Cocinar a fuego lento.')).toBeNull();
     await fireEvent.click(toggle);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByText('Cómo prepararlo')).toBeTruthy();
+    expect(screen.getByText('Cocinar a fuego lento.')).toBeTruthy();
   });
 });

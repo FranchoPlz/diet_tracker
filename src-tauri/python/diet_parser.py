@@ -116,11 +116,12 @@ def _split_into_options(meal_type: str, meal_body: str) -> list:
             header_positions.append(idx)
 
     if not header_positions:
+        raw_text = meal_body.strip()
         return [
             {
                 "name": meal_type,
-                "description": None,
-                "raw_text": meal_body.strip(),
+                "description": _extract_recipe_description(raw_text),
+                "raw_text": raw_text,
             }
         ]
 
@@ -134,12 +135,47 @@ def _split_into_options(meal_type: str, meal_body: str) -> list:
         options.append(
             {
                 "name": name,
-                "description": description,
+                "description": _extract_recipe_description(raw_text) or description,
                 "raw_text": raw_text,
             }
         )
 
     return options
+
+
+def _extract_recipe_description(raw_text: str):
+    paragraphs = []
+    current = ""
+
+    def append(value):
+        nonlocal current
+        text = re.sub(r"\s+", " ", value.strip())
+        if not text:
+            return
+        if current.endswith("-"):
+            current = current[:-1] + text
+        else:
+            current += (" " if current else "") + text
+
+    for raw_line in raw_text.split("\n"):
+        line = raw_line.strip()
+        if not line:
+            continue
+        content = re.sub(r"^-+\s*", "", line)
+        starts_instructions = bool(_RECIPE_VERB_START_RE.match(content))
+        if not current:
+            if starts_instructions:
+                append(content)
+            continue
+        if line.startswith("-") and not starts_instructions:
+            paragraphs.append(current)
+            current = ""
+            continue
+        append(content)
+
+    if current:
+        paragraphs.append(current)
+    return "\n\n".join(paragraphs) or None
 
 
 # ─── Typo corrections from ABRIL.pdf ──────────────────────────────────────────

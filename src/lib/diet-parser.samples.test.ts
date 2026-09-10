@@ -38,5 +38,15 @@ describe('PDF sample regressions', () => {
       expect(diet.meals[0].options[0].ingredient_lines.length).toBeGreaterThan(0);
       expect(diet.meals.some((meal) => meal.type === 'MERIENDA')).toBe(false);
     }
+
+    const dinner = result.diets[0].meals.find((meal) => meal.type === 'CENA');
+    const nuggets = dinner?.options.find((option) => option.name.includes('NUGGETS HEALTHY'));
+    expect(nuggets?.description).toContain('Vamos a cortar el salmón a taquitos');
+    expect(nuggets?.description).toContain('AirFryer');
+    expect(nuggets?.description).not.toContain('ne- gra');
+
+    const secondDinner = result.diets[1].meals.find((meal) => meal.type === 'CENA');
+    expect(secondDinner?.options.find((option) => option.name.includes('BURRITO'))?.description).toContain('Tostamos la tortilla');
+    expect(secondDinner?.options.find((option) => option.name.includes('TORTILLA DE PATATAS'))?.description).toContain('Vamos a cortar la patata');
   });
 });

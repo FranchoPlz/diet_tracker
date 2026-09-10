@@ -61,6 +61,23 @@ class ParserUnitTests(unittest.TestCase):
             diet_parser._parse_option_name("- OPCIÓN 1"), ("OPCIÓN 1", None)
         )
 
+    def test_keeps_wrapped_cooking_instructions_as_description(self):
+        options = diet_parser._split_into_options(
+            "CENA",
+            "CENA 1 – NUGGETS HEALTHY\n-150g de Pollo.\n"
+            "Vamos a cortar el salmón a taqui-\n"
+            "tos, cuando lo tengamos batimos 1 huevo.\n"
+            "Cuando estén, los llevamos al AirFryer.\n"
+            "OPCIÓN 2\n-2 Huevos.",
+        )
+
+        self.assertEqual(
+            options[0]["description"],
+            "Vamos a cortar el salmón a taquitos, cuando lo tengamos batimos 1 huevo. "
+            "Cuando estén, los llevamos al AirFryer.",
+        )
+        self.assertIsNone(options[1]["description"])
+
     def test_recognizes_ingredients_without_a_dash(self):
         lines = diet_parser._join_wrapped_lines(
             "-50g de Tomate Frito.\n70g de Queso Mozzarella / 80g de Queso Feta."

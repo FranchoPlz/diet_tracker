@@ -54,6 +54,19 @@ describe('parseDietText', () => {
     expect(result.diets[0].meals[0].type).toBe('DESAYUNO');
   });
 
+  it('keeps wrapped cooking instructions as option descriptions', () => {
+    const result = parseDietText([
+      'DIETA 1\nCENA\nCENA 1 – NUGGETS HEALTHY\n-150g de Pollo.\nVamos a cortar el salmón a taqui-\ntos, cuando lo tengamos batimos 1 huevo.\nCuando estén, los llevamos al AirFryer.\nOPCIÓN 2\n-2 Huevos.',
+    ]);
+
+    const [nuggets, eggs] = result.diets[0].meals[0].options;
+    expect(nuggets.description).toBe(
+      'Vamos a cortar el salmón a taquitos, cuando lo tengamos batimos 1 huevo. Cuando estén, los llevamos al AirFryer.',
+    );
+    expect(nuggets.ingredient_lines).toHaveLength(1);
+    expect(eggs.description).toBeNull();
+  });
+
   it('stops before supplementation or training pages', () => {
     const result = parseDietText([
       'DIETA 1\nALMUERZO\n-1 Huevo.',

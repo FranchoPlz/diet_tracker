@@ -211,17 +211,53 @@ function parseIngredients(rawText: string): IngredientLine[] {
     .map(parseIngredientLine);
 }
 
+function extractRecipeDescription(rawText: string): string | null {
+  const paragraphs: string[] = [];
+  let current = '';
+
+  const append = (value: string) => {
+    const text = value.trim().replace(/\s+/g, ' ');
+    if (!text) return;
+    current = current.endsWith('-') ? current.slice(0, -1) + text : `${current}${current ? ' ' : ''}${text}`;
+  };
+
+  for (const rawLine of rawText.split('\n')) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const content = line.replace(/^-+\s*/, '');
+    const startsInstructions = RECIPE_VERB_START_RE.test(content);
+
+    if (!current) {
+      if (startsInstructions) append(content);
+      continue;
+    }
+    if (line.startsWith('-') && !startsInstructions) {
+      paragraphs.push(current);
+      current = '';
+      continue;
+    }
+    append(content);
+  }
+
+  if (current) paragraphs.push(current);
+  return paragraphs.length > 0 ? paragraphs.join('\n\n') : null;
+}
+
 function splitIntoOptions(mealType: Meal['type'], body: string): MealOption[] {
   const lines = body.split('\n');
   const positions = lines.flatMap((line, index) => OPTION_HEADER_RE.test(line) ? [index] : []);
   if (positions.length === 0) {
-    return [{ name: mealType, description: null, ingredient_lines: parseIngredients(body.trim()) }];
+    const rawText = body.trim();
+    return [{ name: mealType, description: extractRecipeDescription(rawText), ingredient_lines: parseIngredients(rawText) }];
   }
-  return positions.map((position, index) => ({
-    name: lines[position].replace(/^\s*-\s*/, '').trim(),
-    description: null,
-    ingredient_lines: parseIngredients(lines.slice(position + 1, positions[index + 1] ?? lines.length).join('\n').trim()),
-  }));
+  return positions.map((position, index) => {
+    const rawText = lines.slice(position + 1, positions[index + 1] ?? lines.length).join('\n').trim();
+    return {
+      name: lines[position].replace(/^\s*-\s*/, '').trim(),
+      description: extractRecipeDescription(rawText),
+      ingredient_lines: parseIngredients(rawText),
+    };
+  });
 }
 
 function parseDiet(name: string, body: string): DietPlan {

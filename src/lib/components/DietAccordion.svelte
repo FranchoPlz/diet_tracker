@@ -60,10 +60,13 @@
                       <div class="space-y-2">
                         <div class="font-bold" style="color: var(--text-primary);">
                           {option.name}
-                          {#if option.description}
-                            <span class="ml-2 text-sm font-normal" style="color: var(--text-muted);">({option.description})</span>
-                          {/if}
                         </div>
+                        {#if option.description}
+                          <aside class="whitespace-pre-line rounded-xl border border-orange-200 bg-orange-50 px-3 py-2.5 text-sm font-normal leading-relaxed text-stone-700 dark:border-orange-900 dark:bg-orange-950/30 dark:text-stone-200">
+                            <span class="mb-1 block text-xs font-black uppercase tracking-wider text-orange-700 dark:text-orange-400">Cómo prepararlo</span>
+                            {option.description}
+                          </aside>
+                        {/if}
                         
                         <ul class="space-y-1.5 pl-1 text-sm" style="color: var(--text-secondary);">
                           {#each option.ingredient_lines as line}
