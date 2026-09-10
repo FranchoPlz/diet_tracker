@@ -28,4 +28,23 @@ describe('weekly selection', () => {
     expect(selection.days[0].diet).toBe('DIETA 2');
     expect(selection.pdf_path).toBe('/diet.pdf');
   });
+
+  it('serializes only meals present in the selected diet', () => {
+    const config = createDefaultWeekConfig();
+    const parsedDiets: DietPlan[] = [{
+      name: 'DIETA 1',
+      intro: '',
+      meals: [
+        { type: 'DESAYUNO', options: [{ name: 'DESAYUNO', description: null, ingredient_lines: [] }] },
+        { type: 'ALMUERZO', options: [{ name: 'ALMUERZO', description: null, ingredient_lines: [] }] },
+        { type: 'COMIDA', options: [{ name: 'COMIDA', description: null, ingredient_lines: [] }] },
+        { type: 'CENA', options: [{ name: 'CENA', description: null, ingredient_lines: [] }] },
+      ],
+    }];
+
+    const meals = buildBackendSelection(config, parsedDiets, '/diet.pdf').days[0].meals;
+
+    expect(meals.map((meal) => meal.type)).toEqual(['DESAYUNO', 'ALMUERZO', 'COMIDA', 'CENA']);
+    expect(meals.some((meal) => meal.type === 'MERIENDA')).toBe(false);
+  });
 });

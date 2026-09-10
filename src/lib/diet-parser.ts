@@ -8,8 +8,8 @@ export interface TrainingTable {
 }
 export type DietPageText = string | { page: number; text: string; trainingTable?: TrainingTable };
 
-const MEAL_TYPES = ['ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA'] as const;
-const MEAL_HEADER_RE = /^\s*(ALMUERZO|COMIDA|MERIENDA|CENA)\s*$/;
+const MEAL_TYPES = ['DESAYUNO', 'ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA'] as const;
+const MEAL_HEADER_RE = /^\s*(DESAYUNO|ALMUERZO|COMIDA|MERIENDA|CENA)\s*$/;
 const OPTION_HEADER_RE = /^\s*-?\s*((?:OPCI[ÓO]N\s+\d+(?:\s+DE\s+\w+)?(?:\s*[–-]\s*.+)?)|(?:OPCI[ÓO]N\s+\d+\s+\w.*?)|(?:CENA\s+\d+(?:\s*[–-]\s*.+)?))\s*$/i;
 const DIET_SECTION_END_RE = /^\s*(?:SUPLEMENTACI[ÓO]N|ENTRENAMIENTO)\s*$/im;
 const TRAINING_HEADER_RE = /^\s*ENTRENAMIENTO\s*$/im;
@@ -388,7 +388,7 @@ export function parseDietText(pageTexts: readonly DietPageText[]): ParseResult {
     relevantPages.push(text);
   }
 
-  const parts = relevantPages.join('\n').split(/(DIETA\s+\d+)/i);
+  const parts = relevantPages.join('\n').split(/^\s*(DIETA\s+\d+)\s*$/im);
   const diets: DietPlan[] = [];
   for (let index = 1; index < parts.length - 1; index += 2) {
     diets.push(parseDiet(parts[index].trim().toUpperCase(), parts[index + 1]));

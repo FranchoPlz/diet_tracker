@@ -11,7 +11,7 @@ export interface Meal {
   options: MealOption[];
 }
 
-export type MealType = 'ALMUERZO' | 'COMIDA' | 'MERIENDA' | 'CENA';
+export type MealType = 'DESAYUNO' | 'ALMUERZO' | 'COMIDA' | 'MERIENDA' | 'CENA';
 
 export interface MealOption {
   name: string;

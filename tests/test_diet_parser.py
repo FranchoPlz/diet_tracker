@@ -105,7 +105,7 @@ class ParserUnitTests(unittest.TestCase):
 )
 class PdfRegressionTests(unittest.TestCase):
     def test_abril_output_matches_existing_golden_file(self):
-        actual = diet_parser.parse_pdf_to_structure(str(ROOT / "ABRIL.pdf"))
+        actual = diet_parser.parse_pdf_to_structure(str(ROOT / "samples" / "ABRIL.pdf"))
         with (ROOT / "tests" / "fixtures" / "abril_golden.json").open(
             encoding="utf-8"
         ) as fixture:
@@ -125,7 +125,7 @@ class PdfRegressionTests(unittest.TestCase):
         self.assertTrue(any(row.get("supersetExercises") for row in actual["training"]["days"][0]["exercises"]))
 
     def test_september_reads_all_diet_pages_and_layout_variations(self):
-        result = diet_parser.parse_pdf_to_structure(str(ROOT / "SEPTIEMBRE.pdf"))
+        result = diet_parser.parse_pdf_to_structure(str(ROOT / "samples" / "SEPTIEMBRE.pdf"))
 
         self.assertEqual(result["status"], "ok")
         self.assertEqual([diet["name"] for diet in result["diets"]], ["DIETA 1", "DIETA 2"])
@@ -156,6 +156,20 @@ class PdfRegressionTests(unittest.TestCase):
         self.assertEqual([day["days"] for day in result["training"]["days"]], [[1], [2], [3], [4], [5], [6, 7]])
         self.assertEqual(result["training"]["days"][0]["title"], "TORSO")
         self.assertTrue(any(row.get("supersetExercises") for row in result["training"]["days"][1]["exercises"]))
+
+    def test_september_2_detects_breakfast_and_omits_snack(self):
+        result = diet_parser.parse_pdf_to_structure(
+            str(ROOT / "samples" / "SEPTIEMBRE 2.pdf")
+        )
+
+        self.assertEqual(result["status"], "ok")
+        for diet in result["diets"]:
+            meal_types = [meal["type"] for meal in diet["meals"]]
+            self.assertEqual(meal_types, ["DESAYUNO", "ALMUERZO", "COMIDA", "CENA"])
+            self.assertNotIn("MERIENDA", meal_types)
+            breakfast = diet["meals"][0]
+            self.assertTrue(breakfast["options"])
+            self.assertTrue(breakfast["options"][0]["ingredient_lines"])
 
 
 if __name__ == "__main__":

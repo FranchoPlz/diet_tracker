@@ -8,7 +8,7 @@ import zipfile
 from xml.sax.saxutils import escape
 
 
-MEAL_TYPES = ["ALMUERZO", "COMIDA", "MERIENDA", "CENA"]
+MEAL_TYPES = ["DESAYUNO", "ALMUERZO", "COMIDA", "MERIENDA", "CENA"]
 
 _MEAL_HEADER_RE = re.compile(r"^\s*(" + "|".join(MEAL_TYPES) + r")\s*$")
 
@@ -54,7 +54,7 @@ def _parse_option_name(header_line: str) -> tuple:
 
 
 def _split_into_diets(full_text: str) -> list:
-    parts = re.split(r"(DIETA\s+\d+)", full_text)
+    parts = re.split(r"^\s*(DIETA\s+\d+)\s*$", full_text, flags=re.IGNORECASE | re.MULTILINE)
     diets = []
     i = 1
     while i < len(parts) - 1:

@@ -32,6 +32,28 @@ describe('parseDietText', () => {
     expect(result.diets[1].meals[1].options[0].name).toBe('OPCIÓN 3 – SMASH BURGUER');
   });
 
+  it('parses DESAYUNO before ALMUERZO and omits meals that are not present', () => {
+    const result = parseDietText([
+      'DIETA 1\nDESAYUNO\n-1 Huevo.\nALMUERZO\n-1 Yogur.\nCOMIDA\n-100g de Arroz.\nCENA\n-100g de Merluza.',
+    ]);
+
+    expect(result.diets[0].meals.map((meal) => meal.type)).toEqual([
+      'DESAYUNO', 'ALMUERZO', 'COMIDA', 'CENA',
+    ]);
+    expect(result.diets[0].meals.some((meal) => meal.type === 'MERIENDA')).toBe(false);
+    expect(result.diets[0].meals[0].options[0].ingredient_lines[0].items[0].name).toBe('Huevo');
+  });
+
+  it('ignores diet names mentioned inside introductory prose', () => {
+    const result = parseDietText([
+      'DESAYUNO DIETA 1 : ejemplo orientativo\nDIETA 1\nDESAYUNO\n-1 Huevo.',
+    ]);
+
+    expect(result.diets).toHaveLength(1);
+    expect(result.diets[0].name).toBe('DIETA 1');
+    expect(result.diets[0].meals[0].type).toBe('DESAYUNO');
+  });
+
   it('stops before supplementation or training pages', () => {
     const result = parseDietText([
       'DIETA 1\nALMUERZO\n-1 Huevo.',

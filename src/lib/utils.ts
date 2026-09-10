@@ -10,11 +10,12 @@ import type {
   WeekConfig,
 } from './types';
 
-const MEAL_TYPES: MealType[] = ['ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA'];
+const MEAL_TYPES: MealType[] = ['DESAYUNO', 'ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA'];
 
 function createDietDefaults(): DietDefaults {
   return {
     mealOptionIndexes: {
+      DESAYUNO: 0,
       ALMUERZO: 0,
       COMIDA: 0,
       MERIENDA: 0,
@@ -186,11 +187,11 @@ export function buildBackendSelection(
       return {
         day: day.day,
         diet: day.diet,
-        meals: MEAL_TYPES.map((mealType) => {
+        meals: (diet?.meals ?? []).map((meal, mealIndex) => {
+          const mealType = meal.type;
           const selectedOptionIndex = getEffectiveMealOptionIndex(config, dayIndex, mealType);
-          const mealIndex = diet?.meals.findIndex(meal => meal.type === mealType) ?? -1;
           const alternativeChoices: Record<string, number> = {};
-          const option = mealIndex >= 0 ? diet?.meals[mealIndex]?.options[selectedOptionIndex] : undefined;
+          const option = meal.options[selectedOptionIndex];
 
           option?.ingredient_lines.forEach((line, lineIndex) => {
             if (line.is_alternatives) {
