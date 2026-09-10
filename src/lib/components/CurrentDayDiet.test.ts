@@ -32,6 +32,10 @@ describe('CurrentDayDiet', () => {
     await fireEvent.click(toggle);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(screen.getByText('Cómo prepararlo')).toBeTruthy();
+    const recipeDetails = screen.getByText('Cómo prepararlo').closest('details')!;
+    expect(recipeDetails.open).toBe(false);
+    await fireEvent.click(recipeDetails.querySelector('summary')!);
+    expect(recipeDetails.open).toBe(true);
     expect(screen.getByText('Cocinar a fuego lento.')).toBeTruthy();
   });
 });

@@ -2,6 +2,7 @@
   import { appState } from '$lib/state.svelte';
   import type { IngredientItem } from '$lib/types';
   import { formatQuantity, getEffectiveAlternativeChoice, getEffectiveMealOptionIndex } from '$lib/utils';
+  import RecipeInstructions from './RecipeInstructions.svelte';
 
   let { onEdit } = $props<{ onEdit: (dayIndex: number) => void }>();
   let expandedMeals = $state<Record<number, boolean>>({});
@@ -35,18 +36,15 @@
           </button>
           {#if option && expandedMeals[mealIndex]}
             <div id="current-meal-{mealIndex}" class="space-y-3 border-t border-stone-200 px-4 py-3 dark:border-stone-700">
-              {#if option.description}
-                <aside class="rounded-xl border border-orange-200 bg-orange-50 px-3 py-2.5 text-sm leading-relaxed text-stone-700 dark:border-orange-900 dark:bg-orange-950/30 dark:text-stone-200">
-                  <span class="mb-1 block text-xs font-black uppercase tracking-wider text-orange-700 dark:text-orange-400">Cómo prepararlo</span>
-                  <span class="whitespace-pre-line">{option.description}</span>
-                </aside>
-              {/if}
               <ul class="space-y-2">
                 {#each option.ingredient_lines as line, lineIndex}
                   {@const selected = getEffectiveAlternativeChoice(appState.weekConfig, dayIndex, `${mealIndex}-${optionIndex}-${lineIndex}`)}
                   <li class="flex gap-2 text-sm text-stone-600 dark:text-stone-300"><span class="text-orange-600">•</span><span>{line.is_alternatives ? (line.items[selected] ? formatItem(line.items[selected]) : 'Sin selección') : line.items.map(formatItem).join(' + ')}</span></li>
                 {/each}
               </ul>
+              {#if option.description}
+                <RecipeInstructions text={option.description} />
+              {/if}
             </div>
           {/if}
         </article>

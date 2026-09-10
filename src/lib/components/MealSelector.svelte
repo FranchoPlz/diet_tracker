@@ -1,6 +1,7 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
   import type { DietPlan, IngredientItem } from '$lib/types';
+  import RecipeInstructions from './RecipeInstructions.svelte';
   import { 
     formatQuantity, 
     getEffectiveMealOptionIndex, 
@@ -116,13 +117,6 @@
                 <div class="text-sm font-bold text-teal-700 dark:text-teal-300">{option.name}</div>
               {/if}
 
-              {#if option.description}
-                <aside class="rounded-xl border border-orange-200 bg-orange-50 px-3 py-2.5 text-sm leading-relaxed text-stone-700 dark:border-orange-900 dark:bg-orange-950/30 dark:text-stone-200">
-                  <span class="mb-1 block text-xs font-black uppercase tracking-wider text-orange-700 dark:text-orange-400">Cómo prepararlo</span>
-                  <span class="whitespace-pre-line">{option.description}</span>
-                </aside>
-              {/if}
-
               {#each option.ingredient_lines as line, lineIndex}
                 {@const altKey = `${mealIndex}-${selectedOptionIndex}-${lineIndex}`}
 
@@ -165,6 +159,10 @@
                   {/if}
                 </div>
               {/each}
+
+              {#if option.description}
+                <RecipeInstructions text={option.description} />
+              {/if}
             </div>
           {/if}
           </div>
