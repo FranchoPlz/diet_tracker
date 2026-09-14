@@ -1,5 +1,6 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
+  import { findExerciseIllustration } from '$lib/exercise-illustrations';
   import { downloadTrainingPdf } from '$lib/training-export';
   import { exerciseWeightKey, repetitionTargets, seriesCount, setExerciseRepetitions, setExerciseWeight } from '$lib/week-tracker';
   import { scheduleWorkspaceAutosave } from '$lib/workspace-controller';
@@ -8,6 +9,11 @@
   const dayIndex = $derived(appState.weekTracker.activeDayIndex);
   const trainingDayIndex = $derived(training?.days.findIndex((day) => day.days.includes(dayIndex + 1)) ?? -1);
   const day = $derived(trainingDayIndex >= 0 ? training?.days[trainingDayIndex] : undefined);
+  let visibleIllustrations = $state<Record<string, boolean>>({});
+
+  function toggleIllustration(key: string, visible: boolean) {
+    visibleIllustrations[key] = !visible;
+  }
 
   function exportPdf() {
     if (training) downloadTrainingPdf(training, appState.weekTracker.trainingWeights, appState.activePlanName, appState.weekTracker.weekNumber, appState.weekTracker.trainingRepetitions);
@@ -48,13 +54,41 @@
         {#each day.exercises as exercise, exerciseIndex}
           {@const key = exerciseWeightKey(dayIndex, exerciseIndex)}
           {@const targets = repetitionTargets(exercise.repetitions, seriesCount(exercise.series))}
-          <li>
+          {@const exerciseNames = exercise.supersetExercises ?? [exercise.exercise]}
+          {@const illustrations = exerciseNames.map((name) => ({ name, illustration: findExerciseIllustration(name) }))}
+          {@const showIllustration = visibleIllustrations[key] ?? appState.alwaysShowExerciseIllustrations}
+          <li class="relative">
             <details class="group" open>
-            <summary class="flex cursor-pointer list-none items-start gap-3 p-4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 sm:p-6 [&::-webkit-details-marker]:hidden">
+            <summary class="flex cursor-pointer list-none items-start gap-3 p-4 pr-24 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 sm:p-6 sm:pr-28 [&::-webkit-details-marker]:hidden">
               <span class="grid size-8 shrink-0 place-items-center rounded-xl bg-stone-900 text-xs font-black text-white dark:bg-white dark:text-stone-900">{exerciseIndex + 1}</span>
               <div class="min-w-0 flex-1"><h3 class="text-lg font-black leading-snug">{exercise.exercise}</h3>{#if exercise.details}<p class="mt-1 text-sm text-stone-600 dark:text-stone-300">{exercise.details}</p>{/if}</div>
               <span aria-hidden="true" class="shrink-0 text-xl font-black text-stone-400 transition-transform group-open:rotate-180">⌄</span>
             </summary>
+            <button
+              type="button"
+              class="absolute right-12 top-3 grid size-11 place-items-center rounded-xl border border-stone-300 text-lg font-black text-stone-600 transition hover:border-orange-400 hover:text-orange-600 dark:border-stone-600 dark:text-stone-300 sm:right-16 sm:top-5"
+              aria-label={`${showIllustration ? 'Ocultar' : 'Mostrar'} cómo hacer ${exercise.exercise}`}
+              aria-expanded={showIllustration}
+              onclick={() => toggleIllustration(key, showIllustration)}
+            >?</button>
+            {#if showIllustration}
+              <div class="mx-4 mb-4 space-y-3 rounded-2xl bg-stone-100 p-3 dark:bg-stone-800 sm:mx-6 sm:mb-6 sm:p-4">
+                {#each illustrations as item}
+                  {#if item.illustration}
+                    <figure>
+                      {#if illustrations.length > 1}<figcaption class="mb-2 text-sm font-black">{item.name}</figcaption>{/if}
+                      <div class="grid grid-cols-3 gap-2">
+                        {#each item.illustration.frameUrls as frameUrl, frameIndex}
+                          <img class="aspect-square w-full rounded-xl bg-white object-contain dark:bg-stone-950" src={frameUrl} alt={`${item.name}, posición ${frameIndex + 1}`} />
+                        {/each}
+                      </div>
+                    </figure>
+                  {:else}
+                    <p class="py-3 text-center text-sm font-bold text-stone-500 dark:text-stone-400">No hay una guía visual disponible para {item.name}.</p>
+                  {/if}
+                {/each}
+              </div>
+            {/if}
             <div class="mx-4 mb-4 overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-700 sm:mx-6 sm:mb-6">
               <div class="grid grid-cols-[3.5rem_minmax(0,1fr)_minmax(0,1fr)] gap-2 bg-stone-100 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-stone-500 dark:bg-stone-800">
                 <span>Serie</span><span>Peso</span><span>Reps hechas</span>

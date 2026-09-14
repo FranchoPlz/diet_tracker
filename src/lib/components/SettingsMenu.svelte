@@ -1,6 +1,6 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
-  import { setAskToModifyDiet, setAutoDay, setCompactView, setDarkMode } from '$lib/preferences';
+  import { setAlwaysShowExerciseIllustrations, setAskToModifyDiet, setAutoDay, setCompactView, setDarkMode } from '$lib/preferences';
 
   const settings = [
     {
@@ -14,6 +14,12 @@
       description: 'Selecciona automáticamente el día actual de lunes a domingo.',
       checked: () => appState.autoDay,
       update: setAutoDay,
+    },
+    {
+      label: 'Mostrar ilustraciones de ejercicios',
+      description: 'Muestra siempre la guía visual sin tener que abrirla en cada ejercicio.',
+      checked: () => appState.alwaysShowExerciseIllustrations,
+      update: setAlwaysShowExerciseIllustrations,
     },
     {
       label: 'Preguntar por la dieta',
@@ -64,5 +70,11 @@
     >
       <span class="truncate">trabajo@diariodenutricion.com</span>
     </a>
+    <p class="mt-5 text-xs leading-relaxed text-stone-500 dark:text-stone-400">
+      Ilustraciones de ejercicios basadas en el trabajo de
+      <a class="underline" href="https://github.com/everkinetic/data">Everkinetic</a>, ampliadas por
+      <a class="underline" href="https://bryllim.com">Bryl Lim</a> y publicadas bajo
+      <a class="underline" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.
+    </p>
   </footer>
 </section>
