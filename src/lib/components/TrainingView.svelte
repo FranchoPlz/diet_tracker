@@ -57,20 +57,24 @@
           {@const exerciseNames = exercise.supersetExercises ?? [exercise.exercise]}
           {@const illustrations = exerciseNames.map((name) => ({ name, illustration: findExerciseIllustration(name) }))}
           {@const showIllustration = visibleIllustrations[key] ?? appState.alwaysShowExerciseIllustrations}
-          <li class="relative">
+          <li>
             <details class="group" open>
-            <summary class="flex cursor-pointer list-none items-start gap-3 p-4 pr-24 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 sm:p-6 sm:pr-28 [&::-webkit-details-marker]:hidden">
+            <summary class="flex cursor-pointer list-none items-start gap-3 p-4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 sm:p-6 [&::-webkit-details-marker]:hidden">
               <span class="grid size-8 shrink-0 place-items-center rounded-xl bg-stone-900 text-xs font-black text-white dark:bg-white dark:text-stone-900">{exerciseIndex + 1}</span>
               <div class="min-w-0 flex-1"><h3 class="text-lg font-black leading-snug">{exercise.exercise}</h3>{#if exercise.details}<p class="mt-1 text-sm text-stone-600 dark:text-stone-300">{exercise.details}</p>{/if}</div>
               <span aria-hidden="true" class="shrink-0 text-xl font-black text-stone-400 transition-transform group-open:rotate-180">⌄</span>
             </summary>
-            <button
-              type="button"
-              class="absolute right-12 top-3 grid size-11 place-items-center rounded-xl border border-stone-300 text-lg font-black text-stone-600 transition hover:border-orange-400 hover:text-orange-600 dark:border-stone-600 dark:text-stone-300 sm:right-16 sm:top-5"
-              aria-label={`${showIllustration ? 'Ocultar' : 'Mostrar'} cómo hacer ${exercise.exercise}`}
-              aria-expanded={showIllustration}
-              onclick={() => toggleIllustration(key, showIllustration)}
-            >?</button>
+            {#if !appState.alwaysShowExerciseIllustrations}
+              <div class="mx-4 mb-3 flex justify-end sm:mx-6">
+                <button
+                  type="button"
+                  class="grid size-10 place-items-center rounded-full border border-stone-300 text-base font-black text-stone-600 transition hover:border-orange-400 hover:bg-orange-50 hover:text-orange-600 dark:border-stone-600 dark:text-stone-300 dark:hover:bg-orange-950/30"
+                  aria-label={`${showIllustration ? 'Ocultar' : 'Mostrar'} cómo hacer ${exercise.exercise}`}
+                  aria-expanded={showIllustration}
+                  onclick={() => toggleIllustration(key, showIllustration)}
+                >?</button>
+              </div>
+            {/if}
             {#if showIllustration}
               <div class="mx-4 mb-4 space-y-3 rounded-2xl bg-stone-100 p-3 dark:bg-stone-800 sm:mx-6 sm:mb-6 sm:p-4">
                 {#each illustrations as item}

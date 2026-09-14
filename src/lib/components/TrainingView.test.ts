@@ -54,16 +54,16 @@ describe('TrainingView', () => {
     render(TrainingView);
 
     expect(screen.getAllByRole('img')).toHaveLength(3);
-    expect(screen.getByRole('button', { name: 'Ocultar cómo hacer Press de banca plano con barra recta' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /cómo hacer Press de banca plano con barra recta/ })).toBeNull();
   });
 
-  it('allows an automatically shown illustration to be hidden for one exercise', async () => {
+  it('does not show the help button while illustrations are always visible', () => {
     appState.alwaysShowExerciseIllustrations = true;
     appState.parsedData!.training!.days[0].exercises[0].exercise = 'Press de banca plano';
     render(TrainingView);
 
-    await fireEvent.click(screen.getByRole('button', { name: 'Ocultar cómo hacer Press de banca plano' }));
-    expect(screen.queryAllByRole('img')).toHaveLength(0);
+    expect(screen.getAllByRole('img')).toHaveLength(3);
+    expect(screen.queryByText('?')).toBeNull();
   });
 
   it('shows the active-rest instructions for that day', () => {

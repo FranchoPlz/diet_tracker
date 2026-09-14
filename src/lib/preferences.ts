@@ -4,7 +4,7 @@ export function initializePreferences(): void {
   appState.compactView = localStorage.getItem('compactView') === 'true';
   appState.askToModifyDiet = localStorage.getItem('askToModifyDiet') !== 'false';
   appState.autoDay = localStorage.getItem('autoDay') !== 'false';
-  appState.alwaysShowExerciseIllustrations = localStorage.getItem('alwaysShowExerciseIllustrations') === 'true';
+  appState.alwaysShowExerciseIllustrations = localStorage.getItem('alwaysShowExerciseIllustrations') !== 'false';
   setDarkMode(localStorage.getItem('darkMode') !== 'false', false);
 }
 

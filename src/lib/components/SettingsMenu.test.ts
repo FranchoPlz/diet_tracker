@@ -12,7 +12,7 @@ describe('SettingsMenu', () => {
     appState.compactView = false;
     appState.askToModifyDiet = true;
     appState.autoDay = true;
-    appState.alwaysShowExerciseIllustrations = false;
+    appState.alwaysShowExerciseIllustrations = true;
     appState.darkMode = false;
   });
 
@@ -45,7 +45,7 @@ describe('SettingsMenu', () => {
 
     expect(localStorage.getItem('compactView')).toBe('true');
     expect(localStorage.getItem('autoDay')).toBe('false');
-    expect(localStorage.getItem('alwaysShowExerciseIllustrations')).toBe('true');
+    expect(localStorage.getItem('alwaysShowExerciseIllustrations')).toBe('false');
     expect(localStorage.getItem('askToModifyDiet')).toBe('false');
     expect(localStorage.getItem('darkMode')).toBe('true');
     expect(document.documentElement.classList.contains('dark')).toBe(true);
@@ -54,7 +54,7 @@ describe('SettingsMenu', () => {
   it('initializes persisted preferences before opening settings', () => {
     localStorage.setItem('compactView', 'true');
     localStorage.setItem('autoDay', 'false');
-    localStorage.setItem('alwaysShowExerciseIllustrations', 'true');
+    localStorage.setItem('alwaysShowExerciseIllustrations', 'false');
     localStorage.setItem('askToModifyDiet', 'false');
     localStorage.setItem('darkMode', 'false');
 
@@ -63,8 +63,15 @@ describe('SettingsMenu', () => {
 
     expect((screen.getByRole('checkbox', { name: 'Vista compacta' }) as HTMLInputElement).checked).toBe(true);
     expect((screen.getByRole('checkbox', { name: 'Día automático' }) as HTMLInputElement).checked).toBe(false);
-    expect((screen.getByRole('checkbox', { name: 'Mostrar ilustraciones de ejercicios' }) as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByRole('checkbox', { name: 'Mostrar ilustraciones de ejercicios' }) as HTMLInputElement).checked).toBe(false);
     expect((screen.getByRole('checkbox', { name: 'Preguntar por la dieta' }) as HTMLInputElement).checked).toBe(false);
     expect((screen.getByRole('checkbox', { name: 'Modo oscuro' }) as HTMLInputElement).checked).toBe(false);
+  });
+
+  it('shows exercise illustrations by default', () => {
+    initializePreferences();
+    render(SettingsMenu);
+
+    expect((screen.getByRole('checkbox', { name: 'Mostrar ilustraciones de ejercicios' }) as HTMLInputElement).checked).toBe(true);
   });
 });

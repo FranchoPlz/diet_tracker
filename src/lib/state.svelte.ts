@@ -28,7 +28,7 @@ export const appState = $state({
   compactView: false,
   askToModifyDiet: true,
   autoDay: true,
-  alwaysShowExerciseIllustrations: false,
+  alwaysShowExerciseIllustrations: true,
   loading: false,
   error: null as string | null,
 });
