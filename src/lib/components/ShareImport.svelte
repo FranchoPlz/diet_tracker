@@ -3,6 +3,7 @@
   import { applyList, initializeLists } from '$lib/list-controller';
   import { readSharedListFromHash } from '$lib/share';
   import { saveShoppingList } from '$lib/storage';
+  import { selectActiveTab } from '$lib/workspace-controller';
 
   let message = $state('');
   let isError = $state(false);
@@ -15,6 +16,7 @@
       void saveShoppingList(imported).then(async () => {
         await initializeLists();
         applyList(imported);
+        await selectActiveTab('shopping');
         history.replaceState(null, '', location.pathname + location.search);
         message = 'Lista compartida importada como una copia independiente.';
       }).catch((error) => {

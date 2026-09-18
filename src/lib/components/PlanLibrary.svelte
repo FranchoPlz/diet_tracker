@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { appState } from '$lib/state.svelte';
-  import { calculateActivePlan, duplicatePlan, initializePlans, persistCurrentPlan, renamePlan, restorePlan } from '$lib/plan-controller';
-  import { deletePlan } from '$lib/storage';
+  import { calculateActivePlan, duplicatePlan, initializePlans, persistCurrentPlan, removePlan, renamePlan, restorePlan } from '$lib/plan-controller';
 
   let open = $state(false);
   let editingId = $state<string | null>(null);
@@ -16,9 +15,8 @@
   }
 
   async function remove(id: string) {
-    await deletePlan(id);
-    if (appState.activePlanId === id) appState.activePlanId = null;
-    await initializePlans();
+    if (!confirm('¿Eliminar este plan guardado? Esta acción no se puede deshacer.')) return;
+    await removePlan(id);
   }
 </script>
 

@@ -172,6 +172,18 @@ describe('ingredient helpers', () => {
     ]);
   });
 
+  it('splits alternatives when a quantity follows the slash without a space', () => {
+    const result = parseDietText([
+      'DIETA 1\nCOMIDA\n-150g Garbanzos cocidos /150g de Lentejas cocidas / 150g de Alubias blancas cocidas.',
+    ]);
+    const line = result.diets[0].meals[0].options[0].ingredient_lines[0];
+
+    expect(line.is_alternatives).toBe(true);
+    expect(line.items.map((item) => item.name)).toEqual([
+      'Garbanzos cocidos', 'Lentejas cocidas', 'Alubias blancas cocidas',
+    ]);
+  });
+
   it('does not split fractions while retaining spaced alternatives', () => {
     const result = parseDietText([
       'DIETA 1\nCENA\n-1/2 Cebolla + ¼ de Pimiento rojo.\n-Verduras a elegir (Ensalada / Plancha / Horno).',

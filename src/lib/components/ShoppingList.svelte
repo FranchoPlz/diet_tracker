@@ -1,9 +1,12 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
   import { scheduleWorkspaceAutosave } from '$lib/workspace-controller';
+  import { persistCurrentList } from '$lib/list-controller';
   import { SHOPPING_CATEGORIES, normalizeShoppingItem } from '$lib/shopping';
   import { formatQuantity } from '$lib/utils';
   import type { ShoppingCategory } from '$lib/types';
+  import ListLibrary from './ListLibrary.svelte';
+  import ShareList from './ShareList.svelte';
 
   let search = $state('');
   let pendingOnly = $state(false);
@@ -17,11 +20,11 @@
   });
 
   const normalizedItems = $derived(appState.shoppingList.map(item => normalizeShoppingItem(item)));
-  const checkedCount = $derived(normalizedItems.filter(item => appState.checkedShoppingItems[`${item.name}|${item.unit ?? ''}`] ?? item.checked).length);
+  const checkedCount = $derived(normalizedItems.filter(item => appState.checkedShoppingItems[item.id] ?? item.checked).length);
 
   function visibleItems(category: ShoppingCategory) {
     return normalizedItems.filter(item => {
-      const checked = appState.checkedShoppingItems[`${item.name}|${item.unit ?? ''}`] ?? item.checked;
+      const checked = appState.checkedShoppingItems[item.id] ?? item.checked;
       return item.category === category
         && item.name.toLowerCase().includes(search.trim().toLowerCase())
         && (!pendingOnly || !checked);
@@ -46,18 +49,31 @@
     appState.shoppingList = appState.shoppingList.filter(item => normalizeShoppingItem(item).id !== id);
     scheduleWorkspaceAutosave();
   }
+
+  async function saveList() {
+    try {
+      await persistCurrentList();
+    } catch (error) {
+      appState.error = error instanceof Error ? error.message : String(error);
+    }
+  }
 </script>
 
 {#if appState.shoppingList.length > 0 || appState.activeListId}
   <section class="compact-shopping min-w-0 max-w-full overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
     <div class="compact-shopping-header border-b border-stone-200 p-5 dark:border-stone-700">
       <p class="text-xs font-bold uppercase tracking-[0.2em] text-teal-700 dark:text-teal-300">En el supermercado</p>
-      <h2 class="mt-1 text-2xl font-black text-stone-900 dark:text-white">Lista de {appState.activePlanName}</h2>
+      <h2 class="mt-1 text-2xl font-black text-stone-900 dark:text-white">{appState.activeListName}</h2>
       <div class="mt-1 flex flex-wrap items-center justify-between gap-2">
         <p class="text-sm text-stone-500 dark:text-stone-400">{checkedCount} de {appState.shoppingList.length} en el carro</p>
         <label class="flex items-center gap-2 text-xs font-bold text-stone-500">
           <input type="checkbox" bind:checked={pendingOnly} class="accent-teal-700" /> Solo pendientes
         </label>
+      </div>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <input bind:value={appState.activeListName} aria-label="Nombre de la lista" class="min-w-0 basis-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm font-bold outline-none focus:border-teal-600 dark:border-stone-700 dark:bg-stone-800 sm:flex-1 sm:basis-auto" />
+        <button class="rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-bold text-white" onclick={() => void saveList()}>Guardar lista</button>
+        <ListLibrary />
       </div>
       <div class="mt-4 flex gap-2">
         <input bind:value={search} type="search" placeholder="Buscar ingrediente" class="min-w-0 flex-1 rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm outline-none focus:border-teal-600 dark:border-stone-700 dark:bg-stone-800" />
@@ -73,7 +89,7 @@
             <summary class="sticky top-0 z-10 cursor-pointer bg-stone-50 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-stone-500 dark:bg-stone-800 dark:text-stone-300">{category} · {items.length}</summary>
             <div class="divide-y divide-stone-100 dark:divide-stone-800">
               {#each items as item (item.id)}
-                {@const key = `${item.name}|${item.unit ?? ''}`}
+                {@const key = item.id}
                 <div class="compact-shopping-item flex min-w-0 items-start gap-2 px-4 py-3.5 sm:gap-3 sm:px-5">
                   <input type="checkbox" bind:checked={appState.checkedShoppingItems[key]} onchange={() => scheduleWorkspaceAutosave()} class="mt-1 size-5 shrink-0 accent-teal-700" aria-label="Marcar {item.name}" />
                   <div class="min-w-0 flex-1">
@@ -106,4 +122,5 @@
     </div>
 
   </section>
+  <ShareList />
 {/if}

@@ -1,8 +1,9 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { appState } from './state.svelte';
-import { calculateActivePlan, persistCurrentPlan, portableWeekConfig, restorePlan } from './plan-controller';
+import { calculateActivePlan, persistCurrentPlan, portableWeekConfig, removePlan, restorePlan } from './plan-controller';
 import { createDefaultWeekConfig } from './utils';
+import { deletePlan, listPlans } from './storage';
 import type { ParseResult, SavedPlan } from './types';
 
 const parsedData: ParseResult = {
@@ -60,5 +61,17 @@ describe('plan controller', () => {
     await restorePlan(plan);
     calculateActivePlan();
     expect(appState.shoppingList).toContainEqual({ name: 'arroz', quantity: 320, unit: 'g', count: 4 });
+  });
+
+  it('clears the active workspace when its only saved plan is deleted', async () => {
+    for (const plan of await listPlans()) await deletePlan(plan.id);
+    const saved = await persistCurrentPlan();
+
+    await removePlan(saved.id);
+
+    expect(appState.savedPlans).toEqual([]);
+    expect(appState.activePlanId).toBeNull();
+    expect(appState.parsedData).toBeNull();
+    expect(appState.configured).toBe(false);
   });
 });

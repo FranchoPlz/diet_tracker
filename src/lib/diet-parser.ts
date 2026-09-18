@@ -189,9 +189,9 @@ function parseIngredientLine(line: string): IngredientLine {
   let content = line.replace(/^-+/, '').trim();
   for (const [wrong, replacement] of TYPO_CORRECTIONS) content = content.replaceAll(wrong, replacement);
 
-  if (/\s\/\s/.test(content)) {
+  if (/\s+\/\s*/.test(content)) {
     return {
-      items: content.split(/\s+\/\s+/).map((part) => {
+      items: content.split(/\s+\/\s*/).map((part) => {
         const item = cleanEnd(part);
         return item.includes(' + ') ? parseCombination(item) : parseIngredient(item);
       }) as IngredientItem[],

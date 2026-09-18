@@ -7,8 +7,8 @@ export const SHOPPING_CATEGORIES: ShoppingCategory[] = [
 
 const rules: Array<[ShoppingCategory, RegExp]> = [
   ['Fruta y verdura', /fruta|verdura|tomate|aguacate|fresa|cebolla|lechuga|calabac|patata|plátano|manzana/i],
-  ['Carne y pescado', /pollo|pavo|jamón|merluza|atún|salmón|carne|ternera|gamba|huevo/i],
-  ['Lácteos y huevos', /leche|yogur|queso|mozzarella|feta|quesito/i],
+  ['Carne y pescado', /pollo|pavo|jamón|merluza|atún|salmón|carne|ternera|gamba/i],
+  ['Lácteos y huevos', /leche|yogur|queso|mozzarella|feta|quesito|huevo/i],
   ['Panadería', /pan|tortilla|brioche/i],
   ['Congelados', /congelad/i],
   ['Bebidas', /agua|bebida|zumo|café/i],

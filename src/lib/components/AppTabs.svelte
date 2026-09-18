@@ -21,6 +21,20 @@
     { id: 'shopping', label: 'Compra' },
     { id: 'settings', label: 'Ajustes' }
   ];
+
+  function handleKeydown(event: KeyboardEvent, index: number) {
+    let nextIndex: number;
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length;
+    else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length;
+    else if (event.key === 'Home') nextIndex = 0;
+    else if (event.key === 'End') nextIndex = tabs.length - 1;
+    else return;
+
+    event.preventDefault();
+    const next = tabs[nextIndex];
+    onChange(next.id);
+    document.getElementById(`tab-${next.id}`)?.focus();
+  }
 </script>
 
 <nav
@@ -35,11 +49,14 @@
     {#each tabs as tab}
       <button
         type="button"
+        id="tab-{tab.id}"
         role="tab"
         aria-selected={active === tab.id}
         aria-label={tab.label}
+        aria-controls="panel-{tab.id}"
         tabindex={active === tab.id ? 0 : -1}
         onclick={() => onChange(tab.id)}
+        onkeydown={(event) => handleKeydown(event, tabs.indexOf(tab))}
         class="flex min-h-10 min-w-0 items-center justify-center gap-1 rounded-lg px-1 py-2 text-xs font-black transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 sm:min-h-11 sm:gap-2 sm:rounded-xl sm:px-3 sm:text-sm {active === tab.id
           ? 'app-accent-button shadow-sm'
           : 'hover:opacity-90'}"

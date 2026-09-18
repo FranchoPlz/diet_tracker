@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   initializeLists: vi.fn().mockResolvedValue(undefined),
   readSharedListFromHash: vi.fn(),
   saveShoppingList: vi.fn().mockResolvedValue(undefined),
+  selectActiveTab: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('$lib/list-controller', () => ({
@@ -14,6 +15,7 @@ vi.mock('$lib/list-controller', () => ({
 }));
 vi.mock('$lib/share', () => ({ readSharedListFromHash: mocks.readSharedListFromHash }));
 vi.mock('$lib/storage', () => ({ saveShoppingList: mocks.saveShoppingList }));
+vi.mock('$lib/workspace-controller', () => ({ selectActiveTab: mocks.selectActiveTab }));
 
 import ShareImport from './ShareImport.svelte';
 
@@ -33,6 +35,7 @@ describe('ShareImport', () => {
 
     await waitFor(() => expect(mocks.applyList).toHaveBeenCalledWith(imported));
     expect(mocks.saveShoppingList).toHaveBeenCalledWith(imported);
+    expect(mocks.selectActiveTab).toHaveBeenCalledWith('shopping');
     expect(location.hash).toBe('');
     expect(screen.getByRole('status').textContent).toContain('Lista compartida importada');
   });

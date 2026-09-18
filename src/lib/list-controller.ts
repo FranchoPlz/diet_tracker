@@ -11,17 +11,20 @@ export function applyList(list: SavedShoppingList): void {
   appState.activeListId = list.id;
   appState.activeListName = list.name;
   appState.shoppingList = list.items.map(item => ({ ...item }));
-  appState.checkedShoppingItems = Object.fromEntries(list.items.map(item => [`${item.name}|${item.unit ?? ''}`, item.checked]));
+  appState.checkedShoppingItems = Object.fromEntries(list.items.map(item => [item.id, item.checked]));
 }
 
 export async function persistCurrentList(): Promise<SavedShoppingList> {
   const existing = appState.savedLists.find(list => list.id === appState.activeListId);
   const list = existing ? JSON.parse(JSON.stringify(existing)) as SavedShoppingList : createShoppingList(appState.activeListName);
   list.name = appState.activeListName;
-  list.items = appState.shoppingList.map((item: ShoppingItem) => ({
-    ...normalizeShoppingItem(item),
-    checked: appState.checkedShoppingItems[`${item.name}|${item.unit ?? ''}`] ?? item.checked ?? false,
-  }));
+  list.items = appState.shoppingList.map((item: ShoppingItem) => {
+    const normalized = normalizeShoppingItem(item);
+    return {
+      ...normalized,
+      checked: appState.checkedShoppingItems[normalized.id] ?? normalized.checked,
+    };
+  });
   await saveShoppingList(list);
   appState.activeListId = list.id;
   appState.savedLists = await listShoppingLists();

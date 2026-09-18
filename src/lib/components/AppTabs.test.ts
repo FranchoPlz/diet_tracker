@@ -25,6 +25,21 @@ describe('AppTabs', () => {
     expect(onChange).toHaveBeenCalledWith('shopping');
   });
 
+  it('moves between tabs with arrow keys and exposes panel relationships', async () => {
+    const onChange = vi.fn();
+    render(AppTabs, { active: 'training', onChange });
+    const training = screen.getByRole('tab', { name: 'Ejercicios' });
+    const shopping = screen.getByRole('tab', { name: 'Compra' });
+
+    expect(training.id).toBe('tab-training');
+    expect(training.getAttribute('aria-controls')).toBe('panel-training');
+    training.focus();
+    await fireEvent.keyDown(training, { key: 'ArrowRight' });
+
+    expect(onChange).toHaveBeenCalledWith('shopping');
+    expect(document.activeElement).toBe(shopping);
+  });
+
   it('shows icons on phones and reveals text labels at the desktop breakpoint', () => {
     render(AppTabs, { active: 'settings', onChange: vi.fn() });
 

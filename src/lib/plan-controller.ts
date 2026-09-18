@@ -1,8 +1,9 @@
 import { calculateShoppingList } from './calculation';
 import { applyList, persistCurrentList } from './list-controller';
 import { appState } from './state.svelte';
-import { listPlans, listShoppingLists, savePlan, saveShoppingList, setActivePlanId } from './storage';
+import { deletePlan, listPlans, listShoppingLists, savePlan, saveShoppingList, setActivePlanId, setActiveTab } from './storage';
 import type { SavedPlan, SavedShoppingList, WeekConfig } from './types';
+import { createDefaultWeekConfig } from './utils';
 
 function cloneData<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -136,4 +137,35 @@ export async function duplicatePlan(plan: SavedPlan): Promise<SavedPlan> {
   await savePlan(copy);
   appState.savedPlans = await listPlans();
   return copy;
+}
+
+export async function removePlan(id: string): Promise<void> {
+  const wasActive = appState.activePlanId === id;
+  await deletePlan(id);
+  appState.savedPlans = await listPlans();
+  if (!wasActive) return;
+
+  const replacement = appState.savedPlans[0];
+  if (replacement) {
+    await restorePlan(replacement);
+    return;
+  }
+
+  appState.parsedData = null;
+  appState.pdfPath = null;
+  appState.weekConfig = createDefaultWeekConfig();
+  appState.weekTracker = {
+    startedAt: new Date().toISOString(), activeDayIndex: 0, weekNumber: 1,
+    trainingWeights: {}, trainingRepetitions: {},
+  };
+  appState.activePlanId = null;
+  appState.activePlanName = 'Mi plan semanal';
+  appState.configured = false;
+  appState.planSourceLabel = null;
+  if (!appState.activeListId) {
+    appState.shoppingList = [];
+    appState.checkedShoppingItems = {};
+  }
+  appState.activeTab = appState.activeListId ? 'shopping' : 'home';
+  await setActiveTab(appState.activeTab);
 }

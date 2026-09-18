@@ -34,8 +34,8 @@ describe('workspace controller', () => {
     expect(await getActivePlanId()).toBe(created.id);
     expect(JSON.stringify(await listPlans())).not.toContain('/private/plans');
 
-    appState.shoppingList = [{ name: 'arroz', quantity: 80, unit: 'g', count: 4 }];
-    appState.checkedShoppingItems = { 'arroz|g': true };
+    appState.shoppingList = [{ name: 'arroz', quantity: 80, unit: 'g', count: 4, checked: true }];
+    appState.checkedShoppingItems = {};
     const configured = await completeConfiguration();
     expect(configured.configured).toBe(true);
     expect(configured.shoppingListId).toBeTruthy();

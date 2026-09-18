@@ -192,6 +192,8 @@
       {/if}
       </div>
     {/if}
+  {:else if compact}
+    <button class="rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm font-bold text-stone-600 shadow-sm dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" onclick={isTauri ? handleTauriFileSelect : requestBrowserFileSelect}>{actionLabel}</button>
   {:else}
     <div
       class="rounded-3xl border-2 border-dashed p-8 text-center transition {isDragging ? 'border-teal-500 bg-teal-50 dark:bg-teal-950/30' : 'border-stone-300 bg-white/50 hover:border-teal-500 dark:border-stone-700 dark:bg-stone-900/50'}"

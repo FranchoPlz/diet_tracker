@@ -12,6 +12,8 @@
   import PdfUpload from '$lib/components/PdfUpload.svelte';
   import ShoppingList from '$lib/components/ShoppingList.svelte';
   import SettingsMenu from '$lib/components/SettingsMenu.svelte';
+  import ListLibrary from '$lib/components/ListLibrary.svelte';
+  import ShareImport from '$lib/components/ShareImport.svelte';
   import { getSwipedTab } from '$lib/swipe';
   import TrainingView from '$lib/components/TrainingView.svelte';
   import { downloadTrainingPdf } from '$lib/training-export';
@@ -128,37 +130,46 @@
     <div class="mx-auto grid min-h-64 max-w-[1480px] place-items-center px-4 sm:px-6 lg:px-8" role="status">
       <p class="font-bold text-stone-500">Recuperando tu plan…</p>
     </div>
-  {:else if !appState.parsedData}
-    <div class="mx-auto max-w-[1480px] px-4 sm:px-6 lg:px-8">
-      <header class="mb-8 max-w-3xl">
-        <p class="mb-2 text-xs font-black uppercase tracking-[0.28em] text-orange-600">Plan semanal</p>
-        <h1 class="text-4xl font-black tracking-[-0.04em] text-stone-950 dark:text-white sm:text-6xl">Del menú al carro,<br /><span class="text-stone-400">sin hacer cuentas.</span></h1>
-        <p class="mt-4 max-w-2xl text-base leading-relaxed text-stone-600 dark:text-stone-400">Carga tu dieta para configurar tus comidas, consultar el entrenamiento y preparar la compra.</p>
-      </header>
-      <PdfUpload />
-    </div>
   {:else}
-    <AppTabs active={appState.activeTab} onChange={setTab} shoppingCount={appState.shoppingList.length} />
+    <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8"><ShareImport /></div>
+    {#if !appState.parsedData && appState.activeListId}
+      <div class="mx-auto max-w-3xl space-y-4 px-3 sm:px-6 lg:px-8">
+        <div class="flex justify-end"><PdfUpload compact actionLabel="Cargar dieta" /></div>
+        <ShoppingList />
+      </div>
+    {:else if !appState.parsedData}
+      <div class="mx-auto max-w-[1480px] px-4 sm:px-6 lg:px-8">
+        <header class="mb-8 max-w-3xl">
+          <p class="mb-2 text-xs font-black uppercase tracking-[0.28em] text-orange-600">Plan semanal</p>
+          <h1 class="text-4xl font-black tracking-[-0.04em] text-stone-950 dark:text-white sm:text-6xl">Del menú al carro,<br /><span class="text-stone-400">sin hacer cuentas.</span></h1>
+          <p class="mt-4 max-w-2xl text-base leading-relaxed text-stone-600 dark:text-stone-400">Carga tu dieta para configurar tus comidas, consultar el entrenamiento y preparar la compra.</p>
+        </header>
+        <div class="mb-4 flex justify-end"><ListLibrary /></div>
+        <PdfUpload actionLabel="Seleccionar PDF" />
+      </div>
+    {:else}
+      <AppTabs active={appState.activeTab} onChange={setTab} shoppingCount={appState.shoppingList.length} />
 
-    <div class="mx-auto mt-4 max-w-[1480px] touch-pan-y space-y-4 px-3 sm:px-6 lg:px-8" role="tabpanel" tabindex="0">
-      {#if appState.activeTab === 'home'}
-        <div class="space-y-4"><HomeOverview onResetWeek={() => void closeWeek()} /><DayNavigator onSelect={selectDay} onNext={nextDay} /><CurrentDayDiet onEdit={openException} /></div>
-      {:else if appState.activeTab === 'diet'}
-        <div class="space-y-5">
-          {#key dietEditDayIndex}
-            <GlobalDietConfiguration initialDayIndex={dietEditDayIndex} onComplete={() => void saveConfiguration()} />
-          {/key}
-          <div class="flex justify-center"><DietPdfExportButton /></div>
-        </div>
-      {:else if appState.activeTab === 'training'}
-        <div class="space-y-4"><DayNavigator onSelect={selectDay} onNext={nextDay} /><TrainingView /></div>
-      {:else if appState.activeTab === 'shopping'}
-        <div class="mx-auto max-w-3xl">
-          <ShoppingList />
-        </div>
-      {:else}
-        <SettingsMenu />
-      {/if}
-    </div>
+      <div id="panel-{appState.activeTab}" aria-labelledby="tab-{appState.activeTab}" class="mx-auto mt-4 max-w-[1480px] touch-pan-y space-y-4 px-3 sm:px-6 lg:px-8" role="tabpanel" tabindex="0">
+        {#if appState.activeTab === 'home'}
+          <div class="space-y-4"><HomeOverview onResetWeek={() => void closeWeek()} /><DayNavigator onSelect={selectDay} onNext={nextDay} /><CurrentDayDiet onEdit={openException} /></div>
+        {:else if appState.activeTab === 'diet'}
+          <div class="space-y-5">
+            {#key dietEditDayIndex}
+              <GlobalDietConfiguration initialDayIndex={dietEditDayIndex} onComplete={() => void saveConfiguration()} />
+            {/key}
+            <div class="flex justify-center"><DietPdfExportButton /></div>
+          </div>
+        {:else if appState.activeTab === 'training'}
+          <div class="space-y-4"><DayNavigator onSelect={selectDay} onNext={nextDay} /><TrainingView /></div>
+        {:else if appState.activeTab === 'shopping'}
+          <div class="mx-auto max-w-3xl">
+            <ShoppingList />
+          </div>
+        {:else}
+          <SettingsMenu />
+        {/if}
+      </div>
+    {/if}
   {/if}
 </main>
