@@ -10,7 +10,7 @@ export type DietPageText = string | { page: number; text: string; trainingTable?
 
 const MEAL_TYPES = ['DESAYUNO', 'ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA'] as const;
 const MEAL_HEADER_RE = /^\s*(DESAYUNO|ALMUERZO|COMIDA|MERIENDA|CENA)\s*$/;
-const OPTION_HEADER_RE = /^\s*-?\s*((?:OPCI[ÓO]N\s+\d+(?:\s+DE\s+\w+)?(?:\s*[–-]\s*.+)?)|(?:OPCI[ÓO]N\s+\d+\s+\w.*?)|(?:CENA\s+\d+(?:\s*[–-]\s*.+)?))\s*$/i;
+const OPTION_HEADER_RE = /^\s*-?\s*((?:OPCI[ÓO]N\s+\d+(?:\s+DE\s+\w+)?(?:\s*[–-]\s*.+)?)|(?:OPCI[ÓO]N\s+\d+\s+\w.*?)|(?:(?:ALMUERZO|COMIDA|MERIENDA|CENA)\s+\d+(?:\s*[–-]\s*.+)?))\s*$/i;
 const DIET_SECTION_END_RE = /^\s*(?:SUPLEMENTACI[ÓO]N|ENTRENAMIENTO)\s*$/im;
 const TRAINING_HEADER_RE = /^\s*ENTRENAMIENTO\s*$/im;
 const DAY_HEADER_RE = /^\s*D[IÍ]A\s+([\d\sYy,]+)\s*[–-]\s*(.+?)\s*$/i;
@@ -189,9 +189,9 @@ function parseIngredientLine(line: string): IngredientLine {
   let content = line.replace(/^-+/, '').trim();
   for (const [wrong, replacement] of TYPO_CORRECTIONS) content = content.replaceAll(wrong, replacement);
 
-  if (content.includes('/')) {
+  if (/\s\/\s/.test(content)) {
     return {
-      items: content.split('/').map((part) => {
+      items: content.split(/\s+\/\s+/).map((part) => {
         const item = cleanEnd(part);
         return item.includes(' + ') ? parseCombination(item) : parseIngredient(item);
       }) as IngredientItem[],
@@ -253,7 +253,7 @@ function splitIntoOptions(mealType: Meal['type'], body: string): MealOption[] {
   return positions.map((position, index) => {
     const rawText = lines.slice(position + 1, positions[index + 1] ?? lines.length).join('\n').trim();
     return {
-      name: lines[position].replace(/^\s*-\s*/, '').trim(),
+      name: lines[position].replace(/^\s*-\s*/, '').trim().replace(/\s+/g, ' '),
       description: extractRecipeDescription(rawText),
       ingredient_lines: parseIngredients(rawText),
     };

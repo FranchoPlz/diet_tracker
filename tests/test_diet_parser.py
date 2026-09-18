@@ -57,6 +57,7 @@ class ParserUnitTests(unittest.TestCase):
     def test_accepts_pdf_heading_variations(self):
         self.assertTrue(diet_parser._is_option_header("- OPCIÓN 1"))
         self.assertTrue(diet_parser._is_option_header("OPCION 3 – PANCAKES"))
+        self.assertTrue(diet_parser._is_option_header("COMIDA 2 – ENSALADA"))
         self.assertEqual(
             diet_parser._parse_option_name("- OPCIÓN 1"), ("OPCIÓN 1", None)
         )
@@ -97,6 +98,14 @@ class ParserUnitTests(unittest.TestCase):
         self.assertEqual(
             lines, ["-80g de Pasta / 250g de Garbanzos / 160g de Gnocchis."]
         )
+
+    def test_does_not_split_fraction_as_an_alternative(self):
+        line = diet_parser._parse_ingredient_line(
+            "-1/2 Cebolla + ¼ de Pimiento rojo."
+        )
+        self.assertTrue(line["is_combination"])
+        self.assertEqual(line["items"][0]["sub_items"][0]["name"], "Cebolla")
+        self.assertEqual(line["items"][0]["sub_items"][0]["quantity"], 0.5)
 
     def test_parses_training_shape_and_superseries(self):
         training = diet_parser._parse_training([
@@ -187,6 +196,19 @@ class PdfRegressionTests(unittest.TestCase):
             breakfast = diet["meals"][0]
             self.assertTrue(breakfast["options"])
             self.assertTrue(breakfast["options"][0]["ingredient_lines"])
+
+    def test_september_3_detects_numbered_meal_options(self):
+        result = diet_parser.parse_pdf_to_structure(
+            str(ROOT / "samples" / "SEPTIEMBRE3.pdf")
+        )
+
+        diet_1, diet_2 = result["diets"]
+        self.assertEqual(
+            [len(meal["options"]) for meal in diet_1["meals"]], [3, 2, 1, 3]
+        )
+        self.assertEqual(
+            [len(meal["options"]) for meal in diet_2["meals"]], [1, 2, 1, 2]
+        )
 
 
 if __name__ == "__main__":

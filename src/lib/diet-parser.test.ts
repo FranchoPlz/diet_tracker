@@ -67,6 +67,19 @@ describe('parseDietText', () => {
     expect(eggs.description).toBeNull();
   });
 
+  it('recognizes numbered meal names as options', () => {
+    const result = parseDietText([
+      'DIETA 1\nCOMIDA\nCOMIDA 1\n-100g de Arroz.\nCOMIDA 2 – ENSALADA\n-200g de Garbanzos.\nCENA\nCENA 1\n-2 Huevos.\nCENA 2 – CREMA\n-380g de Crema de verduras.',
+    ]);
+
+    expect(result.diets[0].meals[0].options.map((option) => option.name)).toEqual([
+      'COMIDA 1', 'COMIDA 2 – ENSALADA',
+    ]);
+    expect(result.diets[0].meals[1].options.map((option) => option.name)).toEqual([
+      'CENA 1', 'CENA 2 – CREMA',
+    ]);
+  });
+
   it('stops before supplementation or training pages', () => {
     const result = parseDietText([
       'DIETA 1\nALMUERZO\n-1 Huevo.',
@@ -157,5 +170,16 @@ describe('ingredient helpers', () => {
     expect(joinWrappedLines('-80g de Pasta /\n250g de Garbanzos / 160g de Gnocchis.')).toEqual([
       '-80g de Pasta / 250g de Garbanzos / 160g de Gnocchis.',
     ]);
+  });
+
+  it('does not split fractions while retaining spaced alternatives', () => {
+    const result = parseDietText([
+      'DIETA 1\nCENA\n-1/2 Cebolla + ¼ de Pimiento rojo.\n-Verduras a elegir (Ensalada / Plancha / Horno).',
+    ]);
+    const lines = result.diets[0].meals[0].options[0].ingredient_lines;
+
+    expect(lines[0].is_combination).toBe(true);
+    expect(lines[0].items[0].sub_items?.[0]).toMatchObject({ name: 'Cebolla', quantity: 0.5 });
+    expect(lines[1].items).toHaveLength(3);
   });
 });

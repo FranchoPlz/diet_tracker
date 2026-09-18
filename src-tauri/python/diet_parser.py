@@ -15,13 +15,13 @@ _MEAL_HEADER_RE = re.compile(r"^\s*(" + "|".join(MEAL_TYPES) + r")\s*$")
 # Matches all option naming styles found in ABRIL.pdf:
 # OPCIÓN N / OPCIÓN N – TITLE / OPCIÓN N DE COMIDA – TITLE /
 # OPCIÓN N DE CENA / OPCIÓN N DE CENA – TITLE / OPCIÓN N BOCATA /
-# CENA N / CENA N – TITLE
+# MEAL N / MEAL N – TITLE
 _OPTION_HEADER_RE = re.compile(
     r"^\s*-?\s*"
     r"("
     r"(?:OPCI[ÓO]N\s+\d+(?:\s+DE\s+\w+)?(?:\s*[–-]\s*.+)?)"
     r"|(?:OPCI[ÓO]N\s+\d+\s+\w.*?)"
-    r"|(?:CENA\s+\d+(?:\s*[–-]\s*.+)?)"
+    r"|(?:(?:ALMUERZO|COMIDA|MERIENDA|CENA)\s+\d+(?:\s*[–-]\s*.+)?)"
     r")"
     r"\s*$",
     re.IGNORECASE,
@@ -49,7 +49,7 @@ def _is_meal_header(line: str) -> bool:
 
 
 def _parse_option_name(header_line: str) -> tuple:
-    name = re.sub(r"^\s*-\s*", "", header_line).strip()
+    name = re.sub(r"\s+", " ", re.sub(r"^\s*-\s*", "", header_line).strip())
     return name, None
 
 
@@ -584,8 +584,8 @@ def _parse_ingredient_line(logical_line: str) -> dict:
 
     # Check for alternatives (/) at top level
     # We split by "/" but need to check if each part contains "+" (combination within alternatives)
-    if "/" in content:
-        parts = [p.strip() for p in content.split("/")]
+    if re.search(r"\s/\s", content):
+        parts = [p.strip() for p in re.split(r"\s+/\s+", content)]
         items = []
         for part in parts:
             part = part.strip().rstrip(".,;")
