@@ -135,7 +135,7 @@ export async function extractPdfPageTexts(file: File): Promise<DietPageText[]> {
         for (const item of content.items) {
           if (!('str' in item)) continue;
           text += item.str;
-          text += item.hasEOL ? '\n' : ' ';
+          if (item.hasEOL) text += '\n';
         }
         const trainingTable = extractTrainingTable(content.items.filter((item): item is typeof item & PositionedTextItem => 'str' in item && 'transform' in item));
         pages.push({ page: pageNumber, text: text.trim(), ...(trainingTable ? { trainingTable } : {}) });

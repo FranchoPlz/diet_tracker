@@ -67,6 +67,7 @@ export async function restorePlan(plan: SavedPlan): Promise<void> {
   appState.activePlanName = plan.name;
   appState.configured = plan.configured ?? true;
   appState.parsedData = cloneData(plan.parsedData);
+  for (const diet of appState.parsedData.diets) diet.name = diet.name.trim().replace(/\s+/g, ' ').toUpperCase();
   appState.weekConfig = portableWeekConfig(plan.weekConfig);
   appState.weekTracker = cloneData(plan.weekTracker ?? {
     startedAt: new Date().toISOString(),

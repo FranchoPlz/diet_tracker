@@ -32,6 +32,14 @@ describe('parseDietText', () => {
     expect(result.diets[1].meals[1].options[0].name).toBe('OPCIÓN 3 – SMASH BURGUER');
   });
 
+  it('normalizes spacing in diet headings split across PDF text fragments', () => {
+    const result = parseDietText([
+      'DIETA   1\nALMUERZO\n-1 Huevo.\nDIETA   2\nALMUERZO\n-1 Yogur.',
+    ]);
+
+    expect(result.diets.map((diet) => diet.name)).toEqual(['DIETA 1', 'DIETA 2']);
+  });
+
   it('parses DESAYUNO before ALMUERZO and omits meals that are not present', () => {
     const result = parseDietText([
       'DIETA 1\nDESAYUNO\n-1 Huevo.\nALMUERZO\n-1 Yogur.\nCOMIDA\n-100g de Arroz.\nCENA\n-100g de Merluza.',
@@ -65,6 +73,17 @@ describe('parseDietText', () => {
     );
     expect(nuggets.ingredient_lines).toHaveLength(1);
     expect(eggs.description).toBeNull();
+  });
+
+  it('keeps instructions starting with Primero out of ingredients', () => {
+    const result = parseDietText([
+      'DIETA 1\nCENA\nOPCIÓN 1 – WOK\n-2 Huevos.\n-Primero vamos a cortar la cebolla y el pimiento.',
+    ]);
+    const option = result.diets[0].meals[0].options[0];
+
+    expect(option.ingredient_lines[0].items[0].name).toBe('Huevos');
+    expect(option.ingredient_lines).toHaveLength(1);
+    expect(option.description).toBe('Primero vamos a cortar la cebolla y el pimiento.');
   });
 
   it('recognizes numbered meal names as options', () => {

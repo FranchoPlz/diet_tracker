@@ -52,14 +52,19 @@ describe('plan controller', () => {
     expect(appState.configured).toBe(false);
   });
 
-  it('calculates from restored parsed data without a PDF path', async () => {
+  it('normalizes legacy diet names before calculating a restored plan', async () => {
     const plan: SavedPlan = {
       id: 'portable', schemaVersion: 1, name: 'Portable',
       createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
-      parsedData, weekConfig: portableWeekConfig(createDefaultWeekConfig()),
+      parsedData: {
+        ...parsedData,
+        diets: [{ ...parsedData.diets[0], name: 'DIETA   1' }],
+      },
+      weekConfig: portableWeekConfig(createDefaultWeekConfig()),
     };
     await restorePlan(plan);
     calculateActivePlan();
+    expect(appState.parsedData?.diets[0].name).toBe('DIETA 1');
     expect(appState.shoppingList).toContainEqual({ name: 'arroz', quantity: 320, unit: 'g', count: 4 });
   });
 

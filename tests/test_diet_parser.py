@@ -62,6 +62,18 @@ class ParserUnitTests(unittest.TestCase):
             diet_parser._parse_option_name("- OPCIÓN 1"), ("OPCIÓN 1", None)
         )
 
+    def test_normalizes_diet_heading_spacing(self):
+        diets = diet_parser._split_into_diets("DIETA   1\nALMUERZO")
+        self.assertEqual(diets[0][0], "DIETA 1")
+
+    def test_keeps_instructions_starting_with_primero_out_of_ingredients(self):
+        raw = "-2 Huevos.\n-Primero vamos a cortar la cebolla y el pimiento."
+        self.assertEqual(diet_parser._join_wrapped_lines(raw), ["-2 Huevos."])
+        self.assertEqual(
+            diet_parser._extract_recipe_description(raw),
+            "Primero vamos a cortar la cebolla y el pimiento.",
+        )
+
     def test_keeps_wrapped_cooking_instructions_as_description(self):
         options = diet_parser._split_into_options(
             "CENA",

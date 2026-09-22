@@ -10,7 +10,7 @@ vi.mock('pdfjs-dist', () => ({
           items: data.length === 5
             ? []
             : pageNumber === 1
-              ? [{ str: 'DIETA 1', hasEOL: true }, { str: 'ALMUERZO', hasEOL: false }]
+              ? [{ str: 'DIETA', hasEOL: false }, { str: ' ', hasEOL: false }, { str: '1', hasEOL: true }, { str: 'ALMUERZO', hasEOL: false }]
               : [{ str: '-1 Huevo.', hasEOL: false }],
         }),
       }),

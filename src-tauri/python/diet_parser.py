@@ -58,7 +58,7 @@ def _split_into_diets(full_text: str) -> list:
     diets = []
     i = 1
     while i < len(parts) - 1:
-        diet_name = parts[i].strip()
+        diet_name = re.sub(r"\s+", " ", parts[i].strip()).upper()
         body = parts[i + 1]
         diets.append((diet_name, body))
         i += 2
@@ -457,7 +457,7 @@ def _parse_single_item(raw: str) -> dict:
 
 
 _RECIPE_VERB_START_RE = re.compile(
-    r"^(Vamos|Cortamos|Cuando|Llevamos|Mezclar|Servir|Añadir|Batimos|Condimentamos|"
+    r"^(Primero|Vamos|Cortamos|Cuando|Llevamos|Mezclar|Servir|Añadir|Batimos|Condimentamos|"
     r"Calentamos|Colocamos|Rellenando|Enrrollamos|Tostamos|Mandamos|Mezclamos|"
     r"Corregimos|Salpimentándolos|Hacerse|¿)",
     re.IGNORECASE,

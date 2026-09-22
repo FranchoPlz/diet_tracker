@@ -15,7 +15,7 @@ const DIET_SECTION_END_RE = /^\s*(?:SUPLEMENTACI[ÓO]N|ENTRENAMIENTO)\s*$/im;
 const TRAINING_HEADER_RE = /^\s*ENTRENAMIENTO\s*$/im;
 const DAY_HEADER_RE = /^\s*D[IÍ]A\s+([\d\sYy,]+)\s*[–-]\s*(.+?)\s*$/i;
 const RECIPE_INDICATORS_RE = /\b(vamos|cortamos|cuando|llevamos|sartén|plancha\s+y|horno\s+y|mezclar|servir|añadir|batimos|prepararlo|hacerlo|pochando|introducimos|enrolladlo|calentamos|colocamos|rellenando|enrrollamos|listo|mandamos|batiremos|mezclamos|corregimos|tostamos|¿cómo|como lo vamos|condimentamos|salpimentándolos|hacerse)\b/i;
-const RECIPE_VERB_START_RE = /^(Vamos|Cortamos|Cuando|Llevamos|Mezclar|Servir|Añadir|Batimos|Condimentamos|Calentamos|Colocamos|Rellenando|Enrrollamos|Tostamos|Mandamos|Mezclamos|Corregimos|Salpimentándolos|Hacerse|¿)/i;
+const RECIPE_VERB_START_RE = /^(Primero|Vamos|Cortamos|Cuando|Llevamos|Mezclar|Servir|Añadir|Batimos|Condimentamos|Calentamos|Colocamos|Rellenando|Enrrollamos|Tostamos|Mandamos|Mezclamos|Corregimos|Salpimentándolos|Hacerse|¿)/i;
 
 const NUMBER_PATTERN = '(?:\\d+(?:[.,]\\d+)?|[¼½¾]|\\d+\\s*\\/\\s*\\d+)';
 const QTY_UNIT_DE_RE = new RegExp(`^(${NUMBER_PATTERN})\\s*(kg|g|ml|l|litros?|gramos?|kilos?)\\s+de\\s+(.+)$`, 'i');
@@ -427,7 +427,7 @@ export function parseDietText(pageTexts: readonly DietPageText[]): ParseResult {
   const parts = relevantPages.join('\n').split(/^\s*(DIETA\s+\d+)\s*$/im);
   const diets: DietPlan[] = [];
   for (let index = 1; index < parts.length - 1; index += 2) {
-    diets.push(parseDiet(parts[index].trim().toUpperCase(), parts[index + 1]));
+    diets.push(parseDiet(parts[index].trim().replace(/\s+/g, ' ').toUpperCase(), parts[index + 1]));
   }
   if (diets.length === 0) throw new Error('No se han encontrado secciones DIETA en el PDF.');
   const training = parseTraining(pageTexts);
