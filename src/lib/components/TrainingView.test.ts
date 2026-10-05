@@ -105,5 +105,6 @@ describe('TrainingView', () => {
     render(TrainingView);
     await fireEvent.click(screen.getByRole('button', { name: 'Editar Remo' }));
     expect(screen.getByRole('dialog', { name: 'Editar ejercicio' })).toBeTruthy();
+    expect((screen.getByLabelText('Repeticiones objetivo') as HTMLTextAreaElement).value).toBe('1º - 12\n2º - 10\n3º - 8');
   });
 });
