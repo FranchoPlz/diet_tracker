@@ -48,7 +48,8 @@
   function restore() {
     const plan = training();
     if (!plan?.templateDays || !confirm('¿Restaurar la planificación original? Se conservarán los registros de progreso.')) return;
-    plan.days = normalizeTrainingPlan({ ...plan, days: structuredClone(plan.templateDays), templateDays: structuredClone(plan.templateDays) }).days;
+    const templateDays = JSON.parse(JSON.stringify(plan.templateDays));
+    plan.days = normalizeTrainingPlan({ ...plan, days: templateDays, templateDays }).days;
     scheduleWorkspaceAutosave(0);
   }
 </script>

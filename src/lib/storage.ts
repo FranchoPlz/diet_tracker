@@ -46,7 +46,7 @@ export async function listShoppingLists(): Promise<SavedShoppingList[]> {
 
 export async function saveShoppingList(list: SavedShoppingList): Promise<void> {
   list.updatedAt = new Date().toISOString();
-  await (await database()).put('lists', structuredClone(list));
+  await (await database()).put('lists', JSON.parse(JSON.stringify(list)) as SavedShoppingList);
 }
 
 export async function deleteShoppingList(id: string): Promise<void> {

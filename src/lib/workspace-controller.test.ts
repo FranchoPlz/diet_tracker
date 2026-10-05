@@ -64,6 +64,23 @@ describe('workspace controller', () => {
     expect(appState.persistenceReady).toBe(true);
   });
 
+  it('normalizes training before assigning the parsed document to reactive state', async () => {
+    const result: ParseResult = {
+      status: 'ok', diets: [], training: { tips: [], defaultRestSeconds: 60, days: [{
+        days: [1, 3], title: 'PIERNA', activeRest: false, details: '',
+        exercises: [{ exercise: 'Sentadilla', series: '3', repetitions: '10', details: '' }],
+      }] },
+    };
+
+    await createWorkspaceFromDocument(result, 'rutina.pdf');
+
+    expect(appState.parsedData?.training?.days).toHaveLength(7);
+    expect(appState.parsedData?.training?.days[0].title).toBe('PIERNA');
+    expect(appState.parsedData?.training?.days[2].title).toBe('PIERNA');
+    expect(appState.parsedData?.training?.days[0].id).toBeTruthy();
+    expect(appState.parsedData?.diets).toEqual([]);
+  });
+
   it('restores the selected tab with the active workspace', async () => {
     await selectActiveTab('training');
     appState.activeTab = 'home';

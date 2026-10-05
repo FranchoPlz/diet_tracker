@@ -17,8 +17,9 @@ function sourceLabel(sourceName: string): string {
 export async function createWorkspaceFromDocument(result: ParseResult, sourceName: string): Promise<SavedPlan> {
   if (autosaveTimer) clearTimeout(autosaveTimer);
   autosaveTimer = undefined;
-  appState.parsedData = structuredClone(result);
-  if (appState.parsedData.training) appState.parsedData.training = normalizeTrainingPlan(appState.parsedData.training);
+  const parsedData = JSON.parse(JSON.stringify(result)) as ParseResult;
+  if (parsedData.training) parsedData.training = normalizeTrainingPlan(parsedData.training);
+  appState.parsedData = parsedData;
   appState.pdfPath = null;
   appState.weekConfig = createDefaultWeekConfig();
   appState.weekTracker = {

@@ -2,6 +2,10 @@ import type { ExerciseRow, ExerciseType, TrainingDay, TrainingDayType, TrainingP
 
 const DAY_COUNT = 7;
 
+function cloneData<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
 function slug(value: string): string {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'item';
 }
@@ -35,7 +39,7 @@ function normalizeExercise(exercise: ExerciseRow, dayId: string, index: number):
 function normalizeDay(day: TrainingDay, dayNumber: number, fallbackIndex: number): TrainingDay {
   const id = day.id ?? `day-${dayNumber}-${fallbackIndex + 1}-${slug(day.title)}`;
   return {
-    ...structuredClone(day),
+    ...cloneData(day),
     id,
     days: [dayNumber],
     type: day.type ?? inferDayType(day),
@@ -64,7 +68,7 @@ export function normalizeTrainingPlan(training: TrainingPlan): TrainingPlan {
 }
 
 export function cloneTrainingDay(day: TrainingDay, dayNumber: number): TrainingDay {
-  const clone = structuredClone(day);
+  const clone = cloneData(day);
   clone.id = crypto.randomUUID();
   clone.days = [dayNumber];
   clone.exercises = clone.exercises.map(exercise => ({ ...exercise, id: crypto.randomUUID() }));

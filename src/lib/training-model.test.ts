@@ -20,4 +20,11 @@ describe('training model', () => {
     expect(progressKey(day, exercise, 0)).toBe('day:superset:member:0');
     expect(progressKey(day, exercise, 1)).toBe('day:superset:member:1');
   });
+
+  it('clones proxied training days without structuredClone', () => {
+    const day = new Proxy({ days: [1], title: 'Torso', activeRest: false, details: '', exercises: [] }, {});
+    const plan = normalizeTrainingPlan({ tips: [], defaultRestSeconds: null, days: [day] });
+    expect(plan.days[0].title).toBe('Torso');
+    expect(plan.days).toHaveLength(7);
+  });
 });
