@@ -20,13 +20,15 @@ describe('TrainingPlanner', () => {
 
   afterEach(cleanup);
 
-  it('uses the exact PDF routine titles as movable options', async () => {
+  it('uses the exact PDF routine titles as visual choices', async () => {
     render(TrainingPlanner);
-    const selects = screen.getAllByRole('combobox');
-    const labels = screen.getAllByRole('option').map(option => option.textContent);
-    expect(labels).toEqual(expect.arrayContaining(['TORSO', 'PIERNA', 'DESCANSO', 'EMPUJE', 'TIRÓN']));
+    expect(screen.queryByRole('combobox')).toBeNull();
+    await fireEvent.click(screen.getAllByRole('button', { name: 'Cambiar' })[0]);
+    expect(screen.getByRole('dialog', { name: 'Cambiar entrenamiento' })).toBeTruthy();
+    expect(screen.getByText('Rutinas de tu PDF')).toBeTruthy();
+    expect(screen.getByText('Crear un día nuevo')).toBeTruthy();
 
-    await fireEvent.change(selects[0], { target: { value: 'template:3' } });
+    await fireEvent.click(screen.getByRole('button', { name: /EMPUJE/ }));
 
     expect(appState.parsedData?.training?.days[0].title).toBe('EMPUJE');
     expect(appState.parsedData?.training?.days[0].exercises[0].exercise).toBe('Press militar');
