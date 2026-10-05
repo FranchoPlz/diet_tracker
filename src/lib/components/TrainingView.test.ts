@@ -53,7 +53,9 @@ describe('TrainingView', () => {
     const help = screen.getByRole('button', { name: 'Mostrar guía de Press de banca plano' });
     expect(screen.getByText('Guía visual disponible')).toBeTruthy();
     await fireEvent.click(help);
-    expect(screen.getAllByRole('img')).toHaveLength(3);
+    const images = screen.getAllByRole('img');
+    expect(images).toHaveLength(3);
+    expect(images.every(image => image.classList.contains('bg-stone-800'))).toBe(true);
     expect(help.getAttribute('aria-expanded')).toBe('true');
   });
 
