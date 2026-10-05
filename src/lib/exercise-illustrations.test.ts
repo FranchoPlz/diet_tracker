@@ -16,6 +16,17 @@ describe('exercise illustrations', () => {
 
   it('does not guess ambiguous or unavailable exercises', () => {
     expect(findExerciseIllustration('Remo')).toBeNull();
-    expect(findExerciseIllustration('Back Extension')).toBeNull();
+    expect(findExerciseIllustration('Ejercicio inventado')).toBeNull();
+  });
+
+  it.each([
+    ['Hiperextensiones', 'back-extension'],
+    ['Sentadilla Sumo', 'dumbbell-sumo-squat'],
+    ['Crunch abdominal con disco', 'crunch'],
+    ['Plancha lateral', 'side-plank'],
+    ['Dead Bug', 'dead-bug'],
+    ['C ardio en cinta', 'treadmill-incline-walk'],
+  ])('matches real PDF exercise %s', (name, slug) => {
+    expect(findExerciseIllustration(name)?.exercise.slug).toBe(slug);
   });
 });

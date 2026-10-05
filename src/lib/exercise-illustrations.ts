@@ -2,6 +2,22 @@ import { exercises, type Exercise } from '@bryllim/workout-guide';
 import { base } from '$app/paths';
 
 const spanishAliases: Array<[string, string]> = [
+  ['sentadilla estatica con la espalda pegada a la pared', 'wall-sit'],
+  ['pres de banca con agarre estrecho', 'close-grip-bench-press'],
+  ['elevaciones de piernas colgadas', 'hanging-leg-raise'],
+  ['elevaciones de piernas colgado', 'hanging-leg-raise'],
+  ['pres de banca inclinada', 'incline-bench-press'],
+  ['curl femoral tumbada', 'lying-leg-curl'],
+  ['sentadilla sumo con mancuerna', 'dumbbell-sumo-squat'],
+  ['sentadilla sumo', 'dumbbell-sumo-squat'],
+  ['hiper extensiones', 'back-extension'],
+  ['hiperextensiones', 'back-extension'],
+  ['crunch abdominal', 'crunch'],
+  ['giros rusos', 'russian-twist'],
+  ['plancha lateral', 'side-plank'],
+  ['step up', 'step-up'],
+  ['dead bug', 'dead-bug'],
+  ['burpees', 'burpee'],
   ['press de banca inclinado', 'incline-bench-press'],
   ['press inclinado', 'incline-bench-press'],
   ['press inclinado con mancuernas', 'incline-dumbbell-press'],
@@ -61,13 +77,17 @@ function normalize(value: string): string {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/\bpres\b/g, 'press')
+    .replace(/\bc\s+ardio\b/g, 'cardio')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
 }
 
 const exercisesBySlug = new Map(exercises.map((exercise) => [exercise.slug, exercise]));
 const availableSlugs = new Set(spanishAliases.map(([, slug]) => slug));
-const exercisesByName = new Map(exercises.filter((exercise) => availableSlugs.has(exercise.slug)).map((exercise) => [normalize(exercise.name), exercise]));
+const exercisesByName = new Map(exercises.filter(exercise => availableSlugs.has(exercise.slug)).map((exercise) => [normalize(exercise.name), exercise]));
+const aliasesBySpecificity = spanishAliases
+  .map(([alias, slug]) => [normalize(alias), slug] as const)
+  .sort(([left], [right]) => right.length - left.length);
 
 export interface ExerciseIllustration {
   exercise: Exercise;
@@ -77,7 +97,7 @@ export interface ExerciseIllustration {
 export function findExerciseIllustration(name: string): ExerciseIllustration | null {
   const normalizedName = normalize(name);
   const exactMatch = exercisesByName.get(normalizedName);
-  const alias = spanishAliases.find(([candidate]) => normalizedName.includes(candidate));
+  const alias = aliasesBySpecificity.find(([candidate]) => normalizedName.includes(candidate));
   const exercise = exactMatch ?? (alias ? exercisesBySlug.get(alias[1]) : undefined);
   if (!exercise) return null;
 

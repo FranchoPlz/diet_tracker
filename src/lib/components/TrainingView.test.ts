@@ -42,7 +42,7 @@ describe('TrainingView', () => {
   it('shows and hides an exercise illustration from its help button', async () => {
     render(TrainingView);
 
-    const help = screen.getByRole('button', { name: 'Mostrar cómo hacer Remo' });
+    const help = screen.getByRole('button', { name: 'Mostrar guía de Remo' });
     expect(screen.queryByText('No hay una guía visual disponible para Remo.')).toBeNull();
     await fireEvent.click(help);
     expect(screen.getByText('No hay una guía visual disponible para Remo.')).toBeTruthy();
@@ -83,5 +83,17 @@ describe('TrainingView', () => {
     expect(confirm).toHaveBeenCalledTimes(2);
     expect(appState.weekTracker.trainingWeights['0:0']).toEqual(['25']);
     expect(appState.weekTracker.trainingRepetitions['0:0']).toEqual(['10']);
+  });
+
+  it('opens the add form as a modal dialog', async () => {
+    render(TrainingView);
+    await fireEvent.click(screen.getByRole('button', { name: 'Añadir ejercicio' }));
+    expect(screen.getByRole('dialog', { name: 'Añadir ejercicio' })).toBeTruthy();
+  });
+
+  it('opens the edit form from the compact exercise action', async () => {
+    render(TrainingView);
+    await fireEvent.click(screen.getByRole('button', { name: 'Editar Remo' }));
+    expect(screen.getByRole('dialog', { name: 'Editar ejercicio' })).toBeTruthy();
   });
 });

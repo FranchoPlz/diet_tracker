@@ -6,6 +6,7 @@
   import type { CardioEntry, ExerciseRow, ExerciseType } from '$lib/types';
   import { dayRecordKey, repetitionTargets, seriesCount, setCardio, setExerciseNotes, setProgressValue, setSteps } from '$lib/week-tracker';
   import { flushWorkspaceAutosave, saveWorkspaceNow, scheduleWorkspaceAutosave } from '$lib/workspace-controller';
+  import ExerciseEditorModal from './ExerciseEditorModal.svelte';
 
   const training = $derived(appState.parsedData?.training);
   const dayIndex = $derived(appState.weekTracker.activeDayIndex);
@@ -15,6 +16,8 @@
   let visibleIllustrations = $state<Record<string, boolean>>({});
   let showExerciseForm = $state(false);
   let editingExerciseId = $state<string | null>(null);
+  let editingExistingExercise = $state(false);
+  let editingExerciseIndex = $state<number | null>(null);
   let editingDayId = $state<string | null>(null);
   let draft = $state({ exercise: '', type: 'strength' as ExerciseType, series: '3', repetitions: '', duration: '', details: '', notes: '' });
 
@@ -25,19 +28,25 @@
   function updateCardio(field: keyof CardioEntry, value: string) { setCardio(dayIndex, { ...cardio, [field]: value }); }
   function openNewExercise() {
     editingExerciseId = null;
+    editingExistingExercise = false;
+    editingExerciseIndex = null;
     editingDayId = day?.id ?? null;
     draft = { exercise: '', type: day?.type === 'cardio' ? 'cardio' : 'strength', series: '3', repetitions: '', duration: '', details: '', notes: '' };
     showExerciseForm = true;
   }
   function editExercise(exercise: ExerciseRow) {
     editingExerciseId = exercise.id ?? null;
+    editingExistingExercise = true;
+    editingExerciseIndex = day?.exercises.indexOf(exercise) ?? null;
     editingDayId = day?.id ?? null;
     draft = { exercise: exercise.exercise, type: inferExerciseType(exercise), series: exercise.series, repetitions: exercise.repetitions, duration: exercise.duration ?? '', details: exercise.details, notes: exercise.notes ?? '' };
     showExerciseForm = true;
   }
   function saveExercise() {
     if (!day || editingDayId !== (day.id ?? null) || !draft.exercise.trim()) return;
-    const index = day.exercises.findIndex(item => item.id === editingExerciseId);
+    const index = editingExerciseId
+      ? day.exercises.findIndex(item => item.id === editingExerciseId)
+      : (editingExerciseIndex ?? -1);
     const previous = index >= 0 ? day.exercises[index] : undefined;
     const exercise: ExerciseRow = { ...previous, id: editingExerciseId ?? crypto.randomUUID(), ...draft, exercise: draft.exercise.trim(), userAdded: previous?.userAdded ?? true };
     if (index >= 0) day.exercises[index] = exercise; else day.exercises.push(exercise);
@@ -46,7 +55,7 @@
   }
   function removeExercise(exercise: ExerciseRow) {
     if (!day || !confirm(`¿Eliminar ${exercise.exercise}?`)) return;
-    day.exercises = day.exercises.filter(item => item.id !== exercise.id);
+    day.exercises = day.exercises.filter(item => item !== exercise);
     scheduleWorkspaceAutosave(0);
   }
   function resetTraining() {
@@ -81,13 +90,13 @@
         {#each day.exercises as exercise, exerciseIndex (exercise.id)}
           {@const names = exercise.supersetExercises?.length ? exercise.supersetExercises : [exercise.exercise]}
           {@const exerciseType = inferExerciseType(exercise)}
-          <li><details open class="group"><summary class="flex cursor-pointer list-none items-start gap-3 p-4 sm:p-6 [&::-webkit-details-marker]:hidden"><span class="grid size-8 shrink-0 place-items-center rounded-xl bg-stone-900 text-xs font-black text-white dark:bg-white dark:text-stone-900">{exerciseIndex + 1}</span><div class="min-w-0 flex-1"><h3 class="break-words text-lg font-black leading-snug">{exercise.exercise}</h3>{#if names.length > 1}<p class="mt-1 text-xs font-black uppercase tracking-wide text-orange-600">Superserie · registros independientes</p>{/if}{#if exercise.details}<p class="mt-1 break-words text-sm text-stone-600 dark:text-stone-300">{exercise.details}</p>{/if}</div><span aria-hidden="true">⌄</span></summary><div class="px-4 pb-4 sm:px-6 sm:pb-6"><div class="flex justify-end gap-1"><button class="min-h-11 px-2 text-xs font-black text-orange-600" onclick={() => editExercise(exercise)}>Editar</button><button class="min-h-11 px-2 text-lg font-black text-red-500" onclick={() => removeExercise(exercise)} aria-label={`Eliminar ${exercise.exercise}`}>×</button></div>
+          <li><details open class="group"><summary class="flex cursor-pointer list-none items-start gap-3 p-4 sm:p-6 [&::-webkit-details-marker]:hidden"><span class="grid size-8 shrink-0 place-items-center rounded-xl bg-stone-900 text-xs font-black text-white dark:bg-white dark:text-stone-900">{exerciseIndex + 1}</span><div class="min-w-0 flex-1"><h3 class="break-words text-lg font-black leading-snug">{exercise.exercise}</h3>{#if names.length > 1}<p class="mt-1 text-xs font-black uppercase tracking-wide text-orange-600">Superserie · registros independientes</p>{/if}{#if exercise.details}<p class="mt-1 break-words text-sm text-stone-600 dark:text-stone-300">{exercise.details}</p>{/if}</div><span class="flex shrink-0 gap-1"><button type="button" class="grid min-h-11 min-w-11 place-items-center rounded-xl text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-950/30" onclick={(event) => { event.preventDefault(); event.stopPropagation(); editExercise(exercise); }} aria-label={`Editar ${exercise.exercise}`}><svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button><button type="button" class="grid min-h-11 min-w-11 place-items-center rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30" onclick={(event) => { event.preventDefault(); event.stopPropagation(); removeExercise(exercise); }} aria-label={`Eliminar ${exercise.exercise}`}><svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg></button></span><span aria-hidden="true" class="pt-2">⌄</span></summary><div class="px-4 pb-4 sm:px-6 sm:pb-6">
             {#each names as name, memberIndex}
               {@const key = progressKey(day, exercise, names.length > 1 ? memberIndex : undefined)}
               {@const count = seriesCount(exercise.series)}
               {@const targets = names.length > 1 ? memberTargets(exercise.repetitions, count, memberIndex, names.length) : repetitionTargets(exercise.repetitions, count)}
               <div class="mt-4 overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-700">
-                <div class="flex items-center justify-between gap-2 bg-stone-100 px-3 py-2 dark:bg-stone-800"><strong class="break-words">{name}</strong>{#if !appState.alwaysShowExerciseIllustrations}<button class="min-h-11 px-3 text-xs font-black text-orange-600" aria-label={`${visibleIllustrations[key] ? 'Ocultar' : 'Mostrar'} cómo hacer ${name}`} aria-expanded={visibleIllustrations[key] ?? false} onclick={() => visibleIllustrations[key] = !visibleIllustrations[key]}>?</button>{/if}</div>
+                <div class="flex items-center justify-between gap-2 bg-stone-100 px-3 py-2 dark:bg-stone-800"><strong class="break-words">{name}</strong>{#if !appState.alwaysShowExerciseIllustrations}<button class="min-h-11 rounded-xl px-3 text-xs font-black text-orange-600" aria-label={`${visibleIllustrations[key] ? 'Ocultar' : 'Mostrar'} guía de ${name}`} aria-expanded={visibleIllustrations[key] ?? false} onclick={() => visibleIllustrations[key] = !visibleIllustrations[key]}>{visibleIllustrations[key] ? 'Ocultar guía' : 'Ver guía'}</button>{/if}</div>
                 {#if visibleIllustrations[key] || appState.alwaysShowExerciseIllustrations}<div class="p-3">{#if findExerciseIllustration(name)}<div class="grid grid-cols-3 gap-2">{#each findExerciseIllustration(name)?.frameUrls ?? [] as url, i}<img class="aspect-square w-full rounded-xl bg-white object-contain" src={url} alt={`${name}, posición ${i + 1}`} />{/each}</div>{:else}<p class="py-3 text-center text-sm font-bold text-stone-500">No hay una guía visual disponible para {name}.</p>{/if}</div>{/if}
                 {#if exerciseType === 'cardio'}
                   <div class="grid gap-3 p-3 sm:grid-cols-2"><label class="text-sm font-bold">Duración objetivo<input class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" value={exercise.duration || exercise.repetitions} readonly /></label><label class="text-sm font-bold">Notas<input class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" value={appState.weekTracker.exerciseNotes?.[key] ?? ''} oninput={(e) => setExerciseNotes(key, e.currentTarget.value)} onblur={() => void flushWorkspaceAutosave()} /></label></div>
@@ -103,10 +112,13 @@
       </ol>
     {/if}
     <div class="border-t border-stone-200 p-4 dark:border-stone-700"><button class="min-h-11 w-full rounded-xl border border-orange-400 px-4 font-black text-orange-600" onclick={openNewExercise}>Añadir ejercicio</button></div>
-    {#if showExerciseForm}<div class="space-y-3 border-t border-stone-200 bg-stone-100 p-4 dark:border-stone-700 dark:bg-stone-800"><h3 class="font-black">{editingExerciseId ? 'Editar ejercicio' : 'Nuevo ejercicio'}</h3><label class="block text-sm font-bold">Nombre<input class="mt-1 min-h-11 w-full rounded-xl border bg-white px-3 dark:bg-stone-900" bind:value={draft.exercise} /></label><div class="grid gap-3 sm:grid-cols-2"><label class="text-sm font-bold">Tipo<select class="mt-1 min-h-11 w-full rounded-xl border bg-white px-3 dark:bg-stone-900" bind:value={draft.type}><option value="strength">Fuerza</option><option value="cardio">Cardio</option><option value="warmup">Movilidad / calentamiento</option><option value="other">Otro</option></select></label><label class="text-sm font-bold">Series<input type="number" min="1" max="20" class="mt-1 min-h-11 w-full rounded-xl border bg-white px-3 dark:bg-stone-900" bind:value={draft.series} /></label><label class="text-sm font-bold">Repeticiones objetivo<input class="mt-1 min-h-11 w-full rounded-xl border bg-white px-3 dark:bg-stone-900" bind:value={draft.repetitions} /></label><label class="text-sm font-bold">Duración<input class="mt-1 min-h-11 w-full rounded-xl border bg-white px-3 dark:bg-stone-900" placeholder="Ej. 20 minutos" bind:value={draft.duration} /></label></div><label class="block text-sm font-bold">Notas<textarea class="mt-1 min-h-20 w-full rounded-xl border bg-white p-3 dark:bg-stone-900" bind:value={draft.notes}></textarea></label><div class="flex gap-2"><button class="app-accent-button min-h-11 flex-1 rounded-xl font-black" onclick={saveExercise}>Guardar ejercicio</button><button class="min-h-11 rounded-xl border px-4 font-black" onclick={() => showExerciseForm = false}>Cancelar</button></div></div>{/if}
 
     <section class="border-t border-stone-200 p-4 dark:border-stone-700"><h3 class="text-lg font-black">Registrar cardio</h3><p class="text-sm text-stone-500">Disponible todos los días como sesión principal o complemento.</p><div class="mt-3 grid gap-3 sm:grid-cols-2"><label class="text-sm font-bold">Actividad<input class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" placeholder="Cinta, bici, caminar…" value={cardio.activity} oninput={(e) => updateCardio('activity', e.currentTarget.value)} /></label><label class="text-sm font-bold">Duración (min)<input type="number" inputmode="numeric" min="0" class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" value={cardio.duration} oninput={(e) => updateCardio('duration', e.currentTarget.value)} /></label><label class="text-sm font-bold">Distancia opcional<input class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" placeholder="Ej. 5 km" value={cardio.distance} oninput={(e) => updateCardio('distance', e.currentTarget.value)} /></label><label class="text-sm font-bold">Intensidad / ritmo / inclinación<input class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" value={cardio.intensity} oninput={(e) => updateCardio('intensity', e.currentTarget.value)} /></label><label class="text-sm font-bold">Calorías opcionales<input type="number" inputmode="numeric" min="0" class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" value={cardio.calories} oninput={(e) => updateCardio('calories', e.currentTarget.value)} /></label><label class="text-sm font-bold">Notas<input class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" value={cardio.notes} oninput={(e) => updateCardio('notes', e.currentTarget.value)} /></label></div></section>
     <section class="border-t border-stone-200 p-4 dark:border-stone-700"><label class="block text-lg font-black">Pasos del día<input type="number" inputmode="numeric" min="0" step="1" class="mt-2 min-h-12 w-full rounded-xl border bg-transparent px-4" value={appState.weekTracker.stepsByDay?.[cardioKey] ?? ''} oninput={(e) => setSteps(dayIndex, e.currentTarget.value)} onblur={() => void flushWorkspaceAutosave()} /></label></section>
     <div class="sticky bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-20 p-4"><button class="app-accent-button min-h-12 w-full rounded-2xl font-black disabled:opacity-60" disabled={appState.saveStatus === 'saving'} onclick={() => void saveProgress()}>{appState.saveStatus === 'saving' ? 'Guardando…' : appState.saveStatus === 'error' ? 'Error al guardar · Reintentar' : 'Guardar progreso'}</button></div>
   {:else}<div class="p-6 text-center"><p class="font-black">Este plan no incluye una rutina de entrenamiento.</p></div>{/if}
 </section>
+
+{#if showExerciseForm}
+  <ExerciseEditorModal editing={editingExistingExercise} bind:draft onSave={saveExercise} onClose={() => showExerciseForm = false} />
+{/if}
