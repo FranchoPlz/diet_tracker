@@ -27,4 +27,5 @@ describe('training model', () => {
     expect(plan.days[0].title).toBe('Torso');
     expect(plan.days).toHaveLength(7);
   });
+
 });

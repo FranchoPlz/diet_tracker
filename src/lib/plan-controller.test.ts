@@ -68,6 +68,25 @@ describe('plan controller', () => {
     expect(appState.shoppingList).toContainEqual({ name: 'arroz', quantity: 320, unit: 'g', count: 4 });
   });
 
+  it('persists and restores the active weekly training organization', async () => {
+    appState.parsedData = {
+      ...structuredClone(parsedData),
+      training: { tips: [], defaultRestSeconds: 60, days: [{
+        id: 'monday', days: [1], title: 'Pierna', type: 'leg', activeRest: false, details: '', exercises: [],
+      }, {
+        id: 'tuesday', days: [2], title: 'Entrenamiento personalizado', type: 'custom', activeRest: false, details: '', exercises: [],
+      }] },
+    };
+
+    const saved = await persistCurrentPlan();
+    appState.parsedData = null;
+    await restorePlan(saved);
+    const restored = appState.parsedData as ParseResult | null;
+
+    expect(restored?.training?.days[0]).toMatchObject({ title: 'Pierna', type: 'leg' });
+    expect(restored?.training?.days[1]).toMatchObject({ title: 'Entrenamiento personalizado', type: 'custom' });
+  });
+
   it('clears the active workspace when its only saved plan is deleted', async () => {
     for (const plan of await listPlans()) await deletePlan(plan.id);
     const saved = await persistCurrentPlan();
