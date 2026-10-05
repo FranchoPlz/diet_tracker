@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { parseDietText } from './diet-parser';
+import { extractPdfPageTexts } from './pdf';
 
 describe('PDF sample regressions', () => {
   it('parses SEPTIEMBRE 2 with breakfast and no empty snack meal', async () => {
@@ -92,5 +93,22 @@ describe('PDF sample regressions', () => {
     expect(diet2Lunch?.ingredient_lines[0].items).toHaveLength(11);
     const meatballs = diet1.meals.find((meal) => meal.type === 'CENA')?.options[1];
     expect(meatballs?.ingredient_lines[2].items[0].sub_items?.[0]).toMatchObject({ name: 'Cebolla', quantity: 0.5 });
+  });
+
+  it('parses OCTUBRE option-based diets without requiring training', async () => {
+    const fsModule = 'node:fs/promises';
+    const { readFile } = await import(/* @vite-ignore */ fsModule);
+    const bytes = await readFile('samples/OCTUBRE.pdf');
+    const file = new File([bytes], 'OCTUBRE.pdf', { type: 'application/pdf' });
+
+    const result = parseDietText(await extractPdfPageTexts(file));
+
+    expect(result.status).toBe('ok');
+    expect(result.diets.map(diet => diet.name)).toEqual(['DIETA 1', 'DIETA 2']);
+    expect(result.training).toBeUndefined();
+    expect(result.diets[0].meals.map(meal => meal.type)).toEqual(['ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA']);
+    expect(result.diets[1].meals.map(meal => meal.type)).toEqual(['ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA']);
+    expect(result.diets[0].meals.find(meal => meal.type === 'ALMUERZO')?.options[0].ingredient_lines.length).toBeGreaterThan(0);
+    expect(result.diets[1].meals.find(meal => meal.type === 'CENA')?.options.length).toBe(3);
   });
 });

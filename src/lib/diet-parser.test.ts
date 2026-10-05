@@ -40,6 +40,21 @@ describe('parseDietText', () => {
     expect(result.diets.map((diet) => diet.name)).toEqual(['DIETA 1', 'DIETA 2']);
   });
 
+  it('uses top-level option headings as diet variants when DIETA headings are absent', () => {
+    const result = parseDietText([
+      'OCTUBRE\nOPCIÓN 1\nAYUNO\nALMUERZO\nOPCIÓN 1\n-2 Huevos.\nCOMIDA\n-100g de Arroz.',
+      'CENA\nOPCIÓN 2\n-150g de Merluza.',
+      'OPCIÓN 2\nAYUNO\nALMUERZO\n-1 Yogur.\nCOMIDA\nOPCIÓN 1\n-100g de Pasta.',
+      'CENA\n-2 Huevos.',
+      'SUPLEMENTACIÓN\n-5g de Creatina.',
+    ]);
+
+    expect(result.diets.map(diet => diet.name)).toEqual(['DIETA 1', 'DIETA 2']);
+    expect(result.diets[0].meals.map(meal => meal.type)).toEqual(['ALMUERZO', 'COMIDA', 'CENA']);
+    expect(result.diets[1].meals.map(meal => meal.type)).toEqual(['ALMUERZO', 'COMIDA', 'CENA']);
+    expect(result.training).toBeUndefined();
+  });
+
   it('parses DESAYUNO before ALMUERZO and omits meals that are not present', () => {
     const result = parseDietText([
       'DIETA 1\nDESAYUNO\n-1 Huevo.\nALMUERZO\n-1 Yogur.\nCOMIDA\n-100g de Arroz.\nCENA\n-100g de Merluza.',

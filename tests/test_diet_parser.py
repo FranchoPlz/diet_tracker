@@ -66,6 +66,17 @@ class ParserUnitTests(unittest.TestCase):
         diets = diet_parser._split_into_diets("DIETA   1\nALMUERZO")
         self.assertEqual(diets[0][0], "DIETA 1")
 
+    def test_uses_top_level_option_headings_as_diet_variants(self):
+        diets = diet_parser._split_option_diet_pages([
+            "OCTUBRE\nOPCIÓN 1\nAYUNO\nALMUERZO\nOPCIÓN 1\n-2 Huevos.",
+            "COMIDA\n-100g de Arroz.",
+            "OPCIÓN 2\nAYUNO\nALMUERZO\n-1 Yogur.",
+            "CENA\n-2 Huevos.",
+        ])
+        self.assertEqual([name for name, _ in diets], ["DIETA 1", "DIETA 2"])
+        self.assertIn("COMIDA", diets[0][1])
+        self.assertIn("CENA", diets[1][1])
+
     def test_keeps_instructions_starting_with_primero_out_of_ingredients(self):
         raw = "-2 Huevos.\n-Primero vamos a cortar la cebolla y el pimiento."
         self.assertEqual(diet_parser._join_wrapped_lines(raw), ["-2 Huevos."])

@@ -280,6 +280,23 @@ function parseDiet(name: string, body: string): DietPlan {
   };
 }
 
+function splitOptionDietPages(pages: readonly string[]): Array<[string, string]> {
+  const chunks: Array<{ number: number; pages: string[] }> = [];
+  for (const page of pages) {
+    const lines = page.split('\n');
+    const firstLunch = lines.findIndex(line => /^\s*ALMUERZO\s*$/i.test(line));
+    const markerIndex = firstLunch < 0 ? -1 : lines.slice(0, firstLunch).findIndex(line => /^\s*OPCI[ÓO]N\s+([12])\s*$/i.test(line));
+    const marker = markerIndex < 0 ? null : lines[markerIndex].match(/^\s*OPCI[ÓO]N\s+([12])\s*$/i);
+    if (marker) {
+      chunks.push({ number: Number(marker[1]), pages: [lines.filter((_, index) => index !== markerIndex).join('\n')] });
+    } else {
+      chunks.at(-1)?.pages.push(page);
+    }
+  }
+  if (chunks.length !== 2 || chunks[0].number !== 1 || chunks[1].number !== 2) return [];
+  return chunks.map(chunk => [`DIETA ${chunk.number}`, chunk.pages.join('\n')]);
+}
+
 function cleanTrainingLines(rawText: string): string[] {
   const lines: string[] = [];
   for (const rawLine of rawText.split('\n')) {
@@ -428,6 +445,9 @@ export function parseDietText(pageTexts: readonly DietPageText[]): ParseResult {
   const diets: DietPlan[] = [];
   for (let index = 1; index < parts.length - 1; index += 2) {
     diets.push(parseDiet(parts[index].trim().replace(/\s+/g, ' ').toUpperCase(), parts[index + 1]));
+  }
+  if (diets.length === 0) {
+    for (const [name, body] of splitOptionDietPages(relevantPages)) diets.push(parseDiet(name, body));
   }
   if (diets.length === 0) throw new Error('No se han encontrado secciones DIETA en el PDF.');
   const training = parseTraining(pageTexts);

@@ -65,6 +65,36 @@ def _split_into_diets(full_text: str) -> list:
     return diets
 
 
+def _split_option_diet_pages(page_texts: list) -> list:
+    chunks = []
+    for page_text in page_texts:
+        lines = page_text.splitlines()
+        lunch_index = next(
+            (index for index, line in enumerate(lines) if re.match(r"^\s*ALMUERZO\s*$", line, re.IGNORECASE)),
+            -1,
+        )
+        marker_index = -1
+        marker = None
+        if lunch_index >= 0:
+            for index, line in enumerate(lines[:lunch_index]):
+                match = re.match(r"^\s*OPCI[ÓO]N\s+([12])\s*$", line, re.IGNORECASE)
+                if match:
+                    marker_index = index
+                    marker = match
+                    break
+        if marker:
+            body = "\n".join(line for index, line in enumerate(lines) if index != marker_index)
+            chunks.append({"number": int(marker.group(1)), "pages": [body]})
+        elif chunks:
+            chunks[-1]["pages"].append(page_text)
+    if len(chunks) != 2 or [chunk["number"] for chunk in chunks] != [1, 2]:
+        return []
+    return [
+        (f'DIETA {chunk["number"]}', "\n".join(chunk["pages"]))
+        for chunk in chunks
+    ]
+
+
 def _extract_intro(diet_body: str) -> tuple:
     lines = diet_body.split("\n")
     intro_lines = []
@@ -791,7 +821,7 @@ def parse_pdf_to_structure(pdf_path: str) -> dict:
         diet_page_texts.append(text)
     full_text = "\n".join(diet_page_texts)
 
-    diet_chunks = _split_into_diets(full_text)
+    diet_chunks = _split_into_diets(full_text) or _split_option_diet_pages(diet_page_texts)
     if not diet_chunks:
         return {"status": "error", "message": "No DIETA sections found in PDF"}
 
