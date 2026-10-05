@@ -96,8 +96,11 @@ export interface ExerciseIllustration {
 
 export function findExerciseIllustration(name: string): ExerciseIllustration | null {
   const normalizedName = normalize(name);
+  const compactName = normalizedName.replace(/\s+/g, '');
   const exactMatch = exercisesByName.get(normalizedName);
-  const alias = aliasesBySpecificity.find(([candidate]) => normalizedName.includes(candidate));
+  const alias = aliasesBySpecificity.find(([candidate]) => (
+    normalizedName.includes(candidate) || compactName.includes(candidate.replace(/\s+/g, ''))
+  ));
   const exercise = exactMatch ?? (alias ? exercisesBySlug.get(alias[1]) : undefined);
   if (!exercise) return null;
 

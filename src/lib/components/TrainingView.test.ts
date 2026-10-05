@@ -42,10 +42,18 @@ describe('TrainingView', () => {
   it('shows and hides an exercise illustration from its help button', async () => {
     render(TrainingView);
 
-    const help = screen.getByRole('button', { name: 'Mostrar guía de Remo' });
-    expect(screen.queryByText('No hay una guía visual disponible para Remo.')).toBeNull();
+    expect(screen.getByText('Sin guía visual')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Mostrar guía de Remo' })).toBeNull();
+  });
+
+  it('shows and hides an available exercise illustration', async () => {
+    appState.parsedData!.training!.days[0].exercises[0].exercise = 'Press de banca plano';
+    render(TrainingView);
+
+    const help = screen.getByRole('button', { name: 'Mostrar guía de Press de banca plano' });
+    expect(screen.getByText('Guía visual disponible')).toBeTruthy();
     await fireEvent.click(help);
-    expect(screen.getByText('No hay una guía visual disponible para Remo.')).toBeTruthy();
+    expect(screen.getAllByRole('img')).toHaveLength(3);
     expect(help.getAttribute('aria-expanded')).toBe('true');
   });
 

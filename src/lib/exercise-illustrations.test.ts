@@ -21,6 +21,7 @@ describe('exercise illustrations', () => {
 
   it.each([
     ['Hiperextensiones', 'back-extension'],
+    ['H ipere xtensiones', 'back-extension'],
     ['Sentadilla Sumo', 'dumbbell-sumo-squat'],
     ['Crunch abdominal con disco', 'crunch'],
     ['Plancha lateral', 'side-plank'],
