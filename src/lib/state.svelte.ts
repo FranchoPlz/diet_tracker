@@ -11,6 +11,9 @@ export const appState = $state({
     weekNumber: 1,
     trainingWeights: {},
     trainingRepetitions: {},
+    exerciseNotes: {},
+    cardioByDay: {},
+    stepsByDay: {},
   } as WeekTracker,
   shoppingList: [] as ShoppingItem[],
   checkedShoppingItems: {} as Record<string, boolean>,
@@ -31,4 +34,6 @@ export const appState = $state({
   alwaysShowExerciseIllustrations: true,
   loading: false,
   error: null as string | null,
+  saveStatus: 'saved' as 'saved' | 'saving' | 'error',
+  toast: null as string | null,
 });

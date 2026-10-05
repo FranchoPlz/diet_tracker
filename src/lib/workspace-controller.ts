@@ -3,9 +3,11 @@ import { appState } from './state.svelte';
 import { getActivePlanId, getActiveTab, listPlans, listShoppingLists, setActivePlanId, setActiveTab } from './storage';
 import type { AppTab, ParseResult, SavedPlan } from './types';
 import { createDefaultWeekConfig } from './utils';
+import { normalizeTrainingPlan } from './training-model';
 
 let autosaveTimer: ReturnType<typeof setTimeout> | undefined;
 let pendingSave: Promise<SavedPlan | undefined> | undefined;
+let saveRequested = false;
 
 function sourceLabel(sourceName: string): string {
   const source = sourceName.split(/[\\/]/).pop()?.replace(/\.pdf$/i, '') || 'Plan semanal';
@@ -16,6 +18,7 @@ export async function createWorkspaceFromDocument(result: ParseResult, sourceNam
   if (autosaveTimer) clearTimeout(autosaveTimer);
   autosaveTimer = undefined;
   appState.parsedData = structuredClone(result);
+  if (appState.parsedData.training) appState.parsedData.training = normalizeTrainingPlan(appState.parsedData.training);
   appState.pdfPath = null;
   appState.weekConfig = createDefaultWeekConfig();
   appState.weekTracker = {
@@ -24,6 +27,7 @@ export async function createWorkspaceFromDocument(result: ParseResult, sourceNam
     weekNumber: 1,
     trainingWeights: {},
     trainingRepetitions: {},
+    exerciseNotes: {}, cardioByDay: {}, stepsByDay: {},
   };
   appState.shoppingList = [];
   appState.checkedShoppingItems = {};
@@ -51,21 +55,54 @@ export async function selectActiveTab(tab: AppTab): Promise<void> {
 
 export function scheduleWorkspaceAutosave(delay = 250): void {
   if (!appState.parsedData || !appState.activePlanId) return;
+  saveRequested = true;
+  appState.saveStatus = 'saving';
   if (autosaveTimer) clearTimeout(autosaveTimer);
   autosaveTimer = setTimeout(() => {
     autosaveTimer = undefined;
-    pendingSave = persistCurrentPlan().finally(() => { pendingSave = undefined; });
+    void runPendingSave();
   }, delay);
+}
+
+async function runPendingSave(): Promise<SavedPlan | undefined> {
+  if (!saveRequested || !appState.parsedData || !appState.activePlanId) return pendingSave;
+  if (pendingSave) {
+    await pendingSave;
+    if (!saveRequested) return undefined;
+  }
+  saveRequested = false;
+  appState.saveStatus = 'saving';
+  pendingSave = persistCurrentPlan()
+    .then(plan => {
+      appState.saveStatus = 'saved';
+      return plan;
+    })
+    .catch(error => {
+      appState.saveStatus = 'error';
+      appState.error = error instanceof Error ? error.message : String(error);
+      throw error;
+    })
+    .finally(() => { pendingSave = undefined; });
+  const result = await pendingSave;
+  if (saveRequested) return runPendingSave();
+  return result;
 }
 
 export async function flushWorkspaceAutosave(): Promise<SavedPlan | undefined> {
   if (autosaveTimer) {
     clearTimeout(autosaveTimer);
     autosaveTimer = undefined;
-    pendingSave = persistCurrentPlan().finally(() => { pendingSave = undefined; });
+    saveRequested = true;
   }
-  if (pendingSave) return pendingSave;
-  return undefined;
+  return runPendingSave();
+}
+
+export async function saveWorkspaceNow(message?: string): Promise<SavedPlan | undefined> {
+  if (!appState.parsedData || !appState.activePlanId) return undefined;
+  saveRequested = true;
+  const plan = await flushWorkspaceAutosave();
+  if (message) appState.toast = message;
+  return plan;
 }
 
 export async function initializeWorkspace(): Promise<SavedPlan | null> {

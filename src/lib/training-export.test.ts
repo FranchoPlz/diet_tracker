@@ -57,4 +57,26 @@ describe('training PDF export', () => {
     expect(content).toContain('Serie 4 | Peso: peso sin registrar | Objetivo: 8 repeticiones');
     expect(content).not.toContain('1º - 12');
   });
+
+  it('exports both superserie members and daily cardio and steps', async () => {
+    const training: TrainingPlan = { tips: [], defaultRestSeconds: null, days: [{
+      id: 'day-1', days: [1], title: 'PIERNA PERSONALIZADA', activeRest: false, details: '', exercises: [{
+        id: 'super', exercise: 'Hiperextensiones + Sentadilla Sumo', series: '1', repetitions: '12\n10', details: '', supersetExercises: ['Hiperextensiones', 'Sentadilla Sumo'],
+      }],
+    }] };
+    const content = await readPdf(createTrainingPdfBlob(training, {
+      startedAt: '', activeDayIndex: 0, weekNumber: 1,
+      trainingWeights: { 'day-1:super:member:0': ['10'], 'day-1:super:member:1': ['20'] },
+      trainingRepetitions: { 'day-1:super:member:0': ['12'], 'day-1:super:member:1': ['10'] },
+      cardioByDay: { '1:0': { activity: 'Bici', duration: '30', distance: '10 km', intensity: 'Media', calories: '', notes: '' } },
+      stepsByDay: { '1:0': '8000' },
+    }, 'Entrenamiento'));
+    expect(content).toContain('PIERNA PERSONALIZADA');
+    expect(content).toContain('Hiperextensiones');
+    expect(content).toContain('Sentadilla Sumo');
+    expect(content).toContain('Peso: 10 kg');
+    expect(content).toContain('Peso: 20 kg');
+    expect(content).toContain('Bici');
+    expect(content).toContain('Pasos del día: 8000');
+  });
 });

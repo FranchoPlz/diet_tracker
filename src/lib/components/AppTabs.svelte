@@ -38,7 +38,7 @@
 </script>
 
 <nav
-  class="sticky top-0 z-40 px-4 py-2 backdrop-blur sm:px-6 lg:px-8"
+  class="sticky top-0 z-40 px-4 pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))] backdrop-blur sm:px-6 lg:px-8"
   style="background: color-mix(in srgb, var(--app-bg) 78%, transparent);"
   aria-label="Secciones de la aplicación"
 >

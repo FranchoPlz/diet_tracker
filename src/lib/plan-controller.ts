@@ -4,6 +4,7 @@ import { appState } from './state.svelte';
 import { deletePlan, listPlans, listShoppingLists, savePlan, saveShoppingList, setActivePlanId, setActiveTab } from './storage';
 import type { SavedPlan, SavedShoppingList, WeekConfig } from './types';
 import { createDefaultWeekConfig } from './utils';
+import { migrateLegacyProgress, normalizeTrainingPlan } from './training-model';
 
 function cloneData<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -20,7 +21,7 @@ function createPlan(name: string): SavedPlan {
   const now = new Date().toISOString();
   return {
     id: crypto.randomUUID(),
-    schemaVersion: 4,
+    schemaVersion: 5,
     configured: appState.configured,
     name,
     createdAt: now,
@@ -41,7 +42,7 @@ export async function persistCurrentPlan(): Promise<SavedPlan> {
   if (!appState.parsedData) throw new Error('No hay una dieta cargada para guardar.');
 
   plan.name = appState.activePlanName.trim() || 'Mi plan semanal';
-  plan.schemaVersion = 4;
+  plan.schemaVersion = 5;
   plan.configured = appState.configured;
   plan.parsedData = cloneData(appState.parsedData);
   plan.weekConfig = portableWeekConfig(appState.weekConfig);
@@ -67,6 +68,7 @@ export async function restorePlan(plan: SavedPlan): Promise<void> {
   appState.activePlanName = plan.name;
   appState.configured = plan.configured ?? true;
   appState.parsedData = cloneData(plan.parsedData);
+  if (appState.parsedData.training) appState.parsedData.training = normalizeTrainingPlan(appState.parsedData.training);
   for (const diet of appState.parsedData.diets) diet.name = diet.name.trim().replace(/\s+/g, ' ').toUpperCase();
   appState.weekConfig = portableWeekConfig(plan.weekConfig);
   appState.weekTracker = cloneData(plan.weekTracker ?? {
@@ -75,7 +77,9 @@ export async function restorePlan(plan: SavedPlan): Promise<void> {
     weekNumber: 1,
     trainingWeights: {},
     trainingRepetitions: {},
+    exerciseNotes: {}, cardioByDay: {}, stepsByDay: {},
   });
+  if (appState.parsedData.training) migrateLegacyProgress(appState.parsedData.training, appState.weekTracker);
   appState.pdfPath = null;
   appState.planSourceLabel = `Plan guardado: ${plan.name}`;
   appState.error = null;
@@ -157,7 +161,7 @@ export async function removePlan(id: string): Promise<void> {
   appState.weekConfig = createDefaultWeekConfig();
   appState.weekTracker = {
     startedAt: new Date().toISOString(), activeDayIndex: 0, weekNumber: 1,
-    trainingWeights: {}, trainingRepetitions: {},
+    trainingWeights: {}, trainingRepetitions: {}, exerciseNotes: {}, cardioByDay: {}, stepsByDay: {},
   };
   appState.activePlanId = null;
   appState.activePlanName = 'Mi plan semanal';

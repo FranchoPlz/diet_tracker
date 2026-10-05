@@ -19,11 +19,10 @@ const database = () => openDB<DietDatabase>('diet-planner', 2, {
   },
 });
 
-function migratePlan(plan: SavedPlan): SavedPlan {
-  if (plan.schemaVersion === 4 && plan.weekTracker?.trainingRepetitions) return plan;
+export function migratePlan(plan: SavedPlan): SavedPlan {
   return {
     ...plan,
-    schemaVersion: 4,
+    schemaVersion: 5,
     configured: plan.configured ?? true,
     weekTracker: {
       ...(plan.weekTracker ?? {
@@ -33,6 +32,9 @@ function migratePlan(plan: SavedPlan): SavedPlan {
       trainingWeights: {},
       }),
       trainingRepetitions: plan.weekTracker?.trainingRepetitions ?? {},
+      exerciseNotes: plan.weekTracker?.exerciseNotes ?? {},
+      cardioByDay: plan.weekTracker?.cardioByDay ?? {},
+      stepsByDay: plan.weekTracker?.stepsByDay ?? {},
     },
   };
 }

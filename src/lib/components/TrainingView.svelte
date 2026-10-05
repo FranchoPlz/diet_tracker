@@ -2,121 +2,111 @@
   import { appState } from '$lib/state.svelte';
   import { findExerciseIllustration } from '$lib/exercise-illustrations';
   import { downloadTrainingPdf } from '$lib/training-export';
-  import { exerciseWeightKey, repetitionTargets, seriesCount, setExerciseRepetitions, setExerciseWeight } from '$lib/week-tracker';
-  import { scheduleWorkspaceAutosave } from '$lib/workspace-controller';
+  import { inferExerciseType, memberTargets, progressKey } from '$lib/training-model';
+  import type { CardioEntry, ExerciseRow, ExerciseType } from '$lib/types';
+  import { dayRecordKey, repetitionTargets, seriesCount, setCardio, setExerciseNotes, setProgressValue, setSteps } from '$lib/week-tracker';
+  import { flushWorkspaceAutosave, saveWorkspaceNow, scheduleWorkspaceAutosave } from '$lib/workspace-controller';
 
   const training = $derived(appState.parsedData?.training);
   const dayIndex = $derived(appState.weekTracker.activeDayIndex);
-  const trainingDayIndex = $derived(training?.days.findIndex((day) => day.days.includes(dayIndex + 1)) ?? -1);
-  const day = $derived(trainingDayIndex >= 0 ? training?.days[trainingDayIndex] : undefined);
+  const day = $derived(training?.days[dayIndex]);
+  const cardioKey = $derived(dayRecordKey(dayIndex));
+  const cardio = $derived(appState.weekTracker.cardioByDay?.[cardioKey] ?? { activity: '', duration: '', distance: '', intensity: '', calories: '', notes: '' });
   let visibleIllustrations = $state<Record<string, boolean>>({});
+  let showExerciseForm = $state(false);
+  let editingExerciseId = $state<string | null>(null);
+  let editingDayId = $state<string | null>(null);
+  let draft = $state({ exercise: '', type: 'strength' as ExerciseType, series: '3', repetitions: '', duration: '', details: '', notes: '' });
 
-  function toggleIllustration(key: string, visible: boolean) {
-    visibleIllustrations[key] = !visible;
+  function values(key: string, field: 'weight' | 'repetitions') {
+    const store = field === 'weight' ? appState.weekTracker.trainingWeights : appState.weekTracker.trainingRepetitions;
+    return store?.[key] ?? [];
   }
-
-  function exportPdf() {
-    if (training) downloadTrainingPdf(training, appState.weekTracker.trainingWeights, appState.activePlanName, appState.weekTracker.weekNumber, appState.weekTracker.trainingRepetitions);
+  function updateCardio(field: keyof CardioEntry, value: string) { setCardio(dayIndex, { ...cardio, [field]: value }); }
+  function openNewExercise() {
+    editingExerciseId = null;
+    editingDayId = day?.id ?? null;
+    draft = { exercise: '', type: day?.type === 'cardio' ? 'cardio' : 'strength', series: '3', repetitions: '', duration: '', details: '', notes: '' };
+    showExerciseForm = true;
   }
-
+  function editExercise(exercise: ExerciseRow) {
+    editingExerciseId = exercise.id ?? null;
+    editingDayId = day?.id ?? null;
+    draft = { exercise: exercise.exercise, type: inferExerciseType(exercise), series: exercise.series, repetitions: exercise.repetitions, duration: exercise.duration ?? '', details: exercise.details, notes: exercise.notes ?? '' };
+    showExerciseForm = true;
+  }
+  function saveExercise() {
+    if (!day || editingDayId !== (day.id ?? null) || !draft.exercise.trim()) return;
+    const index = day.exercises.findIndex(item => item.id === editingExerciseId);
+    const previous = index >= 0 ? day.exercises[index] : undefined;
+    const exercise: ExerciseRow = { ...previous, id: editingExerciseId ?? crypto.randomUUID(), ...draft, exercise: draft.exercise.trim(), userAdded: previous?.userAdded ?? true };
+    if (index >= 0) day.exercises[index] = exercise; else day.exercises.push(exercise);
+    showExerciseForm = false;
+    scheduleWorkspaceAutosave(0);
+  }
+  function removeExercise(exercise: ExerciseRow) {
+    if (!day || !confirm(`¿Eliminar ${exercise.exercise}?`)) return;
+    day.exercises = day.exercises.filter(item => item.id !== exercise.id);
+    scheduleWorkspaceAutosave(0);
+  }
   function resetTraining() {
-    if (!confirm('¿Quieres borrar los pesos y repeticiones registrados esta semana?')) return;
+    if (!confirm('¿Quieres borrar los registros de esta semana?')) return;
     if (!confirm('Esta acción no se puede deshacer. ¿Confirmas el reinicio del entrenamiento?')) return;
     appState.weekTracker.trainingWeights = {};
     appState.weekTracker.trainingRepetitions = {};
+    appState.weekTracker.exerciseNotes = {};
+    appState.weekTracker.cardioByDay = {};
+    appState.weekTracker.stepsByDay = {};
     scheduleWorkspaceAutosave(0);
   }
+  async function exportPdf() {
+    if (!training) return;
+    await flushWorkspaceAutosave();
+    downloadTrainingPdf(training, appState.weekTracker, appState.activePlanName);
+  }
+  async function saveProgress() { await saveWorkspaceNow('Progreso guardado'); }
 </script>
 
 <section class="app-surface overflow-hidden rounded-3xl border" aria-labelledby="training-title">
   <header class="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-4 py-4 dark:border-stone-700 sm:px-6">
-    <div>
-      <p class="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Entrenamiento de hoy</p>
-      <h2 id="training-title" class="mt-1 text-2xl font-black">Día {dayIndex + 1}{day ? ` · ${day.title}` : ''}</h2>
-    </div>
-    <div class="flex w-full gap-2 sm:w-auto">
-      <button class="app-accent-button min-h-11 flex-1 rounded-xl px-3 text-sm font-black" onclick={exportPdf} disabled={!training}>Exportar PDF</button>
-      <button class="min-h-11 flex-1 rounded-xl border border-red-300 px-3 text-sm font-black text-red-700 dark:border-red-900 dark:text-red-300" onclick={resetTraining}>Reiniciar</button>
-    </div>
+    <div class="min-w-0"><p class="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Entrenamiento de hoy</p><h2 id="training-title" class="mt-1 overflow-wrap-anywhere text-2xl font-black">Día {dayIndex + 1}{day ? ` · ${day.title}` : ''}</h2></div>
+    <div class="flex gap-2"><button class="app-accent-button min-h-11 rounded-xl px-4 text-sm font-black" onclick={() => void exportPdf()} disabled={!training}>Exportar PDF</button><button class="min-h-11 rounded-xl border border-red-300 px-3 text-sm font-black text-red-600 dark:border-red-900 dark:text-red-300" onclick={resetTraining}>Reiniciar</button></div>
   </header>
 
   {#if training && day}
-    {#if training.tips.length > 0 || training.defaultRestSeconds !== null}
-      <details class="border-b border-stone-200 px-4 py-3 dark:border-stone-700">
-        <summary class="min-h-11 cursor-pointer py-2 font-black">Indicaciones generales{training.defaultRestSeconds !== null ? ` · ${training.defaultRestSeconds}s descanso` : ''}</summary>
-        <ul class="space-y-1 pb-2 text-sm text-stone-600 dark:text-stone-300">{#each training.tips as tip}<li>• {tip}</li>{/each}</ul>
-      </details>
-    {/if}
-    {#if day.activeRest}
-      <p class="p-5 font-bold text-stone-700 dark:text-stone-200">{day.details || 'Realiza una actividad suave para mantenerte en movimiento.'}</p>
-    {:else if day.exercises.length > 0}
+    {#if training.tips.length || training.defaultRestSeconds !== null}<details class="border-b border-stone-200 px-4 py-3 dark:border-stone-700"><summary class="min-h-11 cursor-pointer py-2 font-black">Indicaciones generales{training.defaultRestSeconds !== null ? ` · ${training.defaultRestSeconds}s descanso` : ''}</summary><ul class="space-y-1 pb-2 text-sm text-stone-600 dark:text-stone-300">{#each training.tips as tip}<li>• {tip}</li>{/each}</ul></details>{/if}
+    {#if day.activeRest}<p class="p-5 font-bold text-stone-700 dark:text-stone-200">{day.details || 'Día de descanso. Puedes registrar cardio suave si lo realizas.'}</p>{/if}
+    {#if day.exercises.length}
       <ol class="divide-y divide-stone-200 dark:divide-stone-700">
-        {#each day.exercises as exercise, exerciseIndex}
-          {@const key = exerciseWeightKey(dayIndex, exerciseIndex)}
-          {@const targets = repetitionTargets(exercise.repetitions, seriesCount(exercise.series))}
-          {@const exerciseNames = exercise.supersetExercises ?? [exercise.exercise]}
-          {@const illustrations = exerciseNames.map((name) => ({ name, illustration: findExerciseIllustration(name) }))}
-          {@const showIllustration = visibleIllustrations[key] ?? appState.alwaysShowExerciseIllustrations}
-          <li>
-            <details class="group" open>
-            <summary class="flex cursor-pointer list-none items-start gap-3 p-4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-orange-500 sm:p-6 [&::-webkit-details-marker]:hidden">
-              <span class="grid size-8 shrink-0 place-items-center rounded-xl bg-stone-900 text-xs font-black text-white dark:bg-white dark:text-stone-900">{exerciseIndex + 1}</span>
-              <div class="min-w-0 flex-1"><h3 class="text-lg font-black leading-snug">{exercise.exercise}</h3>{#if exercise.details}<p class="mt-1 text-sm text-stone-600 dark:text-stone-300">{exercise.details}</p>{/if}</div>
-              <span aria-hidden="true" class="shrink-0 text-xl font-black text-stone-400 transition-transform group-open:rotate-180">⌄</span>
-            </summary>
-            {#if !appState.alwaysShowExerciseIllustrations}
-              <div class="mx-4 mb-3 flex justify-end sm:mx-6">
-                <button
-                  type="button"
-                  class="grid size-10 place-items-center rounded-full border border-stone-300 text-base font-black text-stone-600 transition hover:border-orange-400 hover:bg-orange-50 hover:text-orange-600 dark:border-stone-600 dark:text-stone-300 dark:hover:bg-orange-950/30"
-                  aria-label={`${showIllustration ? 'Ocultar' : 'Mostrar'} cómo hacer ${exercise.exercise}`}
-                  aria-expanded={showIllustration}
-                  onclick={() => toggleIllustration(key, showIllustration)}
-                >?</button>
+        {#each day.exercises as exercise, exerciseIndex (exercise.id)}
+          {@const names = exercise.supersetExercises?.length ? exercise.supersetExercises : [exercise.exercise]}
+          {@const exerciseType = inferExerciseType(exercise)}
+          <li><details open class="group"><summary class="flex cursor-pointer list-none items-start gap-3 p-4 sm:p-6 [&::-webkit-details-marker]:hidden"><span class="grid size-8 shrink-0 place-items-center rounded-xl bg-stone-900 text-xs font-black text-white dark:bg-white dark:text-stone-900">{exerciseIndex + 1}</span><div class="min-w-0 flex-1"><h3 class="break-words text-lg font-black leading-snug">{exercise.exercise}</h3>{#if names.length > 1}<p class="mt-1 text-xs font-black uppercase tracking-wide text-orange-600">Superserie · registros independientes</p>{/if}{#if exercise.details}<p class="mt-1 break-words text-sm text-stone-600 dark:text-stone-300">{exercise.details}</p>{/if}</div><span aria-hidden="true">⌄</span></summary><div class="px-4 pb-4 sm:px-6 sm:pb-6"><div class="flex justify-end gap-1"><button class="min-h-11 px-2 text-xs font-black text-orange-600" onclick={() => editExercise(exercise)}>Editar</button><button class="min-h-11 px-2 text-lg font-black text-red-500" onclick={() => removeExercise(exercise)} aria-label={`Eliminar ${exercise.exercise}`}>×</button></div>
+            {#each names as name, memberIndex}
+              {@const key = progressKey(day, exercise, names.length > 1 ? memberIndex : undefined)}
+              {@const count = seriesCount(exercise.series)}
+              {@const targets = names.length > 1 ? memberTargets(exercise.repetitions, count, memberIndex, names.length) : repetitionTargets(exercise.repetitions, count)}
+              <div class="mt-4 overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-700">
+                <div class="flex items-center justify-between gap-2 bg-stone-100 px-3 py-2 dark:bg-stone-800"><strong class="break-words">{name}</strong>{#if !appState.alwaysShowExerciseIllustrations}<button class="min-h-11 px-3 text-xs font-black text-orange-600" aria-label={`${visibleIllustrations[key] ? 'Ocultar' : 'Mostrar'} cómo hacer ${name}`} aria-expanded={visibleIllustrations[key] ?? false} onclick={() => visibleIllustrations[key] = !visibleIllustrations[key]}>?</button>{/if}</div>
+                {#if visibleIllustrations[key] || appState.alwaysShowExerciseIllustrations}<div class="p-3">{#if findExerciseIllustration(name)}<div class="grid grid-cols-3 gap-2">{#each findExerciseIllustration(name)?.frameUrls ?? [] as url, i}<img class="aspect-square w-full rounded-xl bg-white object-contain" src={url} alt={`${name}, posición ${i + 1}`} />{/each}</div>{:else}<p class="py-3 text-center text-sm font-bold text-stone-500">No hay una guía visual disponible para {name}.</p>{/if}</div>{/if}
+                {#if exerciseType === 'cardio'}
+                  <div class="grid gap-3 p-3 sm:grid-cols-2"><label class="text-sm font-bold">Duración objetivo<input class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" value={exercise.duration || exercise.repetitions} readonly /></label><label class="text-sm font-bold">Notas<input class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" value={appState.weekTracker.exerciseNotes?.[key] ?? ''} oninput={(e) => setExerciseNotes(key, e.currentTarget.value)} onblur={() => void flushWorkspaceAutosave()} /></label></div>
+                {:else}
+                  <div class="grid grid-cols-[3rem_minmax(0,1fr)_minmax(0,1fr)] gap-2 bg-stone-100 px-3 py-2 text-xs font-black uppercase text-stone-500 dark:bg-stone-800"><span>Serie</span><span>Peso</span><span>Reps hechas</span></div>
+                  {#each Array(count) as _, seriesIndex}<div class="grid grid-cols-[3rem_minmax(0,1fr)_minmax(0,1fr)] items-center gap-2 border-t border-stone-200 px-3 py-2 dark:border-stone-700"><div><strong>{seriesIndex + 1}</strong><small class="block text-stone-500">{targets[seriesIndex]} obj.</small></div><label><span class="sr-only">{name}, peso serie {seriesIndex + 1}</span><input type="number" inputmode="decimal" min="0" step="0.5" class="min-h-11 w-full rounded-xl border bg-transparent px-3" value={values(key, 'weight')[seriesIndex] ?? ''} oninput={(e) => setProgressValue(key, 'weight', seriesIndex, e.currentTarget.value)} onblur={() => void flushWorkspaceAutosave()} /></label><label><span class="sr-only">{name}, repeticiones serie {seriesIndex + 1}</span><input type="number" inputmode="numeric" min="0" step="1" class="min-h-11 w-full rounded-xl border bg-transparent px-3" value={values(key, 'repetitions')[seriesIndex] ?? ''} placeholder={targets[seriesIndex]} oninput={(e) => setProgressValue(key, 'repetitions', seriesIndex, e.currentTarget.value)} onblur={() => void flushWorkspaceAutosave()} /></label></div>{/each}
+                  <label class="block border-t border-stone-200 p-3 text-sm font-bold dark:border-stone-700">Notas<input class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" value={appState.weekTracker.exerciseNotes?.[key] ?? exercise.notes ?? ''} oninput={(e) => setExerciseNotes(key, e.currentTarget.value)} onblur={() => void flushWorkspaceAutosave()} /></label>
+                {/if}
               </div>
-            {/if}
-            {#if showIllustration}
-              <div class="mx-4 mb-4 space-y-3 rounded-2xl bg-stone-100 p-3 dark:bg-stone-800 sm:mx-6 sm:mb-6 sm:p-4">
-                {#each illustrations as item}
-                  {#if item.illustration}
-                    <figure>
-                      {#if illustrations.length > 1}<figcaption class="mb-2 text-sm font-black">{item.name}</figcaption>{/if}
-                      <div class="grid grid-cols-3 gap-2">
-                        {#each item.illustration.frameUrls as frameUrl, frameIndex}
-                          <img class="aspect-square w-full rounded-xl bg-white object-contain dark:bg-stone-950" src={frameUrl} alt={`${item.name}, posición ${frameIndex + 1}`} />
-                        {/each}
-                      </div>
-                    </figure>
-                  {:else}
-                    <p class="py-3 text-center text-sm font-bold text-stone-500 dark:text-stone-400">No hay una guía visual disponible para {item.name}.</p>
-                  {/if}
-                {/each}
-              </div>
-            {/if}
-            <div class="mx-4 mb-4 overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-700 sm:mx-6 sm:mb-6">
-              <div class="grid grid-cols-[3.5rem_minmax(0,1fr)_minmax(0,1fr)] gap-2 bg-stone-100 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-stone-500 dark:bg-stone-800">
-                <span>Serie</span><span>Peso</span><span>Reps hechas</span>
-              </div>
-              <div class="divide-y divide-stone-200 dark:divide-stone-700">
-                {#each Array(seriesCount(exercise.series)) as _, seriesIndex}
-                  <div class="grid grid-cols-[3.5rem_minmax(0,1fr)_minmax(0,1fr)] items-center gap-2 px-3 py-2.5">
-                    <div><span class="block font-black">{seriesIndex + 1}</span><span class="text-[11px] text-stone-500">{targets[seriesIndex]} obj.</span></div>
-                    <label><span class="sr-only">Peso serie {seriesIndex + 1}</span><div class="relative"><input type="number" inputmode="decimal" min="0" step="0.5" class="min-h-11 w-full rounded-xl border border-stone-300 bg-white px-3 pr-8 font-black dark:border-stone-600 dark:bg-stone-900" aria-label={`${exercise.exercise}, peso serie ${seriesIndex + 1}`} value={appState.weekTracker.trainingWeights[key]?.[seriesIndex] ?? ''} oninput={(event) => setExerciseWeight(dayIndex, exerciseIndex, seriesIndex, event.currentTarget.value)} /><span class="pointer-events-none absolute right-2 top-3 text-xs font-bold text-stone-400">kg</span></div></label>
-                    <label><span class="sr-only">Repeticiones serie {seriesIndex + 1}</span><input type="number" inputmode="numeric" min="0" step="1" class="min-h-11 w-full rounded-xl border border-stone-300 bg-white px-3 font-black dark:border-stone-600 dark:bg-stone-900" aria-label={`${exercise.exercise}, repeticiones serie ${seriesIndex + 1}`} value={appState.weekTracker.trainingRepetitions?.[key]?.[seriesIndex] ?? ''} placeholder={targets[seriesIndex]} oninput={(event) => setExerciseRepetitions(dayIndex, exerciseIndex, seriesIndex, event.currentTarget.value)} /></label>
-                  </div>
-                {/each}
-              </div>
-            </div>
-            </details>
-          </li>
+            {/each}
+          </div></details></li>
         {/each}
       </ol>
-    {:else}
-      <p class="p-5 text-sm text-stone-500">No hay ejercicios indicados para este día.</p>
     {/if}
-  {:else if training}
-    <p class="p-5 text-sm text-stone-500">No hay entrenamiento asignado al día {dayIndex + 1}.</p>
-  {:else}
-    <div class="px-5 py-10 text-center"><p class="text-lg font-black">Este plan no incluye una rutina de entrenamiento.</p></div>
-  {/if}
+    <div class="border-t border-stone-200 p-4 dark:border-stone-700"><button class="min-h-11 w-full rounded-xl border border-orange-400 px-4 font-black text-orange-600" onclick={openNewExercise}>Añadir ejercicio</button></div>
+    {#if showExerciseForm}<div class="space-y-3 border-t border-stone-200 bg-stone-100 p-4 dark:border-stone-700 dark:bg-stone-800"><h3 class="font-black">{editingExerciseId ? 'Editar ejercicio' : 'Nuevo ejercicio'}</h3><label class="block text-sm font-bold">Nombre<input class="mt-1 min-h-11 w-full rounded-xl border bg-white px-3 dark:bg-stone-900" bind:value={draft.exercise} /></label><div class="grid gap-3 sm:grid-cols-2"><label class="text-sm font-bold">Tipo<select class="mt-1 min-h-11 w-full rounded-xl border bg-white px-3 dark:bg-stone-900" bind:value={draft.type}><option value="strength">Fuerza</option><option value="cardio">Cardio</option><option value="warmup">Movilidad / calentamiento</option><option value="other">Otro</option></select></label><label class="text-sm font-bold">Series<input type="number" min="1" max="20" class="mt-1 min-h-11 w-full rounded-xl border bg-white px-3 dark:bg-stone-900" bind:value={draft.series} /></label><label class="text-sm font-bold">Repeticiones objetivo<input class="mt-1 min-h-11 w-full rounded-xl border bg-white px-3 dark:bg-stone-900" bind:value={draft.repetitions} /></label><label class="text-sm font-bold">Duración<input class="mt-1 min-h-11 w-full rounded-xl border bg-white px-3 dark:bg-stone-900" placeholder="Ej. 20 minutos" bind:value={draft.duration} /></label></div><label class="block text-sm font-bold">Notas<textarea class="mt-1 min-h-20 w-full rounded-xl border bg-white p-3 dark:bg-stone-900" bind:value={draft.notes}></textarea></label><div class="flex gap-2"><button class="app-accent-button min-h-11 flex-1 rounded-xl font-black" onclick={saveExercise}>Guardar ejercicio</button><button class="min-h-11 rounded-xl border px-4 font-black" onclick={() => showExerciseForm = false}>Cancelar</button></div></div>{/if}
+
+    <section class="border-t border-stone-200 p-4 dark:border-stone-700"><h3 class="text-lg font-black">Registrar cardio</h3><p class="text-sm text-stone-500">Disponible todos los días como sesión principal o complemento.</p><div class="mt-3 grid gap-3 sm:grid-cols-2"><label class="text-sm font-bold">Actividad<input class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" placeholder="Cinta, bici, caminar…" value={cardio.activity} oninput={(e) => updateCardio('activity', e.currentTarget.value)} /></label><label class="text-sm font-bold">Duración (min)<input type="number" inputmode="numeric" min="0" class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" value={cardio.duration} oninput={(e) => updateCardio('duration', e.currentTarget.value)} /></label><label class="text-sm font-bold">Distancia opcional<input class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" placeholder="Ej. 5 km" value={cardio.distance} oninput={(e) => updateCardio('distance', e.currentTarget.value)} /></label><label class="text-sm font-bold">Intensidad / ritmo / inclinación<input class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" value={cardio.intensity} oninput={(e) => updateCardio('intensity', e.currentTarget.value)} /></label><label class="text-sm font-bold">Calorías opcionales<input type="number" inputmode="numeric" min="0" class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" value={cardio.calories} oninput={(e) => updateCardio('calories', e.currentTarget.value)} /></label><label class="text-sm font-bold">Notas<input class="mt-1 min-h-11 w-full rounded-xl border bg-transparent px-3" value={cardio.notes} oninput={(e) => updateCardio('notes', e.currentTarget.value)} /></label></div></section>
+    <section class="border-t border-stone-200 p-4 dark:border-stone-700"><label class="block text-lg font-black">Pasos del día<input type="number" inputmode="numeric" min="0" step="1" class="mt-2 min-h-12 w-full rounded-xl border bg-transparent px-4" value={appState.weekTracker.stepsByDay?.[cardioKey] ?? ''} oninput={(e) => setSteps(dayIndex, e.currentTarget.value)} onblur={() => void flushWorkspaceAutosave()} /></label></section>
+    <div class="sticky bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-20 p-4"><button class="app-accent-button min-h-12 w-full rounded-2xl font-black disabled:opacity-60" disabled={appState.saveStatus === 'saving'} onclick={() => void saveProgress()}>{appState.saveStatus === 'saving' ? 'Guardando…' : appState.saveStatus === 'error' ? 'Error al guardar · Reintentar' : 'Guardar progreso'}</button></div>
+  {:else}<div class="p-6 text-center"><p class="font-black">Este plan no incluye una rutina de entrenamiento.</p></div>{/if}
 </section>

@@ -1,5 +1,6 @@
 import { appState } from './state.svelte';
 import { scheduleWorkspaceAutosave } from './workspace-controller';
+import type { CardioEntry } from './types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -36,6 +37,9 @@ export function startNextWeek(resetTraining = true, now = new Date()): void {
     weekNumber: appState.weekTracker.weekNumber + 1,
     trainingWeights: resetTraining ? {} : appState.weekTracker.trainingWeights,
     trainingRepetitions: resetTraining ? {} : appState.weekTracker.trainingRepetitions,
+    exerciseNotes: resetTraining ? {} : appState.weekTracker.exerciseNotes,
+    cardioByDay: resetTraining ? {} : appState.weekTracker.cardioByDay,
+    stepsByDay: resetTraining ? {} : appState.weekTracker.stepsByDay,
   };
   scheduleWorkspaceAutosave(0);
 }
@@ -76,5 +80,37 @@ export function setExerciseRepetitions(dayIndex: number, exerciseIndex: number, 
   repetitions[seriesIndex] = value;
   appState.weekTracker.trainingRepetitions ??= {};
   appState.weekTracker.trainingRepetitions[key] = repetitions;
+  scheduleWorkspaceAutosave();
+}
+
+export function setProgressValue(key: string, field: 'weight' | 'repetitions', seriesIndex: number, value: string): void {
+  const store = field === 'weight'
+    ? appState.weekTracker.trainingWeights
+    : (appState.weekTracker.trainingRepetitions ??= {});
+  const values = [...(store[key] ?? [])];
+  values[seriesIndex] = value;
+  store[key] = values;
+  scheduleWorkspaceAutosave();
+}
+
+export function setExerciseNotes(key: string, value: string): void {
+  appState.weekTracker.exerciseNotes ??= {};
+  appState.weekTracker.exerciseNotes[key] = value;
+  scheduleWorkspaceAutosave();
+}
+
+export function dayRecordKey(dayIndex: number): string {
+  return `${appState.weekTracker.weekNumber}:${dayIndex}`;
+}
+
+export function setSteps(dayIndex: number, value: string): void {
+  appState.weekTracker.stepsByDay ??= {};
+  appState.weekTracker.stepsByDay[dayRecordKey(dayIndex)] = value.replace(/\D/g, '');
+  scheduleWorkspaceAutosave();
+}
+
+export function setCardio(dayIndex: number, value: CardioEntry): void {
+  appState.weekTracker.cardioByDay ??= {};
+  appState.weekTracker.cardioByDay[dayRecordKey(dayIndex)] = { ...value };
   scheduleWorkspaceAutosave();
 }

@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { appState } from '$lib/state.svelte';
   import { calculateShoppingList } from '$lib/calculation';
-  import { completeConfiguration, selectActiveTab } from '$lib/workspace-controller';
+  import { completeConfiguration, flushWorkspaceAutosave, selectActiveTab } from '$lib/workspace-controller';
   import AppTabs, { type AppTab } from '$lib/components/AppTabs.svelte';
   import DayNavigator from '$lib/components/DayNavigator.svelte';
   import CurrentDayDiet from '$lib/components/CurrentDayDiet.svelte';
@@ -16,6 +16,7 @@
   import ShareImport from '$lib/components/ShareImport.svelte';
   import { getSwipedTab } from '$lib/swipe';
   import TrainingView from '$lib/components/TrainingView.svelte';
+  import TrainingPlanner from '$lib/components/TrainingPlanner.svelte';
   import { downloadTrainingPdf } from '$lib/training-export';
   import { setActiveDay, startNextWeek, syncActiveDay } from '$lib/week-tracker';
 
@@ -30,6 +31,7 @@
   });
 
   function setTab(tab: AppTab) {
+    void flushWorkspaceAutosave();
     void selectActiveTab(tab);
   }
 
@@ -57,11 +59,16 @@
     const options = { passive: true, capture: true };
     const syncWhenVisible = () => {
       if (document.visibilityState === 'visible') syncCurrentDay();
+      else void flushWorkspaceAutosave();
     };
+    const flush = () => { void flushWorkspaceAutosave(); };
     window.addEventListener('touchstart', startGesture, options);
     window.addEventListener('touchend', endGesture, options);
     window.addEventListener('touchcancel', cancelGesture, options);
     window.addEventListener('focus', syncCurrentDay);
+    window.addEventListener('blur', flush);
+    window.addEventListener('pagehide', flush);
+    window.addEventListener('beforeunload', flush);
     document.addEventListener('visibilitychange', syncWhenVisible);
     const daySyncTimer = window.setInterval(syncCurrentDay, 60_000);
 
@@ -70,6 +77,9 @@
       window.removeEventListener('touchend', endGesture, options);
       window.removeEventListener('touchcancel', cancelGesture, options);
       window.removeEventListener('focus', syncCurrentDay);
+      window.removeEventListener('blur', flush);
+      window.removeEventListener('pagehide', flush);
+      window.removeEventListener('beforeunload', flush);
       document.removeEventListener('visibilitychange', syncWhenVisible);
       window.clearInterval(daySyncTimer);
     };
@@ -84,7 +94,8 @@
       && confirm('Has completado la semana. ¿Quieres modificar la dieta para la siguiente?');
     const exportTraining = confirm('¿Quieres guardar el PDF del entrenamiento de esta semana antes de reiniciarlo?');
     if (exportTraining && appState.parsedData?.training) {
-      downloadTrainingPdf(appState.parsedData.training, appState.weekTracker.trainingWeights, appState.activePlanName, appState.weekTracker.weekNumber, appState.weekTracker.trainingRepetitions);
+      await flushWorkspaceAutosave();
+      downloadTrainingPdf(appState.parsedData.training, appState.weekTracker, appState.activePlanName);
     }
     const resetTraining = confirm('¿Quieres reiniciar también los pesos y repeticiones del entrenamiento para la nueva semana?');
     startNextWeek(resetTraining);
@@ -113,6 +124,7 @@
     appState.activeListId = null;
     appState.activeListName = `${appState.activePlanName} - compra`;
     await completeConfiguration();
+    appState.toast = 'Dieta guardada';
     dietEditDayIndex = null;
   }
 
@@ -125,7 +137,7 @@
 
 <svelte:head><title>Mi semana · DG Nutrición</title></svelte:head>
 
-<main class="w-full min-w-0 pb-20">
+<main class="w-full min-w-0 pb-[calc(5rem+env(safe-area-inset-bottom))]">
   {#if !appState.persistenceReady}
     <div class="mx-auto grid min-h-64 max-w-[1480px] place-items-center px-4 sm:px-6 lg:px-8" role="status">
       <p class="font-bold text-stone-500">Recuperando tu plan…</p>
@@ -161,7 +173,7 @@
             <div class="flex justify-center"><DietPdfExportButton /></div>
           </div>
         {:else if appState.activeTab === 'training'}
-          <div class="space-y-4"><DayNavigator onSelect={selectDay} onNext={nextDay} /><TrainingView /></div>
+          <div class="space-y-4"><DayNavigator onSelect={selectDay} onNext={nextDay} /><TrainingPlanner /><TrainingView /></div>
         {:else if appState.activeTab === 'shopping'}
           <div class="mx-auto max-w-3xl">
             <ShoppingList />
@@ -171,5 +183,10 @@
         {/if}
       </div>
     {/if}
+  {/if}
+  {#if appState.toast}
+    <div class="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-sm rounded-2xl bg-stone-950 px-4 py-3 text-center font-black text-white shadow-2xl" role="status" aria-live="polite">
+      {appState.toast}
+    </div>
   {/if}
 </main>

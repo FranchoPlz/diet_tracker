@@ -60,7 +60,7 @@
 </script>
 
 {#if appState.shoppingList.length > 0 || appState.activeListId}
-  <section class="compact-shopping min-w-0 max-w-full overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
+  <section class="compact-shopping min-w-0 max-w-full rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
     <div class="compact-shopping-header border-b border-stone-200 p-5 dark:border-stone-700">
       <p class="text-xs font-bold uppercase tracking-[0.2em] text-teal-700 dark:text-teal-300">En el supermercado</p>
       <h2 class="mt-1 text-2xl font-black text-stone-900 dark:text-white">{appState.activeListName}</h2>
@@ -81,17 +81,17 @@
       </div>
     </div>
 
-    <div class="max-h-[40rem] overflow-y-auto">
+    <div class="overflow-visible md:max-h-[40rem] md:overflow-y-auto md:overscroll-contain">
       {#each SHOPPING_CATEGORIES as category}
         {@const items = visibleItems(category)}
         {#if items.length > 0}
           <details open class="border-b border-stone-100 last:border-0 dark:border-stone-800">
-            <summary class="sticky top-0 z-10 cursor-pointer bg-stone-50 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-stone-500 dark:bg-stone-800 dark:text-stone-300">{category} · {items.length}</summary>
+            <summary class="sticky top-[calc(4rem+env(safe-area-inset-top))] z-10 cursor-pointer bg-stone-50 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-stone-500 dark:bg-stone-800 dark:text-stone-300 md:top-0">{category} · {items.length}</summary>
             <div class="divide-y divide-stone-100 dark:divide-stone-800">
               {#each items as item (item.id)}
                 {@const key = item.id}
                 <div class="compact-shopping-item flex min-w-0 items-start gap-2 px-4 py-3.5 sm:gap-3 sm:px-5">
-                  <input type="checkbox" bind:checked={appState.checkedShoppingItems[key]} onchange={() => scheduleWorkspaceAutosave()} class="mt-1 size-5 shrink-0 accent-teal-700" aria-label="Marcar {item.name}" />
+                   <label class="grid min-h-11 min-w-11 shrink-0 place-items-center"><input type="checkbox" bind:checked={appState.checkedShoppingItems[key]} onchange={() => scheduleWorkspaceAutosave()} class="size-5 accent-teal-700" aria-label="Marcar {item.name}" /></label>
                   <div class="min-w-0 flex-1">
                     {#if editingId === item.id}
                       <input value={item.name} oninput={(event) => updateItem(item.id, 'name', event.currentTarget.value)} class="w-full rounded-lg border border-stone-200 px-2 py-1 font-bold dark:border-stone-700 dark:bg-stone-800" aria-label="Producto" />
@@ -110,8 +110,8 @@
                     {/if}
                   </div>
                   <div class="flex shrink-0 flex-col gap-1 sm:flex-row">
-                    <button class="rounded-lg px-2 py-1 text-xs font-bold text-teal-700 hover:bg-teal-50 dark:text-teal-300" onclick={() => editingId = editingId === item.id ? null : item.id}>{editingId === item.id ? 'Listo' : 'Editar'}</button>
-                    <button class="rounded-lg px-2 py-1 text-xs font-bold text-red-500 hover:bg-red-50" onclick={() => removeItem(item.id)} aria-label="Eliminar {item.name}">×</button>
+                     <button class="min-h-11 min-w-11 rounded-lg px-2 text-xs font-bold text-teal-700 hover:bg-teal-50 dark:text-teal-300" onclick={() => editingId = editingId === item.id ? null : item.id}>{editingId === item.id ? 'Listo' : 'Editar'}</button>
+                     <button class="min-h-11 min-w-11 rounded-lg px-2 text-xs font-bold text-red-500 hover:bg-red-50" onclick={() => removeItem(item.id)} aria-label="Eliminar {item.name}">×</button>
                   </div>
                 </div>
               {/each}

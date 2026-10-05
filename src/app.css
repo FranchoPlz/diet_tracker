@@ -71,6 +71,18 @@ button, input, summary {
   transition-duration: 150ms;
 }
 
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
 .app-shell {
   background:
     radial-gradient(circle at 8% -10%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 20rem),

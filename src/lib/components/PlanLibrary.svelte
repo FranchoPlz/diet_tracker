@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { appState } from '$lib/state.svelte';
   import { calculateActivePlan, duplicatePlan, initializePlans, persistCurrentPlan, removePlan, renamePlan, restorePlan } from '$lib/plan-controller';
+  import { flushWorkspaceAutosave } from '$lib/workspace-controller';
 
   let open = $state(false);
   let editingId = $state<string | null>(null);
@@ -17,6 +18,12 @@
   async function remove(id: string) {
     if (!confirm('¿Eliminar este plan guardado? Esta acción no se puede deshacer.')) return;
     await removePlan(id);
+  }
+
+  async function selectPlan(plan: Parameters<typeof restorePlan>[0]) {
+    await flushWorkspaceAutosave();
+    await restorePlan(plan);
+    open = false;
   }
 </script>
 
@@ -46,7 +53,7 @@
                 <button class="rounded-lg px-2 text-xs font-bold text-teal-700" type="submit">Listo</button>
               </form>
             {:else}
-              <button class="w-full text-left" onclick={() => { void restorePlan(plan); open = false; }}>
+              <button class="w-full text-left" onclick={() => void selectPlan(plan)}>
                 <span class="block truncate text-sm font-bold">{plan.name}</span>
                 <span class="text-xs text-stone-400">{new Date(plan.updatedAt).toLocaleDateString()} · {plan.shoppingListId ? 'con lista' : 'sin lista'}</span>
               </button>

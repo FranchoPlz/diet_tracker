@@ -44,22 +44,42 @@ export interface TrainingPlan {
   tips: string[];
   defaultRestSeconds: number | null;
   days: TrainingDay[];
+  templateDays?: TrainingDay[];
 }
 
+export type TrainingDayType = 'leg' | 'upper' | 'cardio' | 'rest' | 'custom';
+export type ExerciseType = 'strength' | 'cardio' | 'warmup' | 'other';
+
 export interface TrainingDay {
+  id?: string;
   days: number[];
   title: string;
   activeRest: boolean;
   details: string;
   exercises: ExerciseRow[];
+  type?: TrainingDayType;
 }
 
 export interface ExerciseRow {
+  id?: string;
   exercise: string;
   series: string;
   repetitions: string;
   details: string;
   supersetExercises?: string[];
+  type?: ExerciseType;
+  duration?: string;
+  notes?: string;
+  userAdded?: boolean;
+}
+
+export interface CardioEntry {
+  activity: string;
+  duration: string;
+  distance: string;
+  intensity: string;
+  calories: string;
+  notes: string;
 }
 
 /**
@@ -133,11 +153,14 @@ export interface WeekTracker {
   weekNumber: number;
   trainingWeights: Record<string, string[]>;
   trainingRepetitions?: Record<string, string[]>;
+  exerciseNotes?: Record<string, string>;
+  cardioByDay?: Record<string, CardioEntry>;
+  stepsByDay?: Record<string, string>;
 }
 
 export interface SavedPlan {
   id: string;
-  schemaVersion: 1 | 2 | 3 | 4;
+  schemaVersion: 1 | 2 | 3 | 4 | 5;
   configured?: boolean;
   name: string;
   createdAt: string;

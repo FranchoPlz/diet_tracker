@@ -9,7 +9,7 @@
   const names = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 </script>
 
-<section class="app-surface sticky top-2 z-10 rounded-2xl border p-3" aria-label="Navegación de la semana">
+<section class="app-surface sticky top-[calc(4rem+env(safe-area-inset-top))] z-30 rounded-2xl border p-3" aria-label="Navegación de la semana">
   <div class="mb-3 flex items-center justify-between gap-3">
     <div>
       <p class="text-[0.65rem] font-black uppercase tracking-[0.18em] text-orange-600">Semana {appState.weekTracker.weekNumber}</p>

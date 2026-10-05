@@ -19,19 +19,20 @@ describe('TrainingView', () => {
   it('shows one row per series and records weight and completed repetitions', async () => {
     render(TrainingView);
     expect(screen.getByText('Día 1 · TORSO')).toBeTruthy();
-    expect(screen.getAllByRole('spinbutton')).toHaveLength(6);
+    expect(screen.getAllByLabelText(/Remo, (peso|repeticiones) serie/)).toHaveLength(6);
     expect(screen.getByText('12 obj.')).toBeTruthy();
     expect(screen.getByText('10 obj.')).toBeTruthy();
     expect(screen.getByText('8 obj.')).toBeTruthy();
     await fireEvent.input(screen.getByLabelText('Remo, peso serie 1'), { target: { value: '25' } });
     await fireEvent.input(screen.getByLabelText('Remo, repeticiones serie 1'), { target: { value: '10' } });
-    expect(appState.weekTracker.trainingWeights['0:0']).toEqual(['25']);
-    expect(appState.weekTracker.trainingRepetitions?.['0:0']).toEqual(['10']);
+    const key = Object.keys(appState.weekTracker.trainingWeights)[0];
+    expect(appState.weekTracker.trainingWeights[key]).toEqual(['25']);
+    expect(appState.weekTracker.trainingRepetitions?.[key]).toEqual(['10']);
   });
 
   it('allows each exercise to be collapsed', async () => {
     render(TrainingView);
-    const exercise = screen.getByText('Remo').closest('details');
+    const exercise = screen.getAllByText('Remo')[0].closest('details');
 
     expect(exercise?.open).toBe(true);
     await fireEvent.click(exercise!.querySelector('summary')!);
