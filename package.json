@@ -9,18 +9,12 @@
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "test": "vitest run && python3 -m unittest discover -s tests -p 'test_*.py'",
-    "tauri": "tauri"
+    "test": "vitest run"
   },
   "license": "MIT",
   "dependencies": {
     "@bryllim/workout-guide": "^1.0.0",
     "@tailwindcss/vite": "^4.2.2",
-    "@tauri-apps/api": "^2.10.1",
-    "@tauri-apps/plugin-dialog": "^2.6.0",
-    "@tauri-apps/plugin-fs": "^2.4.5",
-    "@tauri-apps/plugin-opener": "^2.5.3",
-    "@tauri-apps/plugin-shell": "^2.3.5",
     "fflate": "^0.8.3",
     "idb": "^8.0.3",
     "pdfjs-dist": "^5.4.149",
@@ -31,7 +25,6 @@
     "@sveltejs/adapter-static": "^3.0.6",
     "@sveltejs/kit": "^2.55.0",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
-    "@tauri-apps/cli": "^2.10.1",
     "@testing-library/svelte": "^5.2.8",
     "fake-indexeddb": "^6.2.2",
     "jsdom": "^26.1.0",

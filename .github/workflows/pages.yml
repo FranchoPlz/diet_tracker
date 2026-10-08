@@ -1,4 +1,4 @@
-name: Deploy Mobile Web App
+name: Deploy PWA
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npx vitest run
-      - name: Build mobile web app
+      - name: Build PWA
         env:
           BASE_PATH: /${{ github.event.repository.name }}
         run: npm run build

@@ -28,7 +28,7 @@ describe('CalculateButton', () => {
 
   afterEach(cleanup);
 
-  it('calculates locally without a PDF path or Tauri runtime', async () => {
+  it('calculates locally without a PDF path', async () => {
     appState.pdfPath = null;
     render(CalculateButton);
     await fireEvent.click(screen.getByRole('button', { name: 'Crear lista de compra' }));

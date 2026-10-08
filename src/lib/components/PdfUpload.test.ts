@@ -1,35 +1,23 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { appState } from '$lib/state.svelte';
 import PdfUpload from './PdfUpload.svelte';
 
 const mocks = vi.hoisted(() => ({
-  invoke: vi.fn(),
-  onDragDropEvent: vi.fn(),
   parseBrowserPdf: vi.fn(),
   createWorkspaceFromDocument: vi.fn(),
 }));
 
-vi.mock('@tauri-apps/api/core', () => ({ invoke: mocks.invoke }));
-vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({ onDragDropEvent: mocks.onDragDropEvent }),
-}));
 vi.mock('$lib/pdf', () => ({ parseBrowserPdf: mocks.parseBrowserPdf }));
 vi.mock('$lib/workspace-controller', () => ({ createWorkspaceFromDocument: mocks.createWorkspaceFromDocument }));
 
 describe('PdfUpload', () => {
   beforeEach(() => {
-    Object.defineProperty(window, '__TAURI_INTERNALS__', {
-      configurable: true,
-      value: {},
-    });
     appState.error = null;
     appState.loading = false;
     appState.parsedData = null;
     appState.pdfPath = null;
-    mocks.invoke.mockReset();
-    mocks.onDragDropEvent.mockReset();
     mocks.parseBrowserPdf.mockReset();
     mocks.createWorkspaceFromDocument.mockReset();
     mocks.createWorkspaceFromDocument.mockImplementation(async (result, sourceName) => {
@@ -40,43 +28,9 @@ describe('PdfUpload', () => {
     });
   });
 
-  afterEach(() => {
-    cleanup();
-    delete (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
-  });
+  afterEach(cleanup);
 
-  it('parses the PDF path received from a native Tauri drop event', async () => {
-    let listener: (event: { payload: { type: string; paths: string[] } }) => void = () => {};
-    let finishParsing: (value: string) => void = () => {};
-    mocks.onDragDropEvent.mockImplementation(async (callback) => {
-      listener = callback;
-      return vi.fn();
-    });
-    mocks.invoke.mockImplementation(() => new Promise((resolve) => {
-      finishParsing = resolve;
-    }));
-
-    render(PdfUpload);
-    await waitFor(() => expect(mocks.onDragDropEvent).toHaveBeenCalledOnce());
-    listener({ payload: { type: 'drop', paths: ['/plans/SEPTIEMBRE.pdf'] } });
-
-    await waitFor(() => {
-      expect(screen.getByRole('status').textContent).toContain('Leyendo y organizando tu dieta');
-    });
-    finishParsing(JSON.stringify({ status: 'ok', diets: [] }));
-
-    await waitFor(() => {
-      expect(mocks.invoke).toHaveBeenCalledWith('parse_pdf', {
-        path: '/plans/SEPTIEMBRE.pdf',
-      });
-      expect(mocks.createWorkspaceFromDocument).toHaveBeenCalledWith({ status: 'ok', diets: [] }, 'SEPTIEMBRE.pdf');
-      expect(appState.pdfPath).toBeNull();
-      expect(screen.getByRole('region', { name: 'PDF cargado' }).textContent).toContain('SEPTIEMBRE.pdf');
-    });
-  });
-
-  it('parses a selected PDF in the browser without Tauri', async () => {
-    delete (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
+  it('parses a selected PDF in the browser', async () => {
     mocks.parseBrowserPdf.mockResolvedValue({ status: 'ok', diets: [] });
     const { container } = render(PdfUpload);
     const file = new File(['%PDF-test'], 'ABRIL.pdf', { type: 'application/pdf' });
@@ -91,11 +45,24 @@ describe('PdfUpload', () => {
       expect(appState.pdfPath).toBeNull();
     });
     expect(appState.activePlanName).toBe('ABRIL');
-    expect(mocks.invoke).not.toHaveBeenCalled();
+  });
+
+  it('parses a PDF dropped onto the web upload zone', async () => {
+    mocks.parseBrowserPdf.mockResolvedValue({ status: 'ok', diets: [] });
+    const file = new File(['%PDF-test'], 'SEPTIEMBRE.pdf', { type: 'application/pdf' });
+    render(PdfUpload);
+
+    await fireEvent.drop(screen.getByRole('region', { name: 'Subir PDF' }), {
+      dataTransfer: { files: [file] },
+    });
+
+    await waitFor(() => {
+      expect(mocks.parseBrowserPdf).toHaveBeenCalledWith(file);
+      expect(mocks.createWorkspaceFromDocument).toHaveBeenCalledWith({ status: 'ok', diets: [] }, 'SEPTIEMBRE.pdf');
+    });
   });
 
   it('keeps the current plan when replacement parsing fails', async () => {
-    delete (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
     appState.parsedData = { status: 'ok', diets: [{ name: 'DIETA 1', intro: '', meals: [] }] };
     appState.activePlanName = 'Plan actual';
     vi.spyOn(window, 'confirm').mockReturnValue(true);

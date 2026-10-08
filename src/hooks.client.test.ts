@@ -15,7 +15,6 @@ describe('client initialization', () => {
   afterEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
-    delete (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
     if (readyStateDescriptor) Object.defineProperty(Document.prototype, 'readyState', readyStateDescriptor);
   });
 

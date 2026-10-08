@@ -21,18 +21,6 @@ Thumbs.db
 *.Zone.Identifier
 *:Zone.Identifier
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-.venv/
-
-# PyInstaller sidecar build artifacts
-src-tauri/python/build/
-src-tauri/python/dist/
-
-# Sidecar binaries (platform-specific, built in CI)
-src-tauri/diet_parser-*
 
 # Sisyphus agent artifacts
 .sisyphus/evidence/
