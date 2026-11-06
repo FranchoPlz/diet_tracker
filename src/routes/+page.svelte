@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { appState } from '$lib/state.svelte';
-  import { calculateShoppingList } from '$lib/calculation';
   import { completeConfiguration, flushWorkspaceAutosave, selectActiveTab } from '$lib/workspace-controller';
-  import AppTabs, { type AppTab } from '$lib/components/AppTabs.svelte';
+  import AppTabs from '$lib/components/AppTabs.svelte';
+  import { calculateActivePlan } from '$lib/plan-controller';
+  import type { AppTab } from '$lib/types';
   import DayNavigator from '$lib/components/DayNavigator.svelte';
   import CurrentDayDiet from '$lib/components/CurrentDayDiet.svelte';
   import DietPdfExportButton from '$lib/components/DietPdfExportButton.svelte';
@@ -17,12 +18,14 @@
   import { getSwipedTab } from '$lib/swipe';
   import TrainingView from '$lib/components/TrainingView.svelte';
   import TrainingPlanner from '$lib/components/TrainingPlanner.svelte';
+  import WeekCloseDialog from '$lib/components/WeekCloseDialog.svelte';
   import { downloadTrainingPdf } from '$lib/training-export';
   import { setActiveDay, startNextWeek, syncActiveDay } from '$lib/week-tracker';
 
   let gestureStart = $state<{ x: number; y: number; target: EventTarget | null } | null>(null);
   let syncedPlanId = $state<string | null>(null);
   let dietEditDayIndex = $state<number | null>(null);
+  let weekClosing = $state(false);
 
   $effect(() => {
     if (!appState.persistenceReady || !appState.parsedData || appState.activePlanId === syncedPlanId) return;
@@ -86,43 +89,39 @@
   });
 
   function syncCurrentDay() {
-    if (appState.parsedData && syncActiveDay()) void closeWeek();
+    if (appState.parsedData && syncActiveDay()) closeWeek();
   }
 
-  async function closeWeek() {
-    const modifyDiet = appState.askToModifyDiet
-      && confirm('Has completado la semana. ¿Quieres modificar la dieta para la siguiente?');
-    const exportTraining = confirm('¿Quieres guardar el PDF del entrenamiento de esta semana antes de reiniciarlo?');
+  function closeWeek() {
+    weekClosing = true;
+  }
+
+  async function startWeek({ modifyDiet, exportTraining, resetTraining }: { modifyDiet: boolean; exportTraining: boolean; resetTraining: boolean }) {
+    weekClosing = false;
     if (exportTraining && appState.parsedData?.training) {
       await flushWorkspaceAutosave();
       downloadTrainingPdf(appState.parsedData.training, appState.weekTracker, appState.activePlanName);
     }
-    const resetTraining = confirm('¿Quieres reiniciar también los pesos y repeticiones del entrenamiento para la nueva semana?');
     startNextWeek(resetTraining);
-    if (modifyDiet) {
-      await selectActiveTab('diet');
-    }
+    if (modifyDiet) await selectActiveTab('diet');
   }
 
   function selectDay(dayIndex: number) {
     if (appState.weekTracker.activeDayIndex === 6 && dayIndex === 0) {
-      void closeWeek();
+      closeWeek();
       return;
     }
     setActiveDay(dayIndex);
   }
 
   function nextDay() {
-    if (appState.weekTracker.activeDayIndex === 6) void closeWeek();
+    if (appState.weekTracker.activeDayIndex === 6) closeWeek();
     else setActiveDay(appState.weekTracker.activeDayIndex + 1);
   }
 
   async function saveConfiguration() {
     if (!appState.parsedData) return;
-    appState.shoppingList = calculateShoppingList(appState.parsedData, appState.weekConfig);
-    appState.checkedShoppingItems = {};
-    appState.activeListId = null;
-    appState.activeListName = `${appState.activePlanName} - compra`;
+    calculateActivePlan();
     await completeConfiguration();
     appState.toast = 'Dieta guardada';
     dietEditDayIndex = null;
@@ -152,7 +151,7 @@
     {:else if !appState.parsedData}
       <div class="mx-auto max-w-[1480px] px-4 sm:px-6 lg:px-8">
         <header class="mb-8 max-w-3xl">
-          <p class="mb-2 text-xs font-black uppercase tracking-[0.28em] text-orange-600">Plan semanal</p>
+          <p class="mb-2 text-xs font-black uppercase tracking-[0.28em] text-warm">Plan semanal</p>
           <h1 class="text-4xl font-black tracking-[-0.04em] text-stone-950 dark:text-white sm:text-6xl">Del menú al carro,<br /><span class="text-stone-400">sin hacer cuentas.</span></h1>
           <p class="mt-4 max-w-2xl text-base leading-relaxed text-stone-600 dark:text-stone-400">Carga tu dieta para configurar tus comidas, consultar el entrenamiento y preparar la compra.</p>
         </header>
@@ -164,7 +163,7 @@
 
       <div id="panel-{appState.activeTab}" aria-labelledby="tab-{appState.activeTab}" class="mx-auto mt-4 max-w-[1480px] touch-pan-y space-y-4 px-3 sm:px-6 lg:px-8" role="tabpanel" tabindex="0">
         {#if appState.activeTab === 'home'}
-          <div class="space-y-4"><HomeOverview onResetWeek={() => void closeWeek()} /><DayNavigator onSelect={selectDay} onNext={nextDay} /><CurrentDayDiet onEdit={openException} /></div>
+          <div class="space-y-4"><HomeOverview onResetWeek={closeWeek} /><DayNavigator onSelect={selectDay} onNext={nextDay} /><CurrentDayDiet onEdit={openException} /></div>
         {:else if appState.activeTab === 'diet'}
           <div class="space-y-5">
             {#key dietEditDayIndex}
@@ -183,6 +182,9 @@
         {/if}
       </div>
     {/if}
+  {/if}
+  {#if weekClosing}
+    <WeekCloseDialog onConfirm={(choices) => void startWeek(choices)} />
   {/if}
   {#if appState.toast}
     <div class="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-sm rounded-2xl bg-stone-950 px-4 py-3 text-center font-black text-white shadow-2xl" role="status" aria-live="polite">

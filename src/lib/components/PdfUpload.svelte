@@ -8,11 +8,6 @@
   let isParsing = $state(false);
   let fileInput = $state<HTMLInputElement>();
 
-  function handleDragEnter(e: DragEvent) {
-    e.preventDefault();
-    isDragging = true;
-  }
-
   function handleDragLeave(e: DragEvent) {
     e.preventDefault();
     isDragging = false;
@@ -32,8 +27,8 @@
     appState.loading = true;
     appState.error = null;
     try {
-      const { parseBrowserPdf } = await import('$lib/pdf');
-      const result = await parseBrowserPdf(file);
+      const { parsePdf } = await import('$lib/pdf');
+      const result = await parsePdf(file);
       await createWorkspaceFromDocument(result, file.name);
     } catch (e) {
       console.error('Error parsing PDF:', e);
@@ -73,12 +68,12 @@
     {#if compact}
       <span class="rounded-xl border border-stone-200 px-3 py-2 text-sm font-bold text-stone-500 dark:border-stone-700" role="status">Leyendo PDF…</span>
     {:else}
-      <div class="relative overflow-hidden rounded-2xl border border-teal-200 bg-white px-5 py-5 shadow-sm dark:border-teal-900 dark:bg-stone-900" role="status" aria-live="polite">
-      <div class="absolute inset-x-0 bottom-0 h-1 overflow-hidden bg-teal-100 dark:bg-teal-950">
-        <div class="h-full w-1/3 animate-[loading_1.2s_ease-in-out_infinite] rounded-full bg-teal-600"></div>
+      <div class="relative overflow-hidden rounded-2xl border border-brand-line bg-white px-5 py-5 shadow-sm dark:bg-stone-900" role="status" aria-live="polite">
+      <div class="absolute inset-x-0 bottom-0 h-1 overflow-hidden bg-brand-soft">
+        <div class="h-full w-1/3 animate-[loading_1.2s_ease-in-out_infinite] rounded-full bg-brand"></div>
       </div>
       <div class="flex items-center gap-4">
-        <span class="grid size-11 shrink-0 place-items-center rounded-full bg-teal-100 dark:bg-teal-950">
+        <span class="grid size-11 shrink-0 place-items-center rounded-full bg-brand-soft">
           <span class="size-5 animate-spin rounded-full border-2 border-teal-700 border-t-transparent"></span>
         </span>
         <div>
@@ -94,7 +89,7 @@
     {:else}
       <div
       class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white/70 px-4 py-3 text-sm shadow-sm dark:border-stone-800 dark:bg-stone-900/70"
-      ondragenter={handleDragEnter}
+      ondragenter={handleDragOver}
       ondragleave={handleDragLeave}
       ondragover={handleDragOver}
       ondrop={handleDrop}
@@ -102,7 +97,7 @@
       aria-label="PDF cargado"
     >
       <div class="flex min-w-0 items-center gap-3">
-        <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">✓</span>
+        <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand-text">✓</span>
         <span class="min-w-0">
           <span class="block text-xs font-bold uppercase tracking-wider text-stone-400">PDF cargado</span>
           <span class="block truncate font-bold text-stone-700 dark:text-stone-200">{appState.activePlanName}.pdf</span>
@@ -115,8 +110,8 @@
     <button class="rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm font-bold text-stone-600 shadow-sm dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200" onclick={requestBrowserFileSelect}>{actionLabel}</button>
   {:else}
     <div
-      class="rounded-3xl border-2 border-dashed p-8 text-center transition {isDragging ? 'border-teal-500 bg-teal-50 dark:bg-teal-950/30' : 'border-stone-300 bg-white/50 hover:border-teal-500 dark:border-stone-700 dark:bg-stone-900/50'}"
-      ondragenter={handleDragEnter}
+      class="rounded-3xl border-2 border-dashed p-8 text-center transition {isDragging ? 'border-teal-500 bg-brand-soft' : 'border-stone-300 bg-white/50 hover:border-teal-500 dark:border-stone-700 dark:bg-stone-900/50'}"
+      ondragenter={handleDragOver}
       ondragleave={handleDragLeave}
       ondragover={handleDragOver}
       ondrop={handleDrop}
@@ -124,12 +119,12 @@
       aria-label="Subir PDF"
     >
       <div class="flex flex-col items-center justify-center space-y-4">
-        <span class="grid size-14 place-items-center rounded-2xl bg-teal-100 text-2xl dark:bg-teal-950" role="img" aria-label="Archivo PDF">PDF</span>
+        <span class="grid size-14 place-items-center rounded-2xl bg-brand-soft text-2xl" role="img" aria-label="Archivo PDF">PDF</span>
         <div>
           <p class="text-lg font-black text-stone-800 dark:text-stone-100">Carga tu plan de dieta</p>
           <p class="mt-1 text-sm text-stone-500">Arrastra el PDF aquí o selecciónalo desde tu equipo.</p>
         </div>
-        <button class="rounded-xl bg-teal-700 px-5 py-2.5 font-bold text-white shadow-sm hover:bg-teal-800" onclick={requestBrowserFileSelect}>Seleccionar PDF</button>
+        <button class="rounded-xl bg-brand px-5 py-2.5 font-bold text-white shadow-sm hover:bg-brand-strong" onclick={requestBrowserFileSelect}>Seleccionar PDF</button>
       </div>
     </div>
   {/if}

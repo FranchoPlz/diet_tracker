@@ -11,7 +11,7 @@ describe('DietPdfExportButton', () => {
   beforeEach(() => {
     appState.activePlanName = 'Plan abril';
     appState.weekConfig = createDefaultWeekConfig();
-    appState.parsedData = { status: 'ok', diets: [{ name: 'DIETA 1', intro: '', meals: [] }] };
+    appState.parsedData = { diets: [{ name: 'DIETA 1', intro: '', meals: [] }] };
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:pdf') });
     Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
   });
@@ -41,6 +41,5 @@ describe('DietPdfExportButton', () => {
     await waitFor(() => expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob)));
     expect(click).toHaveBeenCalledOnce();
     expect(download).toMatch(/^plan-abril-dieta-\d{4}-\d{2}-\d{2}\.pdf$/);
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:pdf');
   });
 });

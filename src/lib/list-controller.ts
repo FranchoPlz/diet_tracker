@@ -1,7 +1,8 @@
 import { appState } from './state.svelte';
-import { createShoppingList, normalizeShoppingItem } from './shopping';
+import { createShoppingList } from './shopping';
 import { deleteShoppingList, listShoppingLists, saveShoppingList } from './storage';
-import type { SavedShoppingList, ShoppingItem } from './types';
+import type { SavedShoppingList } from './types';
+import { cloneData } from './utils';
 
 export async function initializeLists(): Promise<void> {
   appState.savedLists = await listShoppingLists();
@@ -11,20 +12,13 @@ export function applyList(list: SavedShoppingList): void {
   appState.activeListId = list.id;
   appState.activeListName = list.name;
   appState.shoppingList = list.items.map(item => ({ ...item }));
-  appState.checkedShoppingItems = Object.fromEntries(list.items.map(item => [item.id, item.checked]));
 }
 
 export async function persistCurrentList(): Promise<SavedShoppingList> {
   const existing = appState.savedLists.find(list => list.id === appState.activeListId);
-  const list = existing ? JSON.parse(JSON.stringify(existing)) as SavedShoppingList : createShoppingList(appState.activeListName);
+  const list = existing ? cloneData(existing) : createShoppingList(appState.activeListName);
   list.name = appState.activeListName;
-  list.items = appState.shoppingList.map((item: ShoppingItem) => {
-    const normalized = normalizeShoppingItem(item);
-    return {
-      ...normalized,
-      checked: appState.checkedShoppingItems[normalized.id] ?? normalized.checked,
-    };
-  });
+  list.items = cloneData(appState.shoppingList);
   await saveShoppingList(list);
   appState.activeListId = list.id;
   appState.savedLists = await listShoppingLists();
@@ -44,7 +38,6 @@ export async function removeShoppingList(id: string): Promise<void> {
     appState.activeListId = null;
     appState.activeListName = 'Lista de la semana';
     appState.shoppingList = [];
-    appState.checkedShoppingItems = {};
   }
   appState.savedLists = await listShoppingLists();
 }

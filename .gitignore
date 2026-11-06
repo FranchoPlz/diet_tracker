@@ -20,8 +20,3 @@ vite.config.ts.timestamp-*
 Thumbs.db
 *.Zone.Identifier
 *:Zone.Identifier
-
-
-# Sisyphus agent artifacts
-.sisyphus/evidence/
-.sisyphus/boulder.json

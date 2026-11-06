@@ -4,7 +4,7 @@
   import { persistCurrentList } from '$lib/list-controller';
   import { SHOPPING_CATEGORIES, normalizeShoppingItem } from '$lib/shopping';
   import { formatQuantity } from '$lib/utils';
-  import type { ShoppingCategory } from '$lib/types';
+  import type { ShoppingCategory, ShoppingListItem } from '$lib/types';
   import ListLibrary from './ListLibrary.svelte';
   import ShareList from './ShareList.svelte';
 
@@ -12,29 +12,18 @@
   let pendingOnly = $state(false);
   let editingId = $state<string | null>(null);
 
-  $effect(() => {
-    if (appState.shoppingList.some(item => !item.id)) {
-      appState.shoppingList = appState.shoppingList.map(item => normalizeShoppingItem(item));
-      scheduleWorkspaceAutosave();
-    }
-  });
-
-  const normalizedItems = $derived(appState.shoppingList.map(item => normalizeShoppingItem(item)));
-  const checkedCount = $derived(normalizedItems.filter(item => appState.checkedShoppingItems[item.id] ?? item.checked).length);
+  const checkedCount = $derived(appState.shoppingList.filter(item => item.checked).length);
 
   function visibleItems(category: ShoppingCategory) {
-    return normalizedItems.filter(item => {
-      const checked = appState.checkedShoppingItems[item.id] ?? item.checked;
-      return item.category === category
-        && item.name.toLowerCase().includes(search.trim().toLowerCase())
-        && (!pendingOnly || !checked);
-    });
+    return appState.shoppingList.filter(item => item.category === category
+      && item.name.toLowerCase().includes(search.trim().toLowerCase())
+      && (!pendingOnly || !item.checked));
   }
 
-  function updateItem(id: string, field: string, value: string | number | null) {
-    const index = appState.shoppingList.findIndex(item => normalizeShoppingItem(item).id === id);
-    if (index === -1) return;
-    appState.shoppingList[index] = { ...appState.shoppingList[index], id, [field]: value };
+  function updateItem<K extends keyof ShoppingListItem>(id: string, field: K, value: ShoppingListItem[K]) {
+    const item = appState.shoppingList.find(candidate => candidate.id === id);
+    if (!item) return;
+    item[field] = value;
     scheduleWorkspaceAutosave();
   }
 
@@ -46,7 +35,7 @@
   }
 
   function removeItem(id: string) {
-    appState.shoppingList = appState.shoppingList.filter(item => normalizeShoppingItem(item).id !== id);
+    appState.shoppingList = appState.shoppingList.filter(item => item.id !== id);
     scheduleWorkspaceAutosave();
   }
 
@@ -62,7 +51,7 @@
 {#if appState.shoppingList.length > 0 || appState.activeListId}
   <section class="compact-shopping min-w-0 max-w-full rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
     <div class="compact-shopping-header border-b border-stone-200 p-5 dark:border-stone-700">
-      <p class="text-xs font-bold uppercase tracking-[0.2em] text-teal-700 dark:text-teal-300">En el supermercado</p>
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-brand-text">En el supermercado</p>
       <h2 class="mt-1 text-2xl font-black text-stone-900 dark:text-white">{appState.activeListName}</h2>
       <div class="mt-1 flex flex-wrap items-center justify-between gap-2">
         <p class="text-sm text-stone-500 dark:text-stone-400">{checkedCount} de {appState.shoppingList.length} en el carro</p>
@@ -72,12 +61,12 @@
       </div>
       <div class="mt-4 flex flex-wrap gap-2">
         <input bind:value={appState.activeListName} aria-label="Nombre de la lista" class="min-w-0 basis-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm font-bold outline-none focus:border-teal-600 dark:border-stone-700 dark:bg-stone-800 sm:flex-1 sm:basis-auto" />
-        <button class="rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-bold text-white" onclick={() => void saveList()}>Guardar lista</button>
+        <button class="rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white" onclick={() => void saveList()}>Guardar lista</button>
         <ListLibrary />
       </div>
       <div class="mt-4 flex gap-2">
         <input bind:value={search} type="search" placeholder="Buscar ingrediente" class="min-w-0 flex-1 rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm outline-none focus:border-teal-600 dark:border-stone-700 dark:bg-stone-800" />
-        <button class="grid size-11 shrink-0 place-items-center rounded-xl bg-teal-700 text-xl font-black text-white" onclick={addItem} aria-label="Añadir producto">+</button>
+        <button class="grid size-11 shrink-0 place-items-center rounded-xl bg-brand text-xl font-black text-white" onclick={addItem} aria-label="Añadir producto">+</button>
       </div>
     </div>
 
@@ -89,28 +78,27 @@
             <summary class="sticky top-[calc(4rem+env(safe-area-inset-top))] z-10 cursor-pointer bg-stone-50 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-stone-500 dark:bg-stone-800 dark:text-stone-300 md:top-0">{category} · {items.length}</summary>
             <div class="divide-y divide-stone-100 dark:divide-stone-800">
               {#each items as item (item.id)}
-                {@const key = item.id}
                 <div class="compact-shopping-item flex min-w-0 items-start gap-2 px-4 py-3.5 sm:gap-3 sm:px-5">
-                   <label class="grid min-h-11 min-w-11 shrink-0 place-items-center"><input type="checkbox" bind:checked={appState.checkedShoppingItems[key]} onchange={() => scheduleWorkspaceAutosave()} class="size-5 accent-teal-700" aria-label="Marcar {item.name}" /></label>
+                   <label class="grid min-h-11 min-w-11 shrink-0 place-items-center"><input type="checkbox" bind:checked={item.checked} onchange={() => scheduleWorkspaceAutosave()} class="size-5 accent-teal-700" aria-label="Marcar {item.name}" /></label>
                   <div class="min-w-0 flex-1">
                     {#if editingId === item.id}
                       <input value={item.name} oninput={(event) => updateItem(item.id, 'name', event.currentTarget.value)} class="w-full rounded-lg border border-stone-200 px-2 py-1 font-bold dark:border-stone-700 dark:bg-stone-800" aria-label="Producto" />
                       <div class="mt-2 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)]">
                         <input type="number" step="any" value={item.quantity ?? ''} oninput={(event) => updateItem(item.id, 'quantity', event.currentTarget.value === '' ? null : Number(event.currentTarget.value))} class="min-w-0 rounded-lg border border-stone-200 px-2 py-1 text-sm dark:border-stone-700 dark:bg-stone-800" aria-label="Cantidad" />
                         <input value={item.unit ?? ''} oninput={(event) => updateItem(item.id, 'unit', event.currentTarget.value || null)} class="min-w-0 rounded-lg border border-stone-200 px-2 py-1 text-sm dark:border-stone-700 dark:bg-stone-800" aria-label="Unidad" />
-                        <select value={item.category} onchange={(event) => updateItem(item.id, 'category', event.currentTarget.value)} class="col-span-2 min-w-0 max-w-full rounded-lg border border-stone-200 px-2 py-1 text-xs dark:border-stone-700 dark:bg-stone-800 sm:col-span-1" aria-label="Categoría">
+                        <select value={item.category} onchange={(event) => updateItem(item.id, 'category', event.currentTarget.value as ShoppingCategory)} class="col-span-2 min-w-0 max-w-full rounded-lg border border-stone-200 px-2 py-1 text-xs dark:border-stone-700 dark:bg-stone-800 sm:col-span-1" aria-label="Categoría">
                           {#each SHOPPING_CATEGORIES as choice}<option value={choice}>{choice}</option>{/each}
                         </select>
                       </div>
                     {:else}
                       <button class="w-full text-left" onclick={() => editingId = item.id}>
-                        <span class="block truncate font-bold capitalize {appState.checkedShoppingItems[key] ? 'text-stone-400 line-through' : 'text-stone-800 dark:text-stone-100'}">{item.name}</span>
+                        <span class="block truncate font-bold capitalize {item.checked ? 'text-stone-400 line-through' : 'text-stone-800 dark:text-stone-100'}">{item.name}</span>
                         <span class="text-xs text-stone-500">{formatQuantity(item.quantity, item.unit)}</span>
                       </button>
                     {/if}
                   </div>
                   <div class="flex shrink-0 flex-col gap-1 sm:flex-row">
-                     <button class="min-h-11 min-w-11 rounded-lg px-2 text-xs font-bold text-teal-700 hover:bg-teal-50 dark:text-teal-300" onclick={() => editingId = editingId === item.id ? null : item.id}>{editingId === item.id ? 'Listo' : 'Editar'}</button>
+                     <button class="min-h-11 min-w-11 rounded-lg px-2 text-xs font-bold text-brand-text hover:bg-teal-50" onclick={() => editingId = editingId === item.id ? null : item.id}>{editingId === item.id ? 'Listo' : 'Editar'}</button>
                      <button class="min-h-11 min-w-11 rounded-lg px-2 text-xs font-bold text-red-500 hover:bg-red-50" onclick={() => removeItem(item.id)} aria-label="Eliminar {item.name}">×</button>
                   </div>
                 </div>

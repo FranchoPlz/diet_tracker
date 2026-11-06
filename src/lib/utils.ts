@@ -1,36 +1,53 @@
-import type {
-  BackendSelection,
-  DaySelection,
-  DietDefaults,
-  DietPlan,
-  IngredientItem,
-  MealType,
-  ParseResult,
-  ShoppingItem,
-  WeekConfig,
+import {
+  MEAL_TYPES,
+  type DaySelection,
+  type DietDefaults,
+  type DietPlan,
+  type IngredientItem,
+  type IngredientLine,
+  type Meal,
+  type MealOption,
+  type MealType,
+  type ParseResult,
+  type WeekConfig,
+  type WeekTracker,
 } from './types';
 
-const MEAL_TYPES: MealType[] = ['DESAYUNO', 'ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA'];
+export const WEEKDAY_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+/** Deep copy of plain JSON data; also unwraps Svelte state proxies. */
+export function cloneData<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+export function createWeekTracker(overrides: Partial<WeekTracker> = {}): WeekTracker {
+  return {
+    startedAt: new Date().toISOString(),
+    activeDayIndex: 0,
+    weekNumber: 1,
+    trainingWeights: {},
+    trainingRepetitions: {},
+    exerciseNotes: {},
+    cardioByDay: {},
+    stepsByDay: {},
+    ...overrides,
+  };
+}
 
 function createDietDefaults(): DietDefaults {
   return {
-    mealOptionIndexes: {
-      DESAYUNO: 0,
-      ALMUERZO: 0,
-      COMIDA: 0,
-      MERIENDA: 0,
-      CENA: 0,
-    },
+    mealOptionIndexes: Object.fromEntries(MEAL_TYPES.map(type => [type, 0])) as Record<MealType, number>,
     alternativeChoices: {},
   };
 }
 
-export function createDefaultWeekConfig(weeks: number = 1): WeekConfig {
-  const days = buildDaysArray(weeks);
+function createDay(index: number): DaySelection {
+  return { day: index + 1, diet: index % 2 === 0 ? 'DIETA 1' : 'DIETA 2' };
+}
+
+export function createDefaultWeekConfig(): WeekConfig {
   return {
-    weeks,
-    pdf_path: null,
-    days,
+    days: Array.from({ length: 7 }, (_, index) => createDay(index)),
     dietDefaults: {
       'DIETA 1': createDietDefaults(),
       'DIETA 2': createDietDefaults(),
@@ -39,74 +56,28 @@ export function createDefaultWeekConfig(weeks: number = 1): WeekConfig {
   };
 }
 
-export function buildDaysArray(weeks: number): DaySelection[] {
-  const days: DaySelection[] = [];
-  const totalDays = weeks * 7;
-  for (let i = 0; i < totalDays; i++) {
-    days.push({
-      day: i + 1,
-      diet: i % 2 === 0 ? 'DIETA 1' : 'DIETA 2',
-      meals: MEAL_TYPES.map(type => ({
-        type,
-        selected_option_index: 0,
-      })),
-    });
-  }
-  return days;
-}
-
-export function resizeWeeks(config: WeekConfig, newWeeks: number): void {
-  const oldLen = config.days.length;
-  const newLen = newWeeks * 7;
-  config.weeks = newWeeks;
-
-  if (newLen > oldLen) {
-    for (let i = oldLen; i < newLen; i++) {
-      config.days.push({
-        day: i + 1,
-        diet: i % 2 === 0 ? 'DIETA 1' : 'DIETA 2',
-        meals: MEAL_TYPES.map(type => ({
-          type,
-          selected_option_index: 0,
-        })),
-      });
-    }
-  } else if (newLen < oldLen) {
-    config.days.length = newLen;
-    for (const key of Object.keys(config.dayExceptions)) {
-      if (Number(key) >= newLen) {
-        delete config.dayExceptions[Number(key)];
-      }
-    }
-  }
+export function alternativeKey(mealIndex: number, optionIndex: number, lineIndex: number): string {
+  return `${mealIndex}-${optionIndex}-${lineIndex}`;
 }
 
 export function getEffectiveMealOptionIndex(
   config: WeekConfig,
   dayIndex: number,
   mealType: MealType,
+  ignoreException = false,
 ): number {
-  const exception = config.dayExceptions[dayIndex];
-  if (exception?.mealOptionIndexes?.[mealType] !== undefined) {
-    return exception.mealOptionIndexes[mealType]!;
-  }
-  const day = config.days[dayIndex];
-  const defaults = config.dietDefaults[day.diet];
-  return defaults?.mealOptionIndexes[mealType] ?? 0;
+  const override = ignoreException ? undefined : config.dayExceptions[dayIndex]?.mealOptionIndexes?.[mealType];
+  return override ?? config.dietDefaults[config.days[dayIndex].diet]?.mealOptionIndexes[mealType] ?? 0;
 }
 
 export function getEffectiveAlternativeChoice(
   config: WeekConfig,
   dayIndex: number,
   altKey: string,
+  ignoreException = false,
 ): number {
-  const exception = config.dayExceptions[dayIndex];
-  if (exception?.alternativeChoices?.[altKey] !== undefined) {
-    return exception.alternativeChoices[altKey];
-  }
-  const day = config.days[dayIndex];
-  const defaults = config.dietDefaults[day.diet];
-  return defaults?.alternativeChoices[altKey] ?? 0;
+  const override = ignoreException ? undefined : config.dayExceptions[dayIndex]?.alternativeChoices?.[altKey];
+  return override ?? config.dietDefaults[config.days[dayIndex].diet]?.alternativeChoices[altKey] ?? 0;
 }
 
 export function setMealOptionIndex(
@@ -117,20 +88,12 @@ export function setMealOptionIndex(
   asException: boolean,
 ): void {
   if (asException) {
-    if (!config.dayExceptions[dayIndex]) {
-      config.dayExceptions[dayIndex] = {};
-    }
-    if (!config.dayExceptions[dayIndex].mealOptionIndexes) {
-      config.dayExceptions[dayIndex].mealOptionIndexes = {};
-    }
-    config.dayExceptions[dayIndex].mealOptionIndexes![mealType] = optionIndex;
-  } else {
-    const day = config.days[dayIndex];
-    const defaults = config.dietDefaults[day.diet];
-    if (defaults) {
-      defaults.mealOptionIndexes[mealType] = optionIndex;
-    }
+    const exception = (config.dayExceptions[dayIndex] ??= {});
+    (exception.mealOptionIndexes ??= {})[mealType] = optionIndex;
+    return;
   }
+  const defaults = config.dietDefaults[config.days[dayIndex].diet];
+  if (defaults) defaults.mealOptionIndexes[mealType] = optionIndex;
 }
 
 export function setAlternativeChoice(
@@ -141,28 +104,18 @@ export function setAlternativeChoice(
   asException: boolean,
 ): void {
   if (asException) {
-    if (!config.dayExceptions[dayIndex]) {
-      config.dayExceptions[dayIndex] = {};
-    }
-    if (!config.dayExceptions[dayIndex].alternativeChoices) {
-      config.dayExceptions[dayIndex].alternativeChoices = {};
-    }
-    config.dayExceptions[dayIndex].alternativeChoices![altKey] = itemIndex;
-  } else {
-    const day = config.days[dayIndex];
-    const defaults = config.dietDefaults[day.diet];
-    if (defaults) {
-      defaults.alternativeChoices[altKey] = itemIndex;
-    }
+    const exception = (config.dayExceptions[dayIndex] ??= {});
+    (exception.alternativeChoices ??= {})[altKey] = itemIndex;
+    return;
   }
+  const defaults = config.dietDefaults[config.days[dayIndex].diet];
+  if (defaults) defaults.alternativeChoices[altKey] = itemIndex;
 }
 
 export function hasException(config: WeekConfig, dayIndex: number): boolean {
-  const exc = config.dayExceptions[dayIndex];
-  if (!exc) return false;
-  const hasMealOverrides = exc.mealOptionIndexes && Object.keys(exc.mealOptionIndexes).length > 0;
-  const hasAltOverrides = exc.alternativeChoices && Object.keys(exc.alternativeChoices).length > 0;
-  return !!(hasMealOverrides || hasAltOverrides);
+  const exception = config.dayExceptions[dayIndex];
+  return Object.keys(exception?.mealOptionIndexes ?? {}).length > 0
+    || Object.keys(exception?.alternativeChoices ?? {}).length > 0;
 }
 
 export function clearException(config: WeekConfig, dayIndex: number): void {
@@ -174,89 +127,71 @@ export function setDayDiet(config: WeekConfig, dayIndex: number, diet: DaySelect
   delete config.dayExceptions[dayIndex];
 }
 
-export function buildBackendSelection(
-  config: WeekConfig,
-  diets: DietPlan[],
-  pdfPath: string | null,
-): BackendSelection {
-  return {
-    weeks: config.weeks,
-    pdf_path: config.pdf_path ?? pdfPath,
-    days: config.days.map((day, dayIndex) => {
-      const diet = diets.find(candidate => candidate.name === day.diet);
-      return {
-        day: day.day,
-        diet: day.diet,
-        meals: (diet?.meals ?? []).map((meal, mealIndex) => {
-          const mealType = meal.type;
-          const selectedOptionIndex = getEffectiveMealOptionIndex(config, dayIndex, mealType);
-          const alternativeChoices: Record<string, number> = {};
-          const option = meal.options[selectedOptionIndex];
-
-          option?.ingredient_lines.forEach((line, lineIndex) => {
-            if (line.is_alternatives) {
-              const key = `${mealIndex}-${selectedOptionIndex}-${lineIndex}`;
-              alternativeChoices[String(lineIndex)] = getEffectiveAlternativeChoice(config, dayIndex, key);
-            }
-          });
-
-          return {
-            type: mealType,
-            selected_option_index: selectedOptionIndex,
-            alternative_choices: alternativeChoices,
-          };
-        }),
-      };
-    }),
-  };
+export interface ResolvedLine {
+  line: IngredientLine;
+  /** Items eaten for this line: the chosen alternative, or every item of a fixed line. */
+  items: IngredientItem[];
 }
 
-function itemLabel(item: IngredientItem): string {
-  if (item.is_combination && item.sub_items) {
-    return item.sub_items.map(itemLabel).join(' + ');
-  }
+export interface ResolvedMeal {
+  meal: Meal;
+  mealIndex: number;
+  optionIndex: number;
+  option: MealOption | undefined;
+  lines: ResolvedLine[];
+}
+
+/** The meals, chosen options and chosen ingredients for one day of the week. */
+export function resolveDayMeals(config: WeekConfig, diets: DietPlan[], dayIndex: number): ResolvedMeal[] {
+  const day = config.days[dayIndex];
+  const diet = day && diets.find(candidate => candidate.name === day.diet);
+  return (diet?.meals ?? []).map((meal, mealIndex) => {
+    const optionIndex = getEffectiveMealOptionIndex(config, dayIndex, meal.type);
+    const option = meal.options[optionIndex];
+    const lines = (option?.ingredient_lines ?? []).map((line, lineIndex) => {
+      if (!line.is_alternatives) return { line, items: line.items };
+      const selected = getEffectiveAlternativeChoice(config, dayIndex, alternativeKey(mealIndex, optionIndex, lineIndex));
+      const item = line.items[selected] ?? line.items[0];
+      return { line, items: item ? [item] : [] };
+    });
+    return { meal, mealIndex, optionIndex, option, lines };
+  });
+}
+
+export function formatIngredient(item: IngredientItem): string {
+  if (item.is_combination && item.sub_items?.length) return item.sub_items.map(formatIngredient).join(' + ');
   const quantity = formatQuantity(item.quantity, item.unit);
-  return quantity === 'sin cantidad' ? item.name : `${quantity} ${item.name}`;
+  return quantity === 'sin cantidad' ? item.name : `${item.name} ${quantity}`;
 }
 
-export function buildExportPayload(
-  parsedData: ParseResult,
-  config: WeekConfig,
-  pdfPath: string | null,
-  shoppingList: ShoppingItem[],
-) {
-  const selection = buildBackendSelection(config, parsedData.diets, pdfPath);
-  const days = selection.days.map((day, dayIndex) => {
-    const diet = parsedData.diets.find(candidate => candidate.name === day.diet);
-    return {
+export function buildExportPayload(parsedData: ParseResult, config: WeekConfig) {
+  return {
+    generated_at: new Date().toISOString(),
+    days: config.days.map((day, dayIndex) => ({
       day: day.day,
       diet: day.diet,
-      meals: day.meals.map(mealSelection => {
-        const meal = diet?.meals.find(candidate => candidate.type === mealSelection.type);
-        const option = meal?.options[mealSelection.selected_option_index];
-        const ingredients = option?.ingredient_lines.flatMap((line, lineIndex) => {
-          if (line.is_alternatives) {
-            const selectedIndex = mealSelection.alternative_choices[String(lineIndex)] ?? 0;
-            return line.items[selectedIndex] ? [itemLabel(line.items[selectedIndex])] : [];
-          }
-          return line.items.map(itemLabel);
-        }) ?? [];
-        return {
-          type: mealSelection.type,
-          option: option?.name ?? `Opción ${mealSelection.selected_option_index + 1}`,
-          ingredients,
-        };
-      }),
-    };
-  });
-
-  return {
-    version: 1,
-    generated_at: new Date().toISOString(),
-    source_pdf: pdfPath,
-    days,
-    shopping_list: shoppingList,
+      meals: resolveDayMeals(config, parsedData.diets, dayIndex).map(({ meal, optionIndex, option, lines }) => ({
+        type: meal.type,
+        option: option?.name ?? `Opción ${optionIndex + 1}`,
+        ingredients: lines.flatMap(({ items }) => items.map(formatIngredient)),
+      })),
+    })),
   };
+}
+
+/** Lowercase ASCII slug for download file names. */
+export function fileSlug(value: string): string {
+  return value.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+}
+
+export function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  // Revoking synchronously can cancel the download in Safari and Firefox.
+  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
 }
 
 export function formatQuantity(qty: number | null, unit: string | null): string {

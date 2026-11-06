@@ -38,7 +38,7 @@
 
 <section class="mx-auto max-w-3xl overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
   <header class="border-b border-stone-200 px-5 py-5 dark:border-stone-700 sm:px-7">
-    <p class="text-xs font-black uppercase tracking-[0.2em] text-orange-600">Preferencias</p>
+    <p class="text-xs font-black uppercase tracking-[0.2em] text-warm">Preferencias</p>
     <h1 class="mt-1 text-2xl font-black tracking-tight text-stone-950 dark:text-white">Ajustes</h1>
     <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">Personaliza cómo funciona y se muestra tu plan.</p>
   </header>
@@ -62,7 +62,7 @@
   </div>
 
   <footer class="border-t border-stone-200 bg-stone-50 px-5 py-5 dark:border-stone-700 dark:bg-stone-950/50 sm:px-7">
-    <p class="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Ayuda y soporte</p>
+    <p class="text-xs font-black uppercase tracking-[0.18em] text-warm">Ayuda y soporte</p>
     <p class="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-300">Si encuentras un error o tienes algún problema, escríbenos a:</p>
     <a
       href="mailto:trabajo@diariodenutricion.com?subject=Problema%20con%20DG%20Nutrici%C3%B3n"

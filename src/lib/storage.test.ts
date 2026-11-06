@@ -18,8 +18,8 @@ describe('plan storage', () => {
       id, schemaVersion: 1, name,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
-      parsedData: { status: 'ok', diets: [] },
-      weekConfig: { ...createDefaultWeekConfig(), pdf_path: '/private/original.pdf' },
+      parsedData: { diets: [] },
+      weekConfig: createDefaultWeekConfig(),
     });
     await savePlan(makePlan('one', 'Uno'));
     await new Promise(resolve => setTimeout(resolve, 2));
@@ -27,8 +27,6 @@ describe('plan storage', () => {
 
     const saved = await listPlans();
     expect(saved.map(plan => plan.id)).toEqual(['two', 'one']);
-    expect(saved.every(plan => plan.weekConfig.pdf_path === null)).toBe(true);
-    expect(JSON.stringify(saved)).not.toContain('/private/original.pdf');
     await deletePlan('two');
     expect((await listPlans()).map(plan => plan.id)).toEqual(['one']);
   });
@@ -49,7 +47,7 @@ describe('plan storage', () => {
     const legacy: SavedPlan = {
       id: 'legacy', schemaVersion: 1, name: 'Anterior',
       createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
-      parsedData: { status: 'ok', diets: [] },
+      parsedData: { diets: [] },
       weekConfig: createDefaultWeekConfig(),
     };
     const request = indexedDB.open('diet-planner', 2);

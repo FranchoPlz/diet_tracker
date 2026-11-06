@@ -10,7 +10,6 @@ describe('CurrentDayDiet', () => {
     appState.weekTracker.activeDayIndex = 0;
     appState.weekConfig = createDefaultWeekConfig();
     appState.parsedData = {
-      status: 'ok',
       diets: [{
         name: 'DIETA 1',
         intro: '',

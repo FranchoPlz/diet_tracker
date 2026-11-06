@@ -3,9 +3,9 @@
   import { cloneTrainingDay, createTrainingDay, normalizeTrainingPlan } from '$lib/training-model';
   import type { TrainingDayType } from '$lib/types';
   import { scheduleWorkspaceAutosave } from '$lib/workspace-controller';
+  import { WEEKDAY_NAMES, cloneData } from '$lib/utils';
   import WorkoutPickerModal from './WorkoutPickerModal.svelte';
 
-  const names = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
   let editingDayIndex = $state<number | null>(null);
   const templateOptions = $derived.by(() => {
     const templates = appState.parsedData?.training?.templateDays ?? [];
@@ -54,7 +54,7 @@
   function duplicate(index: number) {
     const plan = training();
     if (!plan || index >= 6) return;
-    if (!confirm(`¿Duplicar ${names[index]} sobre ${names[index + 1]}? Se sustituirá su entrenamiento actual.`)) return;
+    if (!confirm(`¿Duplicar ${WEEKDAY_NAMES[index]} sobre ${WEEKDAY_NAMES[index + 1]}? Se sustituirá su entrenamiento actual.`)) return;
     plan.days[index + 1] = cloneTrainingDay(plan.days[index], index + 2);
     scheduleWorkspaceAutosave(0);
   }
@@ -62,7 +62,7 @@
   function restore() {
     const plan = training();
     if (!plan?.templateDays || !confirm('¿Restaurar la distribución original? Se conservarán los registros de progreso.')) return;
-    const templateDays = JSON.parse(JSON.stringify(plan.templateDays));
+    const templateDays = cloneData(plan.templateDays);
     plan.days = normalizeTrainingPlan({ ...plan, days: templateDays, templateDays }).days;
     scheduleWorkspaceAutosave(0);
   }
@@ -79,14 +79,14 @@
         {#each appState.parsedData.training.days as day, index}
           <article class="relative overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
             <div class="flex min-w-0 items-center gap-3 p-3">
-              <div class="grid size-12 shrink-0 place-items-center rounded-2xl {day.activeRest ? 'bg-stone-200 text-stone-600 dark:bg-stone-700 dark:text-stone-200' : 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'}"><span class="text-[10px] font-black uppercase">Día</span><span class="-mt-1 text-lg font-black">{index + 1}</span></div>
-              <div class="min-w-0 flex-1"><p class="text-xs font-black uppercase tracking-wider text-stone-400">{names[index]}</p><h3 class="truncate text-lg font-black text-stone-900 dark:text-white">{day.title}</h3><p class="text-xs text-stone-500">{day.activeRest ? 'Descanso' : `${day.exercises.length} ${day.exercises.length === 1 ? 'ejercicio' : 'ejercicios'}`}</p></div>
+              <div class="grid size-12 shrink-0 place-items-center rounded-2xl {day.activeRest ? 'bg-stone-200 text-stone-600 dark:bg-stone-700 dark:text-stone-200' : 'bg-warm-soft text-warm'}"><span class="text-[10px] font-black uppercase">Día</span><span class="-mt-1 text-lg font-black">{index + 1}</span></div>
+              <div class="min-w-0 flex-1"><p class="text-xs font-black uppercase tracking-wider text-stone-400">{WEEKDAY_NAMES[index]}</p><h3 class="truncate text-lg font-black text-stone-900 dark:text-white">{day.title}</h3><p class="text-xs text-stone-500">{day.activeRest ? 'Descanso' : `${day.exercises.length} ${day.exercises.length === 1 ? 'ejercicio' : 'ejercicios'}`}</p></div>
               <button type="button" class="min-h-11 shrink-0 rounded-xl bg-stone-900 px-4 text-sm font-black text-white dark:bg-white dark:text-stone-900" onclick={() => editingDayIndex = index}>Cambiar</button>
             </div>
             <div class="grid grid-cols-3 border-t border-stone-100 bg-stone-50 dark:border-stone-800 dark:bg-stone-950/50">
-              <button type="button" class="min-h-11 border-r border-stone-200 text-xs font-black text-stone-600 disabled:opacity-25 dark:border-stone-700 dark:text-stone-300" disabled={index === 0} onclick={() => swap(index, -1)} aria-label={`Mover entrenamiento de ${names[index]} al día anterior`}><span aria-hidden="true">↑</span> Anterior</button>
-              <button type="button" class="min-h-11 border-r border-stone-200 text-xs font-black text-stone-600 disabled:opacity-25 dark:border-stone-700 dark:text-stone-300" disabled={index === 6} onclick={() => swap(index, 1)} aria-label={`Mover entrenamiento de ${names[index]} al día siguiente`}><span aria-hidden="true">↓</span> Siguiente</button>
-              <button type="button" class="min-h-11 text-xs font-black text-orange-700 disabled:opacity-25 dark:text-orange-300" disabled={index === 6} onclick={() => duplicate(index)} aria-label={`Duplicar entrenamiento de ${names[index]}`}>Duplicar</button>
+              <button type="button" class="min-h-11 border-r border-stone-200 text-xs font-black text-stone-600 disabled:opacity-25 dark:border-stone-700 dark:text-stone-300" disabled={index === 0} onclick={() => swap(index, -1)} aria-label={`Mover entrenamiento de ${WEEKDAY_NAMES[index]} al día anterior`}><span aria-hidden="true">↑</span> Anterior</button>
+              <button type="button" class="min-h-11 border-r border-stone-200 text-xs font-black text-stone-600 disabled:opacity-25 dark:border-stone-700 dark:text-stone-300" disabled={index === 6} onclick={() => swap(index, 1)} aria-label={`Mover entrenamiento de ${WEEKDAY_NAMES[index]} al día siguiente`}><span aria-hidden="true">↓</span> Siguiente</button>
+              <button type="button" class="min-h-11 text-xs font-black text-warm disabled:opacity-25" disabled={index === 6} onclick={() => duplicate(index)} aria-label={`Duplicar entrenamiento de ${WEEKDAY_NAMES[index]}`}>Duplicar</button>
             </div>
           </article>
         {/each}
@@ -97,5 +97,5 @@
 {/if}
 
 {#if editingDayIndex !== null && appState.parsedData?.training?.days[editingDayIndex]}
-  <WorkoutPickerModal dayName={names[editingDayIndex]} currentTitle={appState.parsedData.training.days[editingDayIndex].title} templates={templateOptions} onSelectTemplate={selectTemplate} onCreate={createDay} onClose={() => editingDayIndex = null} />
+  <WorkoutPickerModal dayName={WEEKDAY_NAMES[editingDayIndex]} currentTitle={appState.parsedData.training.days[editingDayIndex].title} templates={templateOptions} onSelectTemplate={selectTemplate} onCreate={createDay} onClose={() => editingDayIndex = null} />
 {/if}

@@ -16,17 +16,7 @@ export function validatePdfFile(file: File): void {
   }
 }
 
-function readFileBytes(file: File): Promise<ArrayBuffer> {
-  if (typeof file.arrayBuffer === 'function') return file.arrayBuffer();
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as ArrayBuffer);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsArrayBuffer(file);
-  });
-}
-
-export interface PositionedTextItem {
+interface PositionedTextItem {
   str: string;
   transform: ArrayLike<number>;
   width?: number;
@@ -115,7 +105,7 @@ export function extractTrainingTable(items: readonly PositionedTextItem[], yTole
 /** Extract text in page order with the locally bundled PDF.js worker. */
 export async function extractPdfPageTexts(file: File): Promise<DietPageText[]> {
   validatePdfFile(file);
-  const data = new Uint8Array(await readFileBytes(file));
+  const data = new Uint8Array(await file.arrayBuffer());
   if (String.fromCharCode(...data.slice(0, 5)) !== '%PDF-') {
     throw new Error('No se ha podido leer el PDF. Comprueba que el archivo no esté dañado.');
   }
@@ -126,7 +116,7 @@ export async function extractPdfPageTexts(file: File): Promise<DietPageText[]> {
     const loadingTask = pdfjs.getDocument({ data, isEvalSupported: false });
     try {
       const document = await loadingTask.promise;
-      const pages: DietPageText[] = [];
+      const pages: Extract<DietPageText, object>[] = [];
 
       for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
         const page = await document.getPage(pageNumber);
@@ -141,7 +131,7 @@ export async function extractPdfPageTexts(file: File): Promise<DietPageText[]> {
         pages.push({ page: pageNumber, text: text.trim(), ...(trainingTable ? { trainingTable } : {}) });
       }
 
-      if (!pages.some((page) => typeof page === 'string' ? page.trim().length > 0 : page.text.trim().length > 0)) {
+      if (!pages.some((page) => page.text.length > 0)) {
         throw new Error('No se ha encontrado texto en el PDF. Puede ser un documento escaneado.');
       }
       return pages;
@@ -156,8 +146,4 @@ export async function extractPdfPageTexts(file: File): Promise<DietPageText[]> {
 
 export async function parsePdf(file: File): Promise<ParseResult> {
   return parseDietText(await extractPdfPageTexts(file));
-}
-
-export async function parseBrowserPdf(file: File): Promise<ParseResult> {
-  return parsePdf(file);
 }

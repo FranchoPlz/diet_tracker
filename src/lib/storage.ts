@@ -1,5 +1,6 @@
 import { openDB, type DBSchema } from 'idb';
 import type { AppTab, SavedPlan, SavedShoppingList } from './types';
+import { cloneData, createWeekTracker } from './utils';
 
 interface DietDatabase extends DBSchema {
   lists: { key: string; value: SavedShoppingList; indexes: { updatedAt: string } };
@@ -19,23 +20,12 @@ const database = () => openDB<DietDatabase>('diet-planner', 2, {
   },
 });
 
-export function migratePlan(plan: SavedPlan): SavedPlan {
+function migratePlan(plan: SavedPlan): SavedPlan {
   return {
     ...plan,
     schemaVersion: 5,
     configured: plan.configured ?? true,
-    weekTracker: {
-      ...(plan.weekTracker ?? {
-      startedAt: new Date().toISOString(),
-      activeDayIndex: 0,
-      weekNumber: 1,
-      trainingWeights: {},
-      }),
-      trainingRepetitions: plan.weekTracker?.trainingRepetitions ?? {},
-      exerciseNotes: plan.weekTracker?.exerciseNotes ?? {},
-      cardioByDay: plan.weekTracker?.cardioByDay ?? {},
-      stepsByDay: plan.weekTracker?.stepsByDay ?? {},
-    },
+    weekTracker: createWeekTracker(plan.weekTracker),
   };
 }
 
@@ -46,7 +36,7 @@ export async function listShoppingLists(): Promise<SavedShoppingList[]> {
 
 export async function saveShoppingList(list: SavedShoppingList): Promise<void> {
   list.updatedAt = new Date().toISOString();
-  await (await database()).put('lists', JSON.parse(JSON.stringify(list)) as SavedShoppingList);
+  await (await database()).put('lists', cloneData(list));
 }
 
 export async function deleteShoppingList(id: string): Promise<void> {
@@ -54,9 +44,8 @@ export async function deleteShoppingList(id: string): Promise<void> {
 }
 
 export async function savePlan(plan: SavedPlan): Promise<void> {
-  const portable = migratePlan(JSON.parse(JSON.stringify(plan)) as SavedPlan);
+  const portable = migratePlan(cloneData(plan));
   portable.updatedAt = new Date().toISOString();
-  portable.weekConfig.pdf_path = null;
   await (await database()).put('plans', portable);
 }
 

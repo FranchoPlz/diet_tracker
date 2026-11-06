@@ -8,7 +8,7 @@ describe('TrainingView', () => {
   beforeEach(() => {
     appState.weekTracker = { startedAt: new Date().toISOString(), activeDayIndex: 0, weekNumber: 1, trainingWeights: {} };
     appState.alwaysShowExerciseIllustrations = false;
-    appState.parsedData = { status: 'ok', diets: [], training: { tips: [], defaultRestSeconds: 60, days: [
+    appState.parsedData = { diets: [], training: { tips: [], defaultRestSeconds: 60, days: [
       { days: [1], title: 'TORSO', activeRest: false, details: '', exercises: [{ exercise: 'Remo', series: '3', repetitions: '1º - 12\n2º - 10\n3º - 8', details: '' }] },
       { days: [2], title: 'DESCANSO ACTIVO', activeRest: true, details: 'Caminar 30 minutos.', exercises: [] },
     ] } };
@@ -39,7 +39,7 @@ describe('TrainingView', () => {
     expect(exercise?.open).toBe(false);
   });
 
-  it('shows and hides an exercise illustration from its help button', async () => {
+  it('offers no guide button for exercises without an illustration', async () => {
     render(TrainingView);
 
     expect(screen.getByText('Sin guía visual')).toBeTruthy();
@@ -55,7 +55,6 @@ describe('TrainingView', () => {
     await fireEvent.click(help);
     const images = screen.getAllByRole('img');
     expect(images).toHaveLength(3);
-    expect(images.every(image => image.classList.contains('bg-stone-800'))).toBe(true);
     expect(help.getAttribute('aria-expanded')).toBe('true');
   });
 

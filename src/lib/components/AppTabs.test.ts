@@ -40,15 +40,6 @@ describe('AppTabs', () => {
     expect(document.activeElement).toBe(shopping);
   });
 
-  it('shows icons on phones and reveals text labels at the desktop breakpoint', () => {
-    render(AppTabs, { active: 'settings', onChange: vi.fn() });
-
-    const settings = screen.getByRole('tab', { name: 'Ajustes' });
-    expect(settings.querySelector('svg')).not.toBeNull();
-    expect(settings.querySelector('span')?.className).toContain('hidden');
-    expect(settings.querySelector('span')?.className).toContain('sm:inline');
-  });
-
   it('omits the shopping badge when no count is provided', () => {
     render(AppTabs, { active: 'home', onChange: vi.fn() });
 

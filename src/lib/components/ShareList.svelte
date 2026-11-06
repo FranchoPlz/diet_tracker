@@ -3,18 +3,15 @@
   import { applyList, initializeLists, persistCurrentList } from '$lib/list-controller';
   import { buildShareUrl, createListEnvelope, parseListFile } from '$lib/share';
   import { saveShoppingList } from '$lib/storage';
+  import { downloadBlob, fileSlug } from '$lib/utils';
 
   let shareUrl = $state('');
   let qrMarkup = $state('');
   let message = $state('');
   let fileInput = $state<HTMLInputElement>();
 
-  async function currentList() {
-    return persistCurrentList();
-  }
-
   async function prepareShare() {
-    const list = await currentList();
+    const list = await persistCurrentList();
     shareUrl = buildShareUrl(list, location.href);
     if (shareUrl.length <= 2800) {
       const { renderSVG } = await import('uqr');
@@ -26,14 +23,9 @@
   }
 
   async function downloadJson() {
-    const list = await currentList();
+    const list = await persistCurrentList();
     const blob = new Blob([JSON.stringify(createListEnvelope(list), null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `${list.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase() || 'lista'}.diet-list.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, `${fileSlug(list.name) || 'lista'}.diet-list.json`);
   }
 
   async function importFile(event: Event) {
@@ -60,7 +52,7 @@
 {#if appState.activeListId || appState.shoppingList.length > 0}
   <section class="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900">
     <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-      <button class="rounded-xl bg-teal-700 px-3 py-2 text-sm font-bold text-white" onclick={systemShare}>Compartir</button>
+      <button class="rounded-xl bg-brand px-3 py-2 text-sm font-bold text-white" onclick={systemShare}>Compartir</button>
       <button class="rounded-xl border border-stone-200 px-3 py-2 text-sm font-bold" onclick={prepareShare}>Mostrar QR</button>
       <button class="rounded-xl border border-stone-200 px-3 py-2 text-sm font-bold" onclick={downloadJson}>Guardar archivo</button>
       <button class="rounded-xl border border-stone-200 px-3 py-2 text-sm font-bold" onclick={() => fileInput?.click()}>Importar</button>

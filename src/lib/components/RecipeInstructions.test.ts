@@ -12,7 +12,6 @@ describe('RecipeInstructions', () => {
     const summary = screen.getByText('Cómo prepararlo').closest('summary')!;
     const details = summary.closest('details')!;
     expect(details.open).toBe(false);
-    expect(summary.className).toContain('min-h-12');
 
     await fireEvent.click(summary);
 

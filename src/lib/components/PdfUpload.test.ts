@@ -5,11 +5,11 @@ import { appState } from '$lib/state.svelte';
 import PdfUpload from './PdfUpload.svelte';
 
 const mocks = vi.hoisted(() => ({
-  parseBrowserPdf: vi.fn(),
+  parsePdf: vi.fn(),
   createWorkspaceFromDocument: vi.fn(),
 }));
 
-vi.mock('$lib/pdf', () => ({ parseBrowserPdf: mocks.parseBrowserPdf }));
+vi.mock('$lib/pdf', () => ({ parsePdf: mocks.parsePdf }));
 vi.mock('$lib/workspace-controller', () => ({ createWorkspaceFromDocument: mocks.createWorkspaceFromDocument }));
 
 describe('PdfUpload', () => {
@@ -17,12 +17,10 @@ describe('PdfUpload', () => {
     appState.error = null;
     appState.loading = false;
     appState.parsedData = null;
-    appState.pdfPath = null;
-    mocks.parseBrowserPdf.mockReset();
+    mocks.parsePdf.mockReset();
     mocks.createWorkspaceFromDocument.mockReset();
     mocks.createWorkspaceFromDocument.mockImplementation(async (result, sourceName) => {
       appState.parsedData = result;
-      appState.pdfPath = null;
       appState.activePlanName = sourceName.replace(/\.pdf$/i, '');
       appState.configured = false;
     });
@@ -31,7 +29,7 @@ describe('PdfUpload', () => {
   afterEach(cleanup);
 
   it('parses a selected PDF in the browser', async () => {
-    mocks.parseBrowserPdf.mockResolvedValue({ status: 'ok', diets: [] });
+    mocks.parsePdf.mockResolvedValue({ diets: [] });
     const { container } = render(PdfUpload);
     const file = new File(['%PDF-test'], 'ABRIL.pdf', { type: 'application/pdf' });
     const input = container.querySelector('input[type="file"]') as HTMLInputElement;
@@ -40,15 +38,14 @@ describe('PdfUpload', () => {
     input.dispatchEvent(new Event('change', { bubbles: true }));
 
     await waitFor(() => {
-      expect(mocks.parseBrowserPdf).toHaveBeenCalledWith(file);
-      expect(mocks.createWorkspaceFromDocument).toHaveBeenCalledWith({ status: 'ok', diets: [] }, 'ABRIL.pdf');
-      expect(appState.pdfPath).toBeNull();
+      expect(mocks.parsePdf).toHaveBeenCalledWith(file);
+      expect(mocks.createWorkspaceFromDocument).toHaveBeenCalledWith({ diets: [] }, 'ABRIL.pdf');
     });
     expect(appState.activePlanName).toBe('ABRIL');
   });
 
   it('parses a PDF dropped onto the web upload zone', async () => {
-    mocks.parseBrowserPdf.mockResolvedValue({ status: 'ok', diets: [] });
+    mocks.parsePdf.mockResolvedValue({ diets: [] });
     const file = new File(['%PDF-test'], 'SEPTIEMBRE.pdf', { type: 'application/pdf' });
     render(PdfUpload);
 
@@ -57,16 +54,16 @@ describe('PdfUpload', () => {
     });
 
     await waitFor(() => {
-      expect(mocks.parseBrowserPdf).toHaveBeenCalledWith(file);
-      expect(mocks.createWorkspaceFromDocument).toHaveBeenCalledWith({ status: 'ok', diets: [] }, 'SEPTIEMBRE.pdf');
+      expect(mocks.parsePdf).toHaveBeenCalledWith(file);
+      expect(mocks.createWorkspaceFromDocument).toHaveBeenCalledWith({ diets: [] }, 'SEPTIEMBRE.pdf');
     });
   });
 
   it('keeps the current plan when replacement parsing fails', async () => {
-    appState.parsedData = { status: 'ok', diets: [{ name: 'DIETA 1', intro: '', meals: [] }] };
+    appState.parsedData = { diets: [{ name: 'DIETA 1', intro: '', meals: [] }] };
     appState.activePlanName = 'Plan actual';
     vi.spyOn(window, 'confirm').mockReturnValue(true);
-    mocks.parseBrowserPdf.mockRejectedValue(new Error('PDF dañado'));
+    mocks.parsePdf.mockRejectedValue(new Error('PDF dañado'));
     const { container } = render(PdfUpload);
     const file = new File(['%PDF-broken'], 'NUEVO.pdf', { type: 'application/pdf' });
     const input = container.querySelector('input[type="file"]') as HTMLInputElement;

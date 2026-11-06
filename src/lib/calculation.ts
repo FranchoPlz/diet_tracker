@@ -1,5 +1,5 @@
 import type { IngredientItem, ParseResult, ShoppingItem, WeekConfig } from './types';
-import { buildBackendSelection } from './utils';
+import { resolveDayMeals } from './utils';
 
 interface AggregatedItem {
   name: string;
@@ -32,10 +32,6 @@ export function calculateShoppingList(
   parsedData: ParseResult,
   config: WeekConfig,
 ): ShoppingItem[] {
-  const selection = buildBackendSelection(config, parsedData.diets, config.pdf_path);
-  const diets = new Map(
-    parsedData.diets.map(diet => [diet.name.trim().toUpperCase(), diet]),
-  );
   const aggregation = new Map<string, AggregatedItem>();
 
   function addItem(item: IngredientItem): void {
@@ -72,38 +68,11 @@ export function calculateShoppingList(
     }
   }
 
-  for (const day of selection.days) {
-    const diet = diets.get(day.diet.trim().toUpperCase());
-    if (!diet) continue;
-
-    const meals = new Map(
-      diet.meals.map(meal => [meal.type.trim().toUpperCase(), meal]),
-    );
-
-    for (const mealSelection of day.meals) {
-      const meal = meals.get(mealSelection.type.trim().toUpperCase());
-      if (!meal) continue;
-
-      const option = meal.options[mealSelection.selected_option_index];
-      if (!option) continue;
-
-      option.ingredient_lines.forEach((line, lineIndex) => {
-        if (line.items.length === 0) return;
-
-        if (line.is_alternatives) {
-          const selectedIndex = mealSelection.alternative_choices[String(lineIndex)] ?? 0;
-          const item = line.items[selectedIndex] ?? line.items[0];
-          addItemOrCombination(item);
-        } else if (line.is_combination) {
-          for (const subItem of line.items[0].sub_items ?? []) {
-            addItem(subItem);
-          }
-        } else {
-          addItemOrCombination(line.items[0]);
-        }
-      });
+  config.days.forEach((_, dayIndex) => {
+    for (const { lines } of resolveDayMeals(config, parsedData.diets, dayIndex)) {
+      for (const { items } of lines) items.forEach(addItemOrCombination);
     }
-  }
+  });
 
   return [...aggregation.values()]
     .sort((left, right) => left.name < right.name ? -1 : left.name > right.name ? 1 : 0)

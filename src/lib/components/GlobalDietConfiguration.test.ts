@@ -9,7 +9,6 @@ describe('GlobalDietConfiguration', () => {
   beforeEach(() => {
     appState.weekConfig = createDefaultWeekConfig();
     appState.parsedData = {
-      status: 'ok',
       diets: [
         { name: 'DIETA 1', intro: '', meals: [] },
         { name: 'DIETA 2', intro: '', meals: [] },

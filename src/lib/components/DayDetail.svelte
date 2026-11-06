@@ -33,7 +33,7 @@
 <div class="compact-day-detail flex flex-col bg-white dark:bg-stone-900 rounded-3xl shadow-sm border border-stone-200 dark:border-stone-700 overflow-hidden xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)]">
   <div class="compact-day-detail-header flex items-center justify-between p-5 border-b border-stone-100 dark:border-stone-700 bg-stone-50/70 dark:bg-stone-800/50">
     <div class="flex flex-col">
-      <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">Paso 2</p>
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-warm">Paso 2</p>
       <h2 class="text-2xl font-black tracking-tight text-stone-900 dark:text-white">Día {day.day} · {day.diet}</h2>
     </div>
     

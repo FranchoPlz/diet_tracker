@@ -10,14 +10,14 @@ vi.mock('./storage', () => storage);
 
 import { applyList, persistCurrentList, removeShoppingList } from './list-controller';
 import { appState } from './state.svelte';
+import { normalizeShoppingItem } from './shopping';
 
 describe('removeShoppingList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     appState.activeListId = 'active';
     appState.activeListName = 'Compra';
-    appState.shoppingList = [{ name: 'Leche', quantity: 1, unit: 'l', count: 1 }];
-    appState.checkedShoppingItems = { 'Leche|l': true };
+    appState.shoppingList = [normalizeShoppingItem({ name: 'Leche', quantity: 1, unit: 'l', count: 1 })];
   });
 
   it('deletes and closes the active list', async () => {
@@ -27,7 +27,6 @@ describe('removeShoppingList', () => {
     expect(appState.activeListId).toBeNull();
     expect(appState.activeListName).toBe('Lista de la semana');
     expect(appState.shoppingList).toEqual([]);
-    expect(appState.checkedShoppingItems).toEqual({});
   });
 });
 
@@ -43,8 +42,6 @@ describe('shopping item state', () => {
     applyList(list);
     appState.shoppingList[0].name = 'Leche entera';
     await persistCurrentList();
-
-    expect(appState.checkedShoppingItems).toEqual({ item: true });
     expect(storage.saveShoppingList).toHaveBeenCalledWith(expect.objectContaining({
       items: [expect.objectContaining({ id: 'item', name: 'Leche entera', checked: true })],
     }));

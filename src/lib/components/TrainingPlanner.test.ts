@@ -7,7 +7,7 @@ import TrainingPlanner from './TrainingPlanner.svelte';
 describe('TrainingPlanner', () => {
   beforeEach(() => {
     appState.activePlanId = null;
-    appState.parsedData = { status: 'ok', diets: [], training: normalizeTrainingPlan({
+    appState.parsedData = { diets: [], training: normalizeTrainingPlan({
       tips: [], defaultRestSeconds: 60, days: [
         { days: [1], title: 'TORSO', activeRest: false, details: '', exercises: [{ exercise: 'Remo', series: '3', repetitions: '10', details: '' }] },
         { days: [2], title: 'PIERNA', activeRest: false, details: '', exercises: [{ exercise: 'Sentadilla', series: '3', repetitions: '10', details: '' }] },

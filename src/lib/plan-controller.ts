@@ -2,19 +2,10 @@ import { calculateShoppingList } from './calculation';
 import { applyList, persistCurrentList } from './list-controller';
 import { appState } from './state.svelte';
 import { deletePlan, listPlans, listShoppingLists, savePlan, saveShoppingList, setActivePlanId, setActiveTab } from './storage';
-import type { SavedPlan, SavedShoppingList, WeekConfig } from './types';
-import { createDefaultWeekConfig } from './utils';
+import { normalizeShoppingItem } from './shopping';
+import type { SavedPlan, SavedShoppingList } from './types';
+import { cloneData, createDefaultWeekConfig, createWeekTracker } from './utils';
 import { migrateLegacyProgress, normalizeTrainingPlan } from './training-model';
-
-function cloneData<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
-}
-
-export function portableWeekConfig(config: WeekConfig): WeekConfig {
-  const portable = cloneData(config);
-  portable.pdf_path = null;
-  return portable;
-}
 
 function createPlan(name: string): SavedPlan {
   if (!appState.parsedData) throw new Error('No hay una dieta cargada para guardar.');
@@ -27,7 +18,7 @@ function createPlan(name: string): SavedPlan {
     createdAt: now,
     updatedAt: now,
     parsedData: cloneData(appState.parsedData),
-    weekConfig: portableWeekConfig(appState.weekConfig),
+    weekConfig: cloneData(appState.weekConfig),
     weekTracker: cloneData(appState.weekTracker),
   };
 }
@@ -45,7 +36,7 @@ export async function persistCurrentPlan(): Promise<SavedPlan> {
   plan.schemaVersion = 5;
   plan.configured = appState.configured;
   plan.parsedData = cloneData(appState.parsedData);
-  plan.weekConfig = portableWeekConfig(appState.weekConfig);
+  plan.weekConfig = cloneData(appState.weekConfig);
   plan.weekTracker = cloneData(appState.weekTracker);
   if (appState.shoppingList.length > 0 || appState.activeListId) {
     plan.shoppingListId = (await persistCurrentList()).id;
@@ -58,7 +49,6 @@ export async function persistCurrentPlan(): Promise<SavedPlan> {
   appState.activePlanId = plan.id;
   appState.activePlanName = plan.name;
   appState.configured = plan.configured ?? true;
-  appState.planSourceLabel = `Plan guardado: ${plan.name}`;
   appState.savedPlans = await listPlans();
   return plan;
 }
@@ -70,18 +60,9 @@ export async function restorePlan(plan: SavedPlan): Promise<void> {
   appState.parsedData = cloneData(plan.parsedData);
   if (appState.parsedData.training) appState.parsedData.training = normalizeTrainingPlan(appState.parsedData.training);
   for (const diet of appState.parsedData.diets) diet.name = diet.name.trim().replace(/\s+/g, ' ').toUpperCase();
-  appState.weekConfig = portableWeekConfig(plan.weekConfig);
-  appState.weekTracker = cloneData(plan.weekTracker ?? {
-    startedAt: new Date().toISOString(),
-    activeDayIndex: 0,
-    weekNumber: 1,
-    trainingWeights: {},
-    trainingRepetitions: {},
-    exerciseNotes: {}, cardioByDay: {}, stepsByDay: {},
-  });
+  appState.weekConfig = cloneData(plan.weekConfig);
+  appState.weekTracker = plan.weekTracker ? cloneData(plan.weekTracker) : createWeekTracker();
   if (appState.parsedData.training) migrateLegacyProgress(appState.parsedData.training, appState.weekTracker);
-  appState.pdfPath = null;
-  appState.planSourceLabel = `Plan guardado: ${plan.name}`;
   appState.error = null;
   await setActivePlanId(plan.id);
 
@@ -94,14 +75,12 @@ export async function restorePlan(plan: SavedPlan): Promise<void> {
     appState.activeListId = null;
     appState.activeListName = `${plan.name} - compra`;
     appState.shoppingList = [];
-    appState.checkedShoppingItems = {};
   }
 }
 
 export function calculateActivePlan(): void {
   if (!appState.parsedData) return;
-  appState.shoppingList = calculateShoppingList(appState.parsedData, portableWeekConfig(appState.weekConfig));
-  appState.checkedShoppingItems = {};
+  appState.shoppingList = calculateShoppingList(appState.parsedData, appState.weekConfig).map(normalizeShoppingItem);
   appState.activeListId = null;
   appState.activeListName = `${appState.activePlanName} - compra`;
 }
@@ -109,12 +88,8 @@ export function calculateActivePlan(): void {
 export async function renamePlan(plan: SavedPlan, name: string): Promise<void> {
   const renamed = cloneData(plan);
   renamed.name = name.trim() || plan.name;
-  renamed.weekConfig = portableWeekConfig(renamed.weekConfig);
   await savePlan(renamed);
-  if (appState.activePlanId === renamed.id) {
-    appState.activePlanName = renamed.name;
-    appState.planSourceLabel = `Plan guardado: ${renamed.name}`;
-  }
+  if (appState.activePlanId === renamed.id) appState.activePlanName = renamed.name;
   appState.savedPlans = await listPlans();
 }
 
@@ -124,7 +99,6 @@ export async function duplicatePlan(plan: SavedPlan): Promise<SavedPlan> {
   copy.name = `${plan.name} (copia)`;
   copy.createdAt = new Date().toISOString();
   copy.updatedAt = copy.createdAt;
-  copy.weekConfig = portableWeekConfig(copy.weekConfig);
 
   if (plan.shoppingListId) {
     const linkedList = (await listShoppingLists()).find(list => list.id === plan.shoppingListId);
@@ -157,20 +131,12 @@ export async function removePlan(id: string): Promise<void> {
   }
 
   appState.parsedData = null;
-  appState.pdfPath = null;
   appState.weekConfig = createDefaultWeekConfig();
-  appState.weekTracker = {
-    startedAt: new Date().toISOString(), activeDayIndex: 0, weekNumber: 1,
-    trainingWeights: {}, trainingRepetitions: {}, exerciseNotes: {}, cardioByDay: {}, stepsByDay: {},
-  };
+  appState.weekTracker = createWeekTracker();
   appState.activePlanId = null;
   appState.activePlanName = 'Mi plan semanal';
   appState.configured = false;
-  appState.planSourceLabel = null;
-  if (!appState.activeListId) {
-    appState.shoppingList = [];
-    appState.checkedShoppingItems = {};
-  }
+  if (!appState.activeListId) appState.shoppingList = [];
   appState.activeTab = appState.activeListId ? 'shopping' : 'home';
   await setActiveTab(appState.activeTab);
 }

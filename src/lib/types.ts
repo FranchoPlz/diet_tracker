@@ -11,7 +11,8 @@ export interface Meal {
   options: MealOption[];
 }
 
-export type MealType = 'DESAYUNO' | 'ALMUERZO' | 'COMIDA' | 'MERIENDA' | 'CENA';
+export const MEAL_TYPES = ['DESAYUNO', 'ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA'] as const;
+export type MealType = typeof MEAL_TYPES[number];
 
 export interface MealOption {
   name: string;
@@ -35,7 +36,6 @@ export interface IngredientItem {
 }
 
 export interface ParseResult {
-  status: string;
   diets: DietPlan[];
   training?: TrainingPlan;
 }
@@ -94,37 +94,29 @@ export interface DietDefaults {
 }
 
 export interface WeekConfig {
-  weeks: number;
-  pdf_path: string | null;
   days: DaySelection[];
   /** Global defaults per diet name. All days of that diet type share these selections. */
   dietDefaults: Record<string, DietDefaults>;
   /** Per-day exceptions that override the global defaults. key: day index (0-based) */
   dayExceptions: Record<number, DayException>;
-  alternative_choices?: Record<string, number>;
 }
 
 export interface DaySelection {
   day: number;
   diet: 'DIETA 1' | 'DIETA 2';
-  meals: MealSelection[];
-}
-
-export interface MealSelection {
-  type: MealType;
-  selected_option_index: number;
 }
 
 /**
  * Per-day overrides. Only the fields present here override the global defaults.
  */
-export interface DayException {
+interface DayException {
   /** Override meal option indexes for specific meal types */
   mealOptionIndexes?: Partial<Record<MealType, number>>;
   /** Override alternative choices for specific keys */
   alternativeChoices?: Record<string, number>;
 }
 
+/** A shopping item as calculated or imported; `normalizeShoppingItem` fills the optional fields. */
 export interface ShoppingItem {
   id?: string;
   name: string;
@@ -136,6 +128,8 @@ export interface ShoppingItem {
   custom?: boolean;
 }
 
+export type ShoppingListItem = Required<ShoppingItem>;
+
 export type ShoppingCategory = 'Fruta y verdura' | 'Carne y pescado' | 'Lácteos y huevos' | 'Panadería' | 'Despensa' | 'Congelados' | 'Bebidas' | 'Otros';
 
 export interface SavedShoppingList {
@@ -144,7 +138,7 @@ export interface SavedShoppingList {
   name: string;
   createdAt: string;
   updatedAt: string;
-  items: Required<Pick<ShoppingItem, 'id' | 'name' | 'quantity' | 'unit' | 'count' | 'category' | 'checked' | 'custom'>>[];
+  items: ShoppingListItem[];
 }
 
 export interface WeekTracker {
@@ -169,25 +163,4 @@ export interface SavedPlan {
   weekConfig: WeekConfig;
   weekTracker?: WeekTracker;
   shoppingListId?: string;
-}
-
-export interface BackendMealSelection {
-  type: MealType;
-  selected_option_index: number;
-  alternative_choices: Record<string, number>;
-}
-
-export interface BackendSelection {
-  weeks: number;
-  pdf_path: string | null;
-  days: Array<{
-    day: number;
-    diet: DaySelection['diet'];
-    meals: BackendMealSelection[];
-  }>;
-}
-
-export interface ShoppingList {
-  status: string;
-  items: ShoppingItem[];
 }

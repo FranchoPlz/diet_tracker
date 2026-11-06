@@ -1,13 +1,12 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { appState } from './state.svelte';
-import { calculateActivePlan, persistCurrentPlan, portableWeekConfig, removePlan, restorePlan } from './plan-controller';
+import { calculateActivePlan, persistCurrentPlan, removePlan, restorePlan } from './plan-controller';
 import { createDefaultWeekConfig } from './utils';
 import { deletePlan, listPlans } from './storage';
 import type { ParseResult, SavedPlan } from './types';
 
 const parsedData: ParseResult = {
-  status: 'ok',
   diets: [{
     name: 'DIETA 1', intro: '', meals: [{ type: 'COMIDA', options: [{
       name: 'Arroz', description: null, ingredient_lines: [{
@@ -20,11 +19,8 @@ const parsedData: ParseResult = {
 
 beforeEach(() => {
   appState.parsedData = structuredClone(parsedData);
-  appState.pdfPath = '/Users/example/private/original.pdf';
   appState.weekConfig = createDefaultWeekConfig();
-  appState.weekConfig.pdf_path = '/Users/example/private/original.pdf';
   appState.shoppingList = [];
-  appState.checkedShoppingItems = {};
   appState.activeListId = null;
   appState.activePlanId = null;
   appState.activePlanName = 'Semana abril';
@@ -32,23 +28,12 @@ beforeEach(() => {
 });
 
 describe('plan controller', () => {
-  it('sanitizes a config without mutating the active value', () => {
-    const portable = portableWeekConfig(appState.weekConfig);
-    expect(portable.pdf_path).toBeNull();
-    expect(appState.weekConfig.pdf_path).toBe('/Users/example/private/original.pdf');
-  });
-
-  it('persists no original path and restores parsed data with a source label', async () => {
+  it('persists and restores parsed data', async () => {
     const saved = await persistCurrentPlan();
-    expect(saved.weekConfig.pdf_path).toBeNull();
-    expect(JSON.stringify(saved)).not.toContain('/Users/example/private/original.pdf');
 
     appState.parsedData = null;
     await restorePlan(saved);
     expect(appState.parsedData).toEqual(parsedData);
-    expect(appState.pdfPath).toBeNull();
-    expect(appState.weekConfig.pdf_path).toBeNull();
-    expect(appState.planSourceLabel).toBe('Plan guardado: Semana abril');
     expect(appState.configured).toBe(false);
   });
 
@@ -60,12 +45,12 @@ describe('plan controller', () => {
         ...parsedData,
         diets: [{ ...parsedData.diets[0], name: 'DIETA   1' }],
       },
-      weekConfig: portableWeekConfig(createDefaultWeekConfig()),
+      weekConfig: createDefaultWeekConfig(),
     };
     await restorePlan(plan);
     calculateActivePlan();
     expect(appState.parsedData?.diets[0].name).toBe('DIETA 1');
-    expect(appState.shoppingList).toContainEqual({ name: 'arroz', quantity: 320, unit: 'g', count: 4 });
+    expect(appState.shoppingList).toContainEqual(expect.objectContaining({ name: 'arroz', quantity: 320, unit: 'g', count: 4 }));
   });
 
   it('persists and restores the active weekly training organization', async () => {

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
   import type { DaySelection } from '$lib/types';
-  import { hasException, setDayDiet } from '$lib/utils';
+  import { WEEKDAY_NAMES, hasException, setDayDiet } from '$lib/utils';
   import { scheduleWorkspaceAutosave } from '$lib/workspace-controller';
 
   let { onDayClick, onCollapse, selectedDayIndex } = $props<{
@@ -10,12 +10,10 @@
     selectedDayIndex: number | null;
   }>();
 
-  const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
   function changeDiet(dayIndex: number, diet: DaySelection['diet']) {
     setDayDiet(appState.weekConfig, dayIndex, diet);
     appState.shoppingList = [];
-    appState.checkedShoppingItems = {};
     scheduleWorkspaceAutosave(0);
   }
 
@@ -35,10 +33,10 @@
     {#each appState.weekConfig.days.slice(0, 7) as day, dayIndex}
       {@const isSelected = selectedDayIndex === dayIndex}
       {@const isException = hasException(appState.weekConfig, dayIndex)}
-      <article class="grid min-w-0 grid-cols-[minmax(5.5rem,1fr)_minmax(10rem,1.5fr)] items-center gap-2 px-3 py-2 transition {isSelected ? 'bg-orange-50 dark:bg-orange-950/30' : 'bg-white dark:bg-stone-900'}">
+      <article class="grid min-w-0 grid-cols-[minmax(5.5rem,1fr)_minmax(10rem,1.5fr)] items-center gap-2 px-3 py-2 transition {isSelected ? 'bg-warm-soft' : 'bg-white dark:bg-stone-900'}">
         <button class="min-w-0 rounded-lg px-2 py-2 text-left hover:bg-stone-100 dark:hover:bg-stone-800" onclick={() => onDayClick(dayIndex)}>
-          <span class="block truncate text-sm font-black text-stone-900 dark:text-white">{dayNames[dayIndex]}</span>
-          {#if isException}<span class="block text-[10px] font-black uppercase text-orange-600">Personalizado</span>{/if}
+          <span class="block truncate text-sm font-black text-stone-900 dark:text-white">{WEEKDAY_NAMES[dayIndex]}</span>
+          {#if isException}<span class="block text-[10px] font-black uppercase text-warm">Personalizado</span>{/if}
         </button>
 
         <div class="grid grid-cols-2 gap-1 rounded-lg border border-stone-200 bg-stone-100 p-1 dark:border-stone-600 dark:bg-stone-950">

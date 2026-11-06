@@ -1,16 +1,13 @@
 import type { ExerciseRow, ExerciseType, TrainingDay, TrainingDayType, TrainingPlan, WeekTracker } from './types';
+import { cloneData } from './utils';
 
 const DAY_COUNT = 7;
-
-function cloneData<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
-}
 
 function slug(value: string): string {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'item';
 }
 
-export function inferDayType(day: TrainingDay): TrainingDayType {
+function inferDayType(day: TrainingDay): TrainingDayType {
   const text = `${day.title} ${day.details}`.toLowerCase();
   if (day.activeRest || /descanso/.test(text)) return 'rest';
   if (/cardio|cinta|correr|caminar|bici|el[ií]ptica/.test(text)) return 'cardio';

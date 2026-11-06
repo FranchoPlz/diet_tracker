@@ -1,22 +1,11 @@
-import type { AppTab, ParseResult, WeekConfig, ShoppingItem, SavedPlan, SavedShoppingList, WeekTracker } from './types';
-import { createDefaultWeekConfig } from './utils';
+import type { AppTab, ParseResult, WeekConfig, ShoppingListItem, SavedPlan, SavedShoppingList } from './types';
+import { createDefaultWeekConfig, createWeekTracker } from './utils';
 
 export const appState = $state({
   parsedData: null as ParseResult | null,
-  pdfPath: null as string | null,
-  weekConfig: createDefaultWeekConfig(1) as WeekConfig,
-  weekTracker: {
-    startedAt: new Date().toISOString(),
-    activeDayIndex: 0,
-    weekNumber: 1,
-    trainingWeights: {},
-    trainingRepetitions: {},
-    exerciseNotes: {},
-    cardioByDay: {},
-    stepsByDay: {},
-  } as WeekTracker,
-  shoppingList: [] as ShoppingItem[],
-  checkedShoppingItems: {} as Record<string, boolean>,
+  weekConfig: createDefaultWeekConfig() as WeekConfig,
+  weekTracker: createWeekTracker(),
+  shoppingList: [] as ShoppingListItem[],
   activeListId: null as string | null,
   activeListName: 'Lista de la semana',
   savedLists: [] as SavedShoppingList[],
@@ -25,7 +14,6 @@ export const appState = $state({
   configured: false,
   activeTab: 'home' as AppTab,
   savedPlans: [] as SavedPlan[],
-  planSourceLabel: null as string | null,
   persistenceReady: false,
   darkMode: false,
   compactView: false,

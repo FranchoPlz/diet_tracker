@@ -82,7 +82,7 @@ describe('PDF plan export', () => {
   });
 
   it('exports the real ABRIL fixture with seven days and every meal type readable', async () => {
-    const payload = buildExportPayload(abrilFixture as ParseResult, createDefaultWeekConfig(), null, []);
+    const payload = buildExportPayload(abrilFixture as ParseResult, createDefaultWeekConfig());
     const bytes = createPlanPdfBytes(payload, 'ABRIL');
     const extracted = await extractText(bytes);
 

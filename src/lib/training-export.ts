@@ -1,22 +1,19 @@
 import { createPlanPdfBlob } from './pdf-export';
 import { inferExerciseType, memberTargets, progressKey } from './training-model';
 import type { TrainingPlan, WeekTracker } from './types';
+import { downloadBlob, fileSlug } from './utils';
 import { repetitionTargets, seriesCount } from './week-tracker';
 
-export function createTrainingPdfBlob(training: TrainingPlan, trackerOrWeights: WeekTracker | Record<string, string[]>, title: string, legacyRepetitions: Record<string, string[]> = {}): Blob {
-  const tracker: WeekTracker = 'trainingWeights' in trackerOrWeights
-    ? trackerOrWeights as WeekTracker
-    : { startedAt: '', activeDayIndex: 0, weekNumber: 1, trainingWeights: trackerOrWeights, trainingRepetitions: legacyRepetitions };
+export function createTrainingPdfBlob(training: TrainingPlan, tracker: WeekTracker, title: string): Blob {
   const days = training.days.map((day, dayIndex) => {
     const meals = day.exercises.flatMap((exercise, exerciseIndex) => {
       const names = exercise.supersetExercises?.length ? exercise.supersetExercises : [exercise.exercise];
       return names.map((name, memberIndex) => {
         const key = progressKey(day, exercise, names.length > 1 ? memberIndex : undefined);
-        const legacyKey = `${dayIndex}:${exerciseIndex}`;
         const count = seriesCount(exercise.series);
         const targets = names.length > 1 ? memberTargets(exercise.repetitions, count, memberIndex, names.length) : repetitionTargets(exercise.repetitions, count);
-        const weights = tracker.trainingWeights[key] ?? tracker.trainingWeights[legacyKey] ?? [];
-        const repetitions = tracker.trainingRepetitions?.[key] ?? tracker.trainingRepetitions?.[legacyKey] ?? [];
+        const weights = tracker.trainingWeights[key] ?? [];
+        const repetitions = tracker.trainingRepetitions?.[key] ?? [];
         const cardio = inferExerciseType(exercise) === 'cardio';
         return {
           type: names.length > 1 ? `SUPERSERIE ${exerciseIndex + 1}.${memberIndex + 1}` : `EJERCICIO ${exerciseIndex + 1}`,
@@ -56,10 +53,5 @@ export function createTrainingPdfBlob(training: TrainingPlan, trackerOrWeights: 
 
 export function downloadTrainingPdf(training: TrainingPlan, tracker: WeekTracker, planName: string): void {
   const blob = createTrainingPdfBlob(training, tracker, `${planName} · Entrenamiento semana ${tracker.weekNumber}`);
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = `${planName.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-entrenamiento-semana-${tracker.weekNumber}-${new Date().toISOString().slice(0, 10)}.pdf`;
-  anchor.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+  downloadBlob(blob, `${fileSlug(planName)}-entrenamiento-semana-${tracker.weekNumber}-${new Date().toISOString().slice(0, 10)}.pdf`);
 }

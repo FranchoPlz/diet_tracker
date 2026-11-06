@@ -42,13 +42,13 @@
     {#each dietNames as dietName, dietIndex}
       {@const dayIndex = representativeDayIndex(dietName)}
       {@const dietData = appState.parsedData?.diets.find(diet => diet.name === dietName)}
-      <details open={expandedDiets[dietIndex]} ontoggle={(event) => toggleDiet(dietIndex, event.currentTarget.open)} class="group min-w-0 overflow-hidden rounded-2xl border bg-white dark:bg-stone-900 {dietIndex === 0 ? 'border-orange-300 dark:border-orange-800' : 'border-red-300 dark:border-red-800'}">
+      <details open={expandedDiets[dietIndex]} ontoggle={(event) => toggleDiet(dietIndex, event.currentTarget.open)} class="group min-w-0 overflow-hidden rounded-2xl border bg-white dark:bg-stone-900 {dietIndex === 0 ? 'border-warm-line' : 'border-red-300 dark:border-red-800'}">
         <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
           <div>
-            <p class="text-xs font-bold uppercase tracking-[0.16em] {dietIndex === 0 ? 'text-orange-700 dark:text-orange-400' : 'text-red-700 dark:text-red-300'}">Selección global</p>
+            <p class="text-xs font-bold uppercase tracking-[0.16em] {dietIndex === 0 ? 'text-warm' : 'text-red-700 dark:text-red-300'}">Selección global</p>
             <h3 class="text-lg font-black text-stone-950 dark:text-white">{dietName}</h3>
           </div>
-          <span class="rounded-full px-3 py-1 text-xs font-bold {dietIndex === 0 ? 'bg-orange-100 text-orange-900 dark:bg-orange-950 dark:text-orange-200' : 'bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-200'}"><span class="group-open:hidden">Abrir</span><span class="hidden group-open:inline">Cerrar</span></span>
+          <span class="rounded-full px-3 py-1 text-xs font-bold {dietIndex === 0 ? 'bg-warm-soft text-orange-900 dark:text-orange-200' : 'bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-200'}"><span class="group-open:hidden">Abrir</span><span class="hidden group-open:inline">Cerrar</span></span>
         </summary>
 
         <div class="border-t border-stone-200 p-3 dark:border-stone-700">

@@ -40,7 +40,6 @@ describe('calculateShoppingList', () => {
 
   it('combines singular and plural ingredients into one item', () => {
     const parsedData: ParseResult = {
-      status: 'ok',
       diets: [dietWithComidaOptions([[
         {
           items: [{ name: 'Huevos', quantity: 2, unit: 'unidad', note: null }],
@@ -62,7 +61,6 @@ describe('calculateShoppingList', () => {
 
   it('combines singular and plural compound ingredient names', () => {
     const parsedData: ParseResult = {
-      status: 'ok',
       diets: [dietWithComidaOptions([[
         {
           items: [{ name: 'Yogures de proteínas de Mercadona', quantity: 2, unit: 'unidad', note: null }],
@@ -84,7 +82,6 @@ describe('calculateShoppingList', () => {
 
   it('normalizes, groups, sums, counts, unpacks combinations, and sorts names', () => {
     const parsedData: ParseResult = {
-      status: 'ok',
       diets: [dietWithComidaOptions([[
         {
           items: [{ name: ' Pear ', quantity: 1, unit: 'unidad', note: null }],
@@ -136,7 +133,6 @@ describe('calculateShoppingList', () => {
       is_combination: false,
     });
     const parsedData: ParseResult = {
-      status: 'ok',
       diets: [dietWithComidaOptions([
         [line('default first', 'default choice')],
         [line('exception fallback', 'exception choice')],

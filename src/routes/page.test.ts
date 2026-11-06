@@ -15,7 +15,6 @@ describe('application workspace', () => {
       id: 'item-1', name: 'Arroz', quantity: 1, unit: 'kg', count: 1,
       category: 'Despensa', checked: false, custom: false,
     }];
-    appState.checkedShoppingItems = {};
     appState.savedLists = [];
     appState.error = null;
   });

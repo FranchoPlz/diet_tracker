@@ -10,9 +10,8 @@ describe('HomeOverview', () => {
   beforeEach(() => {
     appState.activePlanName = 'Plan abril';
     appState.weekConfig = createDefaultWeekConfig();
-    appState.parsedData = { status: 'ok', diets: [{ name: 'DIETA 1', intro: '', meals: [] }, { name: 'DIETA 2', intro: '', meals: [] }] };
+    appState.parsedData = { diets: [{ name: 'DIETA 1', intro: '', meals: [] }, { name: 'DIETA 2', intro: '', meals: [] }] };
     appState.shoppingList = [];
-    appState.checkedShoppingItems = {};
   });
 
   afterEach(cleanup);

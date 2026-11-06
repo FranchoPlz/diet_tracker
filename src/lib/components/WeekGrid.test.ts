@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { appState } from '$lib/state.svelte';
+import { normalizeShoppingItem } from '$lib/shopping';
 import { createDefaultWeekConfig } from '$lib/utils';
 import { scheduleWorkspaceAutosave } from '$lib/workspace-controller';
 import WeekGrid from './WeekGrid.svelte';
@@ -14,8 +15,7 @@ describe('WeekGrid', () => {
   beforeEach(() => {
     vi.mocked(scheduleWorkspaceAutosave).mockClear();
     appState.weekConfig = createDefaultWeekConfig();
-    appState.shoppingList = [{ name: 'arroz', quantity: 80, unit: 'g', count: 1 }];
-    appState.checkedShoppingItems = { 'arroz|g': true };
+    appState.shoppingList = [normalizeShoppingItem({ name: 'arroz', quantity: 80, unit: 'g', count: 1 })];
   });
 
   afterEach(cleanup);
@@ -27,7 +27,6 @@ describe('WeekGrid', () => {
 
     expect(appState.weekConfig.days[0].diet).toBe('DIETA 2');
     expect(appState.shoppingList).toEqual([]);
-    expect(appState.checkedShoppingItems).toEqual({});
     expect(scheduleWorkspaceAutosave).toHaveBeenCalledWith(0);
   });
 });

@@ -1,13 +1,14 @@
 <script lang="ts">
   import { appState } from '$lib/state.svelte';
-  import type { DietPlan, IngredientItem } from '$lib/types';
+  import type { DietPlan } from '$lib/types';
   import RecipeInstructions from './RecipeInstructions.svelte';
-  import { 
-    formatQuantity, 
-    getEffectiveMealOptionIndex, 
+  import {
+    alternativeKey,
+    formatIngredient,
     getEffectiveAlternativeChoice,
-    setMealOptionIndex,
+    getEffectiveMealOptionIndex,
     setAlternativeChoice,
+    setMealOptionIndex,
   } from '$lib/utils';
 
   let { dayIndex, dietData, asException, ignoreDayException = false } = $props<{
@@ -17,23 +18,10 @@
     ignoreDayException?: boolean;
   }>();
 
-  let day = $derived(appState.weekConfig.days[dayIndex]);
   let expandedMeals = $state<Record<number, boolean>>({});
-
-  function formatItem(item: IngredientItem): string {
-    if (item.is_combination && item.sub_items && item.sub_items.length > 0) {
-      return item.sub_items.map(si => {
-        const qty = formatQuantity(si.quantity, si.unit);
-        return qty === 'sin cantidad' ? si.name : `${si.name} ${qty}`;
-      }).join(' + ');
-    }
-    const qty = formatQuantity(item.quantity, item.unit);
-    return qty === 'sin cantidad' ? item.name : `${item.name} ${qty}`;
-  }
 
   function invalidateShoppingList() {
     appState.shoppingList = [];
-    appState.checkedShoppingItems = {};
   }
 
   function isExpanded(mealIndex: number): boolean {
@@ -47,15 +35,11 @@
   }
 
   function selectedMealOption(mealType: DietPlan['meals'][number]['type']): number {
-    return ignoreDayException
-      ? appState.weekConfig.dietDefaults[day.diet]?.mealOptionIndexes[mealType] ?? 0
-      : getEffectiveMealOptionIndex(appState.weekConfig, dayIndex, mealType);
+    return getEffectiveMealOptionIndex(appState.weekConfig, dayIndex, mealType, ignoreDayException);
   }
 
   function selectedAlternative(altKey: string): number {
-    return ignoreDayException
-      ? appState.weekConfig.dietDefaults[day.diet]?.alternativeChoices[altKey] ?? 0
-      : getEffectiveAlternativeChoice(appState.weekConfig, dayIndex, altKey);
+    return getEffectiveAlternativeChoice(appState.weekConfig, dayIndex, altKey, ignoreDayException);
   }
 </script>
 
@@ -83,7 +67,7 @@
           <span class="mt-0.5 block truncate text-xs text-stone-500 dark:text-stone-400">{option?.name || `Opción ${selectedOptionIndex + 1}`}</span>
         </span>
         {#if meal.options.length > 1}
-          <span class="shrink-0 rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-bold text-teal-700 dark:bg-teal-950 dark:text-teal-300">{meal.options.length} opciones</span>
+          <span class="shrink-0 rounded-full bg-brand-soft px-2.5 py-1 text-[11px] font-bold text-brand-text">{meal.options.length} opciones</span>
         {/if}
       </button>
 
@@ -93,7 +77,7 @@
             <fieldset class="compact-option-grid mb-5 grid grid-cols-1 gap-2 rounded-xl bg-stone-100 p-2 dark:bg-stone-950/60 sm:grid-cols-2">
               <legend class="sr-only">Opciones para {meal.type}</legend>
               {#each meal.options as opt, optIdx}
-                <label class="relative flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition focus-within:ring-2 focus-within:ring-red-500 {selectedOptionIndex === optIdx ? 'border-red-500 bg-red-50 shadow-sm dark:border-red-500 dark:bg-red-950/40' : 'border-transparent bg-white hover:border-stone-300 dark:bg-stone-800 dark:hover:border-stone-600'}">
+                <label class="relative flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition focus-within:ring-2 focus-within:ring-red-500 {selectedOptionIndex === optIdx ? 'border-red-500 bg-red-50 shadow-sm dark:bg-red-950/40' : 'border-transparent bg-white hover:border-stone-300 dark:bg-stone-800 dark:hover:border-stone-600'}">
                   <input
                     type="radio"
                     name="meal-{dayIndex}-{meal.type}"
@@ -114,11 +98,11 @@
           {#if option}
             <div class="flex flex-col gap-4">
               {#if option.name && option.name !== meal.type && !option.name.startsWith('OPCIÓN')}
-                <div class="text-sm font-bold text-teal-700 dark:text-teal-300">{option.name}</div>
+                <div class="text-sm font-bold text-brand-text">{option.name}</div>
               {/if}
 
               {#each option.ingredient_lines as line, lineIndex}
-                {@const altKey = `${mealIndex}-${selectedOptionIndex}-${lineIndex}`}
+                {@const altKey = alternativeKey(mealIndex, selectedOptionIndex, lineIndex)}
 
                 <div class="flex flex-col py-2 border-b border-gray-50 dark:border-gray-700/50 last:border-0 last:pb-0">
                   {#if line.is_alternatives}
@@ -127,7 +111,7 @@
                     <fieldset class="flex flex-col gap-2">
                       <legend class="sr-only">Alternativas de ingredientes</legend>
                       {#each line.items as item, itemIndex}
-                        <label class="relative flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition focus-within:ring-2 focus-within:ring-red-500 {selectedAltIndex === itemIndex ? 'border-red-500 bg-red-50 dark:border-red-500 dark:bg-red-950/40' : 'border-stone-200 bg-white hover:border-stone-300 dark:border-stone-700 dark:bg-stone-800 dark:hover:border-stone-600'}">
+                        <label class="relative flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition focus-within:ring-2 focus-within:ring-red-500 {selectedAltIndex === itemIndex ? 'border-red-500 bg-red-50 dark:bg-red-950/40' : 'border-stone-200 bg-white hover:border-stone-300 dark:border-stone-700 dark:bg-stone-800 dark:hover:border-stone-600'}">
                           <input
                             type="radio"
                             name="alt-{dayIndex}-{altKey}"
@@ -140,7 +124,7 @@
                           />
                           <span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full border-2 bg-white transition dark:bg-stone-900 {selectedAltIndex === itemIndex ? 'border-red-600' : 'border-stone-300 dark:border-stone-500'}"><span class="size-2.5 rounded-full bg-red-600 transition {selectedAltIndex === itemIndex ? 'opacity-100' : 'opacity-0'}"></span></span>
                           <span class="text-sm font-semibold leading-relaxed {selectedAltIndex === itemIndex ? 'text-red-800 dark:text-red-200' : 'text-stone-700 dark:text-stone-200'}">
-                            {formatItem(item)}
+                            {formatIngredient(item)}
                           </span>
                         </label>
                       {/each}
@@ -149,11 +133,7 @@
                     <div class="flex items-start gap-3 pl-2">
                       <div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600 shrink-0"></div>
                       <span class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                        {#if line.is_combination || line.items.length > 1}
-                          {line.items.map((item: IngredientItem) => formatItem(item)).join(' + ')}
-                        {:else if line.items.length === 1}
-                          {formatItem(line.items[0])}
-                        {/if}
+                        {line.items.map(formatIngredient).join(' + ')}
                       </span>
                     </div>
                   {/if}

@@ -1,24 +1,23 @@
 import 'fake-indexeddb/auto';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { appState } from '$lib/state.svelte';
+import { normalizeShoppingItem } from '$lib/shopping';
 import ShoppingList from './ShoppingList.svelte';
 
 describe('ShoppingList', () => {
   beforeEach(() => {
     appState.activeListId = null;
     appState.activeListName = 'Lista calculada';
-    appState.shoppingList = [{ name: 'Arroz', quantity: 80, unit: 'g', count: 1 }];
-    appState.checkedShoppingItems = {};
+    appState.shoppingList = [normalizeShoppingItem({ name: 'Arroz', quantity: 80, unit: 'g', count: 1 })];
     appState.activePlanName = 'Plan activo';
   });
 
   afterEach(cleanup);
 
-  it('removes a calculated item that initially has no id', async () => {
+  it('removes an item', async () => {
     render(ShoppingList);
-    await waitFor(() => expect(appState.shoppingList[0].id).toBeTruthy());
 
     await fireEvent.click(screen.getByRole('button', { name: 'Eliminar Arroz' }));
 
@@ -37,7 +36,6 @@ describe('ShoppingList', () => {
 
   it('keeps an item checked when its name changes', async () => {
     render(ShoppingList);
-    await waitFor(() => expect(appState.shoppingList[0].id).toBeTruthy());
 
     await fireEvent.click(screen.getByRole('checkbox', { name: 'Marcar Arroz' }));
     await fireEvent.click(screen.getByRole('button', { name: /Arroz 80 g/ }));

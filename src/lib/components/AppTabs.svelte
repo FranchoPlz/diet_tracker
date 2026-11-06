@@ -1,7 +1,3 @@
-<script module lang="ts">
-  export type { AppTab } from '$lib/types';
-</script>
-
 <script lang="ts">
   import type { AppTab } from '$lib/types';
   let {
@@ -80,7 +76,7 @@
           <span
             class="min-w-5 rounded-full px-1.5 py-0.5 text-center text-[11px] leading-none {active === 'shopping'
               ? 'bg-orange-500 text-white'
-              : 'text-orange-300'}"
+              : 'text-warm'}"
             style={active === 'shopping' ? '' : 'background: var(--warm-soft);'}
             aria-hidden="true"
           >{shoppingCount}</span>

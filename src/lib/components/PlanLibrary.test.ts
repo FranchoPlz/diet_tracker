@@ -19,7 +19,7 @@ import PlanLibrary from './PlanLibrary.svelte';
 describe('PlanLibrary', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    appState.parsedData = { status: 'ok', diets: [] };
+    appState.parsedData = { diets: [] };
     appState.activePlanId = 'active';
     appState.activePlanName = 'Plan activo';
     appState.savedPlans = [{

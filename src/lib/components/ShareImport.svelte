@@ -31,7 +31,7 @@
 </script>
 
 {#if message}
-  <div class="mb-6 rounded-2xl border px-4 py-3 text-sm font-bold {isError ? 'border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300' : 'border-teal-200 bg-teal-50 text-teal-800 dark:border-teal-900 dark:bg-teal-950/30 dark:text-teal-200'}" role="status">
+  <div class="mb-6 rounded-2xl border px-4 py-3 text-sm font-bold {isError ? 'border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300' : 'border-brand-line bg-brand-soft text-brand-text'}" role="status">
     {message}
   </div>
 {/if}

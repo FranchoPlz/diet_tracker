@@ -38,10 +38,10 @@
       {#if appState.parsedData}
         <div class="mb-3 flex gap-2">
           <input bind:value={appState.activePlanName} aria-label="Nombre del plan" class="min-w-0 flex-1 rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm font-bold outline-none focus:border-teal-600 dark:border-stone-700 dark:bg-stone-800" />
-          <button class="rounded-xl bg-teal-700 px-3 py-2 text-sm font-bold text-white" onclick={() => void saveCurrent()}>Guardar</button>
+          <button class="rounded-xl bg-brand px-3 py-2 text-sm font-bold text-white" onclick={() => void saveCurrent()}>Guardar</button>
         </div>
         {#if appState.activePlanId}
-          <button class="mb-2 w-full rounded-xl border border-teal-200 px-3 py-2 text-sm font-bold text-teal-700 dark:border-teal-900 dark:text-teal-300" onclick={() => { calculateActivePlan(); open = false; }}>Recalcular desde el plan</button>
+          <button class="mb-2 w-full rounded-xl border border-brand-line px-3 py-2 text-sm font-bold text-brand-text" onclick={() => { calculateActivePlan(); open = false; }}>Recalcular desde el plan</button>
         {/if}
       {/if}
       <div class="max-h-72 space-y-1 overflow-y-auto">
@@ -50,7 +50,7 @@
             {#if editingId === plan.id}
               <form class="flex gap-1" onsubmit={(event) => { event.preventDefault(); void renamePlan(plan, draftName); editingId = null; }}>
                 <input bind:value={draftName} aria-label="Nuevo nombre" class="min-w-0 flex-1 rounded-lg border border-stone-200 bg-white px-2 py-1 text-sm dark:border-stone-700 dark:bg-stone-900" />
-                <button class="rounded-lg px-2 text-xs font-bold text-teal-700" type="submit">Listo</button>
+                <button class="rounded-lg px-2 text-xs font-bold text-brand-text" type="submit">Listo</button>
               </form>
             {:else}
               <button class="w-full text-left" onclick={() => void selectPlan(plan)}>

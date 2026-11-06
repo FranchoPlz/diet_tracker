@@ -3,7 +3,7 @@ import type { AppTab } from './types';
 const TABS: AppTab[] = ['home', 'diet', 'training', 'shopping', 'settings'];
 const MIN_DISTANCE = 56;
 
-export function swipeTargetIsInteractive(target: EventTarget | null): boolean {
+function swipeTargetIsInteractive(target: EventTarget | null): boolean {
   return target instanceof Element && !!target.closest('button, input, select, textarea, summary, a, label');
 }
 

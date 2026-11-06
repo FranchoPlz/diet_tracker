@@ -6,7 +6,7 @@ describe('exercise illustrations', () => {
   it('matches normalized Spanish names and common parser typos', () => {
     const illustration = findExerciseIllustration('Pres de banca plano con barra recta');
 
-    expect(illustration?.exercise.slug).toBe('bench-press');
+    expect(illustration?.slug).toBe('bench-press');
     expect(illustration?.frameUrls).toEqual([
       '/exercise-illustrations/bench-press/frame-1.png',
       '/exercise-illustrations/bench-press/frame-2.png',
@@ -28,6 +28,6 @@ describe('exercise illustrations', () => {
     ['Dead Bug', 'dead-bug'],
     ['C ardio en cinta', 'treadmill-incline-walk'],
   ])('matches real PDF exercise %s', (name, slug) => {
-    expect(findExerciseIllustration(name)?.exercise.slug).toBe(slug);
+    expect(findExerciseIllustration(name)?.slug).toBe(slug);
   });
 });

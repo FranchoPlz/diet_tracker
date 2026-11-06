@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TrainingPlan } from './types';
 import { createTrainingPdfBlob } from './training-export';
+import { createWeekTracker } from './utils';
 
 function readPdf(blob: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -26,7 +27,10 @@ describe('training PDF export', () => {
       }],
     };
 
-    const blob = createTrainingPdfBlob(training, { '0:0': ['40'] }, 'Entrenamiento', { '0:0': ['9'] });
+    const blob = createTrainingPdfBlob(training, createWeekTracker({
+      trainingWeights: { '1:Press de banca plano con barra recta': ['40'] },
+      trainingRepetitions: { '1:Press de banca plano con barra recta': ['9'] },
+    }), 'Entrenamiento');
     const content = await readPdf(blob);
 
     expect(content).toContain('EJERCICIO 1');
@@ -50,7 +54,7 @@ describe('training PDF export', () => {
       }],
     };
 
-    const content = await readPdf(createTrainingPdfBlob(training, {}, 'Entrenamiento'));
+    const content = await readPdf(createTrainingPdfBlob(training, createWeekTracker(), 'Entrenamiento'));
 
     expect(content).toContain('Series: 4');
     expect(content).toContain('Serie 1 | Peso: peso sin registrar | Objetivo: 12 repeticiones');

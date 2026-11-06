@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { appState } from './state.svelte';
+import { normalizeShoppingItem } from './shopping';
 import { getActivePlanId, listPlans, setActivePlanId } from './storage';
 import type { ParseResult } from './types';
 import {
@@ -13,7 +14,6 @@ import {
 } from './workspace-controller';
 
 const parsedData = {
-  status: 'ok',
   diets: [],
   exercise: { days: ['lunes'], notes: 'future schema data' },
 } as ParseResult & { exercise: { days: string[]; notes: string } };
@@ -34,15 +34,13 @@ describe('workspace controller', () => {
     expect(await getActivePlanId()).toBe(created.id);
     expect(JSON.stringify(await listPlans())).not.toContain('/private/plans');
 
-    appState.shoppingList = [{ name: 'arroz', quantity: 80, unit: 'g', count: 4, checked: true }];
-    appState.checkedShoppingItems = {};
+    appState.shoppingList = [normalizeShoppingItem({ name: 'arroz', quantity: 80, unit: 'g', count: 4, checked: true })];
     const configured = await completeConfiguration();
     expect(configured.configured).toBe(true);
     expect(configured.shoppingListId).toBeTruthy();
 
     appState.parsedData = null;
     appState.shoppingList = [];
-    appState.checkedShoppingItems = {};
     appState.activePlanId = null;
     appState.activeListId = null;
     appState.configured = false;
@@ -60,13 +58,12 @@ describe('workspace controller', () => {
     if (!appState.parsedData) throw new Error('Expected restored parsed data');
     expect((appState.parsedData as typeof parsedData).exercise).toEqual(parsedData.exercise);
     expect(appState.configured).toBe(true);
-    expect(appState.pdfPath).toBeNull();
     expect(appState.persistenceReady).toBe(true);
   });
 
   it('normalizes training before assigning the parsed document to reactive state', async () => {
     const result: ParseResult = {
-      status: 'ok', diets: [], training: { tips: [], defaultRestSeconds: 60, days: [{
+      diets: [], training: { tips: [], defaultRestSeconds: 60, days: [{
         days: [1, 3], title: 'PIERNA', activeRest: false, details: '',
         exercises: [{ exercise: 'Sentadilla', series: '3', repetitions: '10', details: '' }],
       }] },

@@ -2,7 +2,7 @@ import { restorePlan, persistCurrentPlan } from './plan-controller';
 import { appState } from './state.svelte';
 import { getActivePlanId, getActiveTab, listPlans, listShoppingLists, setActivePlanId, setActiveTab } from './storage';
 import type { AppTab, ParseResult, SavedPlan } from './types';
-import { createDefaultWeekConfig } from './utils';
+import { cloneData, createDefaultWeekConfig, createWeekTracker } from './utils';
 import { normalizeTrainingPlan } from './training-model';
 
 let autosaveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -17,21 +17,12 @@ function sourceLabel(sourceName: string): string {
 export async function createWorkspaceFromDocument(result: ParseResult, sourceName: string): Promise<SavedPlan> {
   if (autosaveTimer) clearTimeout(autosaveTimer);
   autosaveTimer = undefined;
-  const parsedData = JSON.parse(JSON.stringify(result)) as ParseResult;
+  const parsedData = cloneData(result);
   if (parsedData.training) parsedData.training = normalizeTrainingPlan(parsedData.training);
   appState.parsedData = parsedData;
-  appState.pdfPath = null;
   appState.weekConfig = createDefaultWeekConfig();
-  appState.weekTracker = {
-    startedAt: new Date().toISOString(),
-    activeDayIndex: 0,
-    weekNumber: 1,
-    trainingWeights: {},
-    trainingRepetitions: {},
-    exerciseNotes: {}, cardioByDay: {}, stepsByDay: {},
-  };
+  appState.weekTracker = createWeekTracker();
   appState.shoppingList = [];
-  appState.checkedShoppingItems = {};
   appState.activeListId = null;
   appState.activeListName = `${sourceLabel(sourceName)} - compra`;
   appState.activePlanId = null;
@@ -39,7 +30,6 @@ export async function createWorkspaceFromDocument(result: ParseResult, sourceNam
   appState.configured = false;
   appState.activeTab = 'diet';
   await setActiveTab('diet');
-  appState.planSourceLabel = null;
   appState.error = null;
   return persistCurrentPlan();
 }

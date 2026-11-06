@@ -1,4 +1,3 @@
-import { exercises, type Exercise } from '@bryllim/workout-guide';
 import { base } from '$app/paths';
 
 const spanishAliases: Array<[string, string]> = [
@@ -38,6 +37,7 @@ const spanishAliases: Array<[string, string]> = [
   ['remo con mancuerna', 'one-arm-dumbbell-row'],
   ['remo con barra', 'barbell-row'],
   ['remo sentado', 'seated-row'],
+  ['seated cable row', 'seated-row'],
   ['remo en maquina', 'machine-row'],
   ['jalon al pecho', 'lat-pulldown'],
   ['dominadas', 'pull-up'],
@@ -82,29 +82,22 @@ function normalize(value: string): string {
     .trim();
 }
 
-const exercisesBySlug = new Map(exercises.map((exercise) => [exercise.slug, exercise]));
-const availableSlugs = new Set(spanishAliases.map(([, slug]) => slug));
-const exercisesByName = new Map(exercises.filter(exercise => availableSlugs.has(exercise.slug)).map((exercise) => [normalize(exercise.name), exercise]));
+// Every alias target ships three frames in static/exercise-illustrations/<slug>/.
+// The slugs are the English exercise names, so "Bench Press" matches without an alias.
+const slugs = new Set(spanishAliases.map(([, slug]) => slug));
 const aliasesBySpecificity = spanishAliases
   .map(([alias, slug]) => [normalize(alias), slug] as const)
   .sort(([left], [right]) => right.length - left.length);
 
-export interface ExerciseIllustration {
-  exercise: Exercise;
-  frameUrls: string[];
-}
-
-export function findExerciseIllustration(name: string): ExerciseIllustration | null {
+export function findExerciseIllustration(name: string): { slug: string; frameUrls: string[] } | null {
   const normalizedName = normalize(name);
   const compactName = normalizedName.replace(/\s+/g, '');
-  const exactMatch = exercisesByName.get(normalizedName);
+  const exactSlug = normalizedName.replace(/\s+/g, '-');
   const alias = aliasesBySpecificity.find(([candidate]) => (
     normalizedName.includes(candidate) || compactName.includes(candidate.replace(/\s+/g, ''))
   ));
-  const exercise = exactMatch ?? (alias ? exercisesBySlug.get(alias[1]) : undefined);
-  if (!exercise) return null;
+  const slug = slugs.has(exactSlug) ? exactSlug : alias?.[1];
+  if (!slug) return null;
 
-  const frameUrls = exercise.frames.map((frame) => `${base}/exercise-illustrations/${exercise.slug}/frame-${frame.index}.png`);
-
-  return { exercise, frameUrls };
+  return { slug, frameUrls: [1, 2, 3].map((frame) => `${base}/exercise-illustrations/${slug}/frame-${frame}.png`) };
 }

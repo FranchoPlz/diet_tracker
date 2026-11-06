@@ -44,10 +44,6 @@ export function startNextWeek(resetTraining = true, now = new Date()): void {
   scheduleWorkspaceAutosave(0);
 }
 
-export function exerciseWeightKey(dayIndex: number, exerciseIndex: number): string {
-  return `${dayIndex}:${exerciseIndex}`;
-}
-
 export function seriesCount(value: string): number {
   const match = value.match(/\d+/);
   return Math.max(1, Math.min(20, Number(match?.[0]) || 1));
@@ -64,23 +60,6 @@ export function repetitionTargets(value: string, count: number): string[] {
   }
   const fallback = value.trim() || '—';
   return Array.from({ length: count }, () => fallback);
-}
-
-export function setExerciseWeight(dayIndex: number, exerciseIndex: number, seriesIndex: number, value: string): void {
-  const key = exerciseWeightKey(dayIndex, exerciseIndex);
-  const weights = [...(appState.weekTracker.trainingWeights[key] ?? [])];
-  weights[seriesIndex] = value;
-  appState.weekTracker.trainingWeights[key] = weights;
-  scheduleWorkspaceAutosave();
-}
-
-export function setExerciseRepetitions(dayIndex: number, exerciseIndex: number, seriesIndex: number, value: string): void {
-  const key = exerciseWeightKey(dayIndex, exerciseIndex);
-  const repetitions = [...(appState.weekTracker.trainingRepetitions?.[key] ?? [])];
-  repetitions[seriesIndex] = value;
-  appState.weekTracker.trainingRepetitions ??= {};
-  appState.weekTracker.trainingRepetitions[key] = repetitions;
-  scheduleWorkspaceAutosave();
 }
 
 export function setProgressValue(key: string, field: 'weight' | 'repetitions', seriesIndex: number, value: string): void {
