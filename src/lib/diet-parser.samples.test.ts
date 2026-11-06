@@ -31,7 +31,6 @@ describe('PDF sample regressions', () => {
     }
 
     const result = parseDietText(pages);
-    expect(result.status).toBe('ok');
     for (const diet of result.diets) {
       expect(diet.meals.map((meal) => meal.type)).toEqual([
         'DESAYUNO', 'ALMUERZO', 'COMIDA', 'CENA',
@@ -81,10 +80,10 @@ describe('PDF sample regressions', () => {
     const [diet1, diet2] = result.diets;
     expect(diet1.meals.find((meal) => meal.type === 'ALMUERZO')?.options).toHaveLength(3);
     expect(diet1.meals.find((meal) => meal.type === 'COMIDA')?.options.map((option) => option.name)).toEqual([
-      'COMIDA 1', 'COMIDA 2 – ENSALADA DE PASTA',
+      'OPCIÓN 1', 'OPCIÓN 2 – ENSALADA DE PASTA',
     ]);
     expect(diet1.meals.find((meal) => meal.type === 'CENA')?.options.map((option) => option.name)).toEqual([
-      'COMIDA 1 - QUESADILLA FIT', 'COMIDA 2 – ALBONDIGAS EN TOMATE', 'CENA 3 – NUGGUETS DE POLLO',
+      'OPCIÓN 1 – QUESADILLA FIT', 'OPCIÓN 2 – ALBONDIGAS EN TOMATE', 'OPCIÓN 3 – NUGGUETS DE POLLO',
     ]);
     expect(diet2.meals.find((meal) => meal.type === 'COMIDA')?.options).toHaveLength(2);
     expect(diet2.meals.find((meal) => meal.type === 'CENA')?.options).toHaveLength(2);
@@ -102,13 +101,32 @@ describe('PDF sample regressions', () => {
     const file = new File([bytes], 'OCTUBRE.pdf', { type: 'application/pdf' });
 
     const result = parseDietText(await extractPdfPageTexts(file));
-
-    expect(result.status).toBe('ok');
     expect(result.diets.map(diet => diet.name)).toEqual(['DIETA 1', 'DIETA 2']);
     expect(result.training).toBeUndefined();
     expect(result.diets[0].meals.map(meal => meal.type)).toEqual(['ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA']);
     expect(result.diets[1].meals.map(meal => meal.type)).toEqual(['ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA']);
     expect(result.diets[0].meals.find(meal => meal.type === 'ALMUERZO')?.options[0].ingredient_lines.length).toBeGreaterThan(0);
     expect(result.diets[1].meals.find(meal => meal.type === 'CENA')?.options.length).toBe(3);
+  });
+
+  it('normalizes OCTUBRE_ERROR_1 without merging meal options', async () => {
+    const fsModule = 'node:fs/promises';
+    const { readFile } = await import(/* @vite-ignore */ fsModule);
+    const bytes = await readFile('samples/OCTUBRE_ERROR_1.pdf');
+    const file = new File([bytes], 'OCTUBRE_ERROR_1.pdf', { type: 'application/pdf' });
+
+    const result = parseDietText(await extractPdfPageTexts(file));
+    expect(result.diets.map(diet => diet.meals.map(meal => [meal.type, meal.options.length]))).toEqual([
+      [['ALMUERZO', 2], ['COMIDA', 2], ['MERIENDA', 1], ['CENA', 2]],
+      [['ALMUERZO', 1], ['COMIDA', 2], ['MERIENDA', 1], ['CENA', 3]],
+    ]);
+    expect(result.diets[0].meals.find(meal => meal.type === 'COMIDA')?.options.map(option => option.name)).toEqual([
+      'OPCIÓN 1', 'OPCIÓN 2 – CALABACÍNES RELLENAS',
+    ]);
+    expect(result.diets[0].meals.find(meal => meal.type === 'CENA')?.options.map(option => option.name)).toEqual([
+      'OPCIÓN 1 – ENSALADA DE LEGUMBRES', 'OPCIÓN 2 – POKEBOWL',
+    ]);
+    const legumes = result.diets[0].meals.find(meal => meal.type === 'CENA')?.options[0].ingredient_lines[0].items;
+    expect(legumes?.filter(item => item.name === 'Alubias blancas cocidas')).toHaveLength(1);
   });
 });

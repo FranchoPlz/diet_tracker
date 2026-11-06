@@ -18,6 +18,8 @@ La versión web se publica en GitHub Pages en `https://franchoplz.github.io/diet
 3. Crea la lista de la compra, corrige categorías o cantidades y guárdala con un nombre.
 4. Guarda el plan para recuperarlo sin conservar el PDF original.
 
+Para crear documentos compatibles, consulta [el formato estándar de dietas](docs/diet-document-format.md).
+
 Una vez configurado, el plan se organiza en tres pestañas:
 
 - **Dieta** muestra `DIETA 1` y `DIETA 2` en modo consulta, con acceso a la reconfiguración y a excepciones por día.

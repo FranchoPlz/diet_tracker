@@ -27,7 +27,7 @@ describe('parseDietText', () => {
       'OPCIÓN 1',
       'OPCIÓN 2 – BIZCOCHO DE COCO',
     ]);
-    expect(result.diets[0].meals[1].options[0].name).toBe('OPCION 3 – PANCAKES DE VERDURA RELLENOS');
+    expect(result.diets[0].meals[1].options[0].name).toBe('OPCIÓN 3 – PANCAKES DE VERDURA RELLENOS');
     expect(result.diets[1].meals[0].options[0].ingredient_lines[0].items[0].name).toBe('Frutos secos a elegir');
     expect(result.diets[1].meals[1].options[0].name).toBe('OPCIÓN 3 – SMASH BURGUER');
   });
@@ -107,10 +107,27 @@ describe('parseDietText', () => {
     ]);
 
     expect(result.diets[0].meals[0].options.map((option) => option.name)).toEqual([
-      'COMIDA 1', 'COMIDA 2 – ENSALADA',
+      'OPCIÓN 1', 'OPCIÓN 2 – ENSALADA',
     ]);
     expect(result.diets[0].meals[1].options.map((option) => option.name)).toEqual([
-      'CENA 1', 'CENA 2 – CREMA',
+      'OPCIÓN 1', 'OPCIÓN 2 – CREMA',
+    ]);
+  });
+
+  it('normalizes legacy option headings and explicit preparation blocks', () => {
+    const result = parseDietText([
+      'DIETA 1\nCOMIDA\nCOMIDA OPCIÓN 1\n-200g de Alubias / 200g de Alubias / 100g de Arroz.\nCOMIDA OPCIÓN 2 – CALABACINES RELLENOS\n-2 Calabacines.\nPREPARACIÓN: Cortamos los calabacines y los horneamos.\nCENA\nCENA 1 BERENJENAS RELLENAS\n-1 Berenjena.\nOPCIÓN 2 DE CENA – PIZZA\n-1 Piadina.',
+    ]);
+
+    expect(result.diets[0].meals[0].options.map(option => option.name)).toEqual([
+      'OPCIÓN 1', 'OPCIÓN 2 – CALABACINES RELLENOS',
+    ]);
+    expect(result.diets[0].meals[0].options[0].ingredient_lines[0].items.map(item => item.name)).toEqual([
+      'Alubias', 'Arroz',
+    ]);
+    expect(result.diets[0].meals[0].options[1].description).toBe('Cortamos los calabacines y los horneamos.');
+    expect(result.diets[0].meals[1].options.map(option => option.name)).toEqual([
+      'OPCIÓN 1 – BERENJENAS RELLENAS', 'OPCIÓN 2 – PIZZA',
     ]);
   });
 

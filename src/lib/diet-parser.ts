@@ -1,6 +1,6 @@
-import type { DietPlan, ExerciseRow, IngredientItem, IngredientLine, Meal, MealOption, ParseResult, TrainingDay, TrainingPlan } from './types';
+import { MEAL_TYPES, type DietPlan, type ExerciseRow, type IngredientItem, type IngredientLine, type Meal, type MealOption, type ParseResult, type TrainingDay, type TrainingPlan } from './types';
 
-export interface TrainingTableRow {
+interface TrainingTableRow {
   columns: [string, string, string, string];
 }
 export interface TrainingTable {
@@ -8,9 +8,10 @@ export interface TrainingTable {
 }
 export type DietPageText = string | { page: number; text: string; trainingTable?: TrainingTable };
 
-const MEAL_TYPES = ['DESAYUNO', 'ALMUERZO', 'COMIDA', 'MERIENDA', 'CENA'] as const;
 const MEAL_HEADER_RE = /^\s*(DESAYUNO|ALMUERZO|COMIDA|MERIENDA|CENA)\s*$/;
-const OPTION_HEADER_RE = /^\s*-?\s*((?:OPCI[ÓO]N\s+\d+(?:\s+DE\s+\w+)?(?:\s*[–-]\s*.+)?)|(?:OPCI[ÓO]N\s+\d+\s+\w.*?)|(?:(?:ALMUERZO|COMIDA|MERIENDA|CENA)\s+\d+(?:\s*[–-]\s*.+)?))\s*$/i;
+const OPTION_HEADER_RE = /^\s*-?\s*OPCI[ÓO]N\s+(\d+)(?:\s+DE\s+(?:DESAYUNO|ALMUERZO|COMIDA|MERIENDA|CENA))?(?:\s*(?:[–—-]\s*)?(.+?))?\s*$/i;
+const MEAL_OPTION_HEADER_RE = /^\s*-?\s*(?:DESAYUNO|ALMUERZO|COMIDA|MERIENDA|CENA)\s+(?:OPCI[ÓO]N\s+)?(\d+)(?:\s*(?:[–—-]\s*)?(.+?))?\s*$/i;
+const PREPARATION_HEADER_RE = /^\s*-?\s*PREPARACI[ÓO]N\s*:\s*(.*)$/i;
 const DIET_SECTION_END_RE = /^\s*(?:SUPLEMENTACI[ÓO]N|ENTRENAMIENTO)\s*$/im;
 const TRAINING_HEADER_RE = /^\s*ENTRENAMIENTO\s*$/im;
 const DAY_HEADER_RE = /^\s*D[IÍ]A\s+([\d\sYy,]+)\s*[–-]\s*(.+?)\s*$/i;
@@ -142,6 +143,11 @@ export function joinWrappedLines(rawText: string): string[] {
       continue;
     }
     if (line === '-') continue;
+    if (PREPARATION_HEADER_RE.test(line)) {
+      if (current !== undefined) logicalLines.push(current);
+      current = undefined;
+      continue;
+    }
 
     if (line.startsWith('-')) {
       const content = line.replace(/^-+/, '').trim();
@@ -190,14 +196,15 @@ function parseIngredientLine(line: string): IngredientLine {
   for (const [wrong, replacement] of TYPO_CORRECTIONS) content = content.replaceAll(wrong, replacement);
 
   if (/\s+\/\s*/.test(content)) {
-    return {
-      items: content.split(/\s+\/\s*/).map((part) => {
-        const item = cleanEnd(part);
-        return item.includes(' + ') ? parseCombination(item) : parseIngredient(item);
-      }) as IngredientItem[],
-      is_alternatives: true,
-      is_combination: false,
-    };
+    const items: IngredientItem[] = [];
+    const seen = new Set<string>();
+    for (const part of content.split(/\s+\/\s*/)) {
+      const value = cleanEnd(part);
+      if (seen.has(value)) continue;
+      seen.add(value);
+      items.push(value.includes(' + ') ? parseCombination(value) as IngredientItem : parseIngredient(value) as IngredientItem);
+    }
+    return { items, is_alternatives: true, is_combination: false };
   }
   if (content.includes(' + ')) {
     return { items: [parseCombination(content) as IngredientItem], is_alternatives: false, is_combination: true };
@@ -214,6 +221,7 @@ function parseIngredients(rawText: string): IngredientLine[] {
 function extractRecipeDescription(rawText: string): string | null {
   const paragraphs: string[] = [];
   let current = '';
+  let explicitPreparation = false;
 
   const append = (value: string) => {
     const text = value.trim().replace(/\s+/g, ' ');
@@ -224,7 +232,19 @@ function extractRecipeDescription(rawText: string): string | null {
   for (const rawLine of rawText.split('\n')) {
     const line = rawLine.trim();
     if (!line) continue;
+    const preparation = line.match(PREPARATION_HEADER_RE);
+    if (preparation) {
+      if (current) paragraphs.push(current);
+      current = '';
+      explicitPreparation = true;
+      append(preparation[1]);
+      continue;
+    }
     const content = line.replace(/^-+\s*/, '');
+    if (explicitPreparation) {
+      append(content);
+      continue;
+    }
     const startsInstructions = RECIPE_VERB_START_RE.test(content);
 
     if (!current) {
@@ -243,17 +263,27 @@ function extractRecipeDescription(rawText: string): string | null {
   return paragraphs.length > 0 ? paragraphs.join('\n\n') : null;
 }
 
+function parseOptionHeader(value: string): string | null {
+  const match = value.match(OPTION_HEADER_RE) ?? value.match(MEAL_OPTION_HEADER_RE);
+  if (!match) return null;
+  const title = match[2]?.trim().replace(/\s+/g, ' ');
+  return title ? `OPCIÓN ${match[1]} – ${title}` : `OPCIÓN ${match[1]}`;
+}
+
 function splitIntoOptions(mealType: Meal['type'], body: string): MealOption[] {
   const lines = body.split('\n');
-  const positions = lines.flatMap((line, index) => OPTION_HEADER_RE.test(line) ? [index] : []);
+  const positions = lines.flatMap((line, index) => {
+    const name = parseOptionHeader(line);
+    return name ? [{ index, name }] : [];
+  });
   if (positions.length === 0) {
     const rawText = body.trim();
     return [{ name: mealType, description: extractRecipeDescription(rawText), ingredient_lines: parseIngredients(rawText) }];
   }
   return positions.map((position, index) => {
-    const rawText = lines.slice(position + 1, positions[index + 1] ?? lines.length).join('\n').trim();
+    const rawText = lines.slice(position.index + 1, positions[index + 1]?.index ?? lines.length).join('\n').trim();
     return {
-      name: lines[position].replace(/^\s*-\s*/, '').trim().replace(/\s+/g, ' '),
+      name: position.name,
       description: extractRecipeDescription(rawText),
       ingredient_lines: parseIngredients(rawText),
     };
@@ -451,7 +481,5 @@ export function parseDietText(pageTexts: readonly DietPageText[]): ParseResult {
   }
   if (diets.length === 0) throw new Error('No se han encontrado secciones DIETA en el PDF.');
   const training = parseTraining(pageTexts);
-  return training ? { status: 'ok', diets, training } : { status: 'ok', diets };
+  return training ? { diets, training } : { diets };
 }
-
-export { MEAL_TYPES };
